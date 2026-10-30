@@ -153,4 +153,76 @@ public final class BoardUtil {
         }
         return captured;
     }
+
+    // The material checks below are PrathxmOp's (ReviewMath's Brilliant rule), ported as-is.
+
+    /** Piece value in pawns, kings and empty squares zero. */
+    public static int pieceValue(char c) {
+        switch (Character.toLowerCase(c)) {
+            case 'p': return 1;
+            case 'n':
+            case 'b': return 3;
+            case 'r': return 5;
+            case 'q': return 9;
+            default: return 0;
+        }
+    }
+
+    /** Material of one side (pawn = 1). */
+    public static int material(char[] b, boolean white) {
+        int s = 0;
+        for (char c : b) {
+            if (c != '.' && Character.isUpperCase(c) == white) s += pieceValue(c);
+        }
+        return s;
+    }
+
+    /** Non-pawn material of one side. */
+    public static int nonPawnMaterial(char[] b, boolean white) {
+        int s = 0;
+        for (char c : b) {
+            if (c != '.' && c != 'p' && c != 'P' && Character.isUpperCase(c) == white) s += pieceValue(c);
+        }
+        return s;
+    }
+
+    /** Does the move land on the square where the opponent just captured? */
+    public static boolean isRecapture(String prevMove, boolean prevWasCapture, String move) {
+        if (!prevWasCapture || prevMove == null || move == null) return false;
+        if (prevMove.length() < 4 || move.length() < 4) return false;
+        return prevMove.regionMatches(2, move, 2, 2);
+    }
+
+    /**
+     * A genuine sacrifice, as PrathxmOp detects it by following Stockfish's line after the played
+     * move: after the last opponent move in the window the mover is at least two points down on
+     * material compared with before, and has given up non-pawn material. Ordinary trades (material
+     * comes back) are therefore ignored.
+     *
+     * @param before     board before the played move (not modified)
+     * @param moverWhite side that played the move
+     * @param played     the played move, in UCI
+     * @param replyPv    the engine's line from the position after the played move
+     * @param window     how many plies of it to follow
+     */
+    public static boolean isSacrifice(char[] before, boolean moverWhite, String played,
+                                      java.util.List<String> replyPv, int window) {
+        if (before == null || played == null || replyPv == null || replyPv.isEmpty()) return false;
+        char[] b = before.clone();
+        int diff0 = material(b, moverWhite) - material(b, !moverWhite);
+        int pieces0 = nonPawnMaterial(b, moverWhite);
+
+        apply(b, played);
+
+        boolean endDown = false;
+        int plies = Math.min(window, replyPv.size());
+        for (int i = 0; i < plies; i++) {
+            apply(b, replyPv.get(i));
+            if ((i & 1) == 0) { // after an opponent move
+                int diff = material(b, moverWhite) - material(b, !moverWhite);
+                endDown = diff <= diff0 - 2 && nonPawnMaterial(b, moverWhite) < pieces0;
+            }
+        }
+        return endDown;
+    }
 }

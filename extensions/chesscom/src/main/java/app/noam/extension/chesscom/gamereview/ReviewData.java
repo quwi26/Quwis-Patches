@@ -55,6 +55,11 @@ final class ReviewData {
     int[] whiteMarks = new int[3], blackMarks = new int[3];
     /** The review's "analysis strength", in chess.com's "depth_N" form. */
     String source;
+    /** The game's PGN header, when it had one: who played, when, and how it ended. */
+    String white, black, date, result;
+    /** Every played move (SAN) and the mark the review gave it, for the saved-review list. */
+    String[] sans;
+    String[] marks;
 
     /**
      * The phase accuracies from every position (start, then after each ply) and the white-POV
@@ -105,6 +110,12 @@ final class ReviewData {
         json.put("whiteMarks", marksJson(whiteMarks));
         json.put("blackMarks", marksJson(blackMarks));
         json.putOpt("source", source);
+        json.putOpt("white", white);
+        json.putOpt("black", black);
+        json.putOpt("date", date);
+        json.putOpt("result", result);
+        if (sans != null) json.put("sans", new JSONArray(sans));
+        if (marks != null) json.put("marks", new JSONArray(marks));
         return json;
     }
 
@@ -142,6 +153,12 @@ final class ReviewData {
         data.whiteMarks = marks(json.getJSONArray("whiteMarks"));
         data.blackMarks = marks(json.getJSONArray("blackMarks"));
         data.source = json.has("source") ? json.getString("source") : null;
+        data.white = json.has("white") ? json.getString("white") : null;
+        data.black = json.has("black") ? json.getString("black") : null;
+        data.date = json.has("date") ? json.getString("date") : null;
+        data.result = json.has("result") ? json.getString("result") : null;
+        data.sans = json.has("sans") ? strings(json.getJSONArray("sans")).toArray(new String[0]) : null;
+        data.marks = json.has("marks") ? strings(json.getJSONArray("marks")).toArray(new String[0]) : null;
         return data;
     }
 

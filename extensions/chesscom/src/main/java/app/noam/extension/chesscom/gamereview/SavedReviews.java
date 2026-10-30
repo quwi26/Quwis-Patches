@@ -2,6 +2,7 @@ package app.noam.extension.chesscom.gamereview;
 
 import android.content.Context;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
@@ -75,11 +76,95 @@ final class SavedReviews {
         } catch (Exception e) {
             Utils.logError("The review could not be saved", e);
             temporary.delete();
+            return;
+        }
+        saveMeta(context, key, data);
+    }
+
+    /**
+     * A small sidecar next to the review: who played, when, and the brilliant moves it found. The
+     * settings screen reads these instead of the whole review of every game.
+     */
+    private static void saveMeta(Context context, String key, ReviewData data) {
+        File file = file(context, key + ".meta");
+        if (file == null) return;
+        File temporary = new File(file.getPath() + ".tmp");
+        try {
+            JSONObject json = new JSONObject();
+            putIfPresent(json, "white", data.white);
+            putIfPresent(json, "black", data.black);
+            putIfPresent(json, "date", data.date);
+            putIfPresent(json, "result", data.result);
+            JSONArray brilliants = new JSONArray();
+            if (data.marks != null && data.sans != null) {
+                for (int i = 0; i < data.marks.length && i < data.sans.length; i++) {
+                    if (!"brilliant".equals(data.marks[i])) continue;
+                    String san = data.sans[i] == null ? "" : data.sans[i];
+                    brilliants.put((i / 2 + 1) + (i % 2 == 0 ? "." : "...") + san);
+                }
+            }
+            json.put("brilliants", brilliants);
+            try (OutputStream out = new FileOutputStream(temporary)) {
+                out.write(json.toString().getBytes(StandardCharsets.UTF_8));
+            }
+            if (!temporary.renameTo(file)) throw new java.io.IOException("could not rename " + temporary);
+        } catch (Exception e) {
+            Utils.logError("The review's summary could not be saved", e);
+            temporary.delete();
         }
     }
 
+    private static void putIfPresent(JSONObject json, String name, String value) throws Exception {
+        if (value != null && !value.isEmpty()) json.put(name, value);
+    }
+
+    /** A saved review's game and the brilliant moves it found. */
+    static final class Meta {
+        String white, black, date, result;
+        final java.util.List<String> brilliants = new java.util.ArrayList<>();
+
+        /** "Morphy – Duke, 1858", or null when the game came without a header. */
+        String game() {
+            StringBuilder text = new StringBuilder();
+            if (white != null) text.append(white);
+            if (black != null) text.append(text.length() > 0 ? " – " : "").append(black);
+            if (date != null) text.append(text.length() > 0 ? ", " : "").append(date);
+            return text.length() == 0 ? null : text.toString();
+        }
+    }
+
+    /** Every saved review's summary, newest first. */
+    static java.util.List<Meta> metas(Context context) {
+        java.util.List<Meta> metas = new java.util.ArrayList<>();
+        File directory = directory(context);
+        File[] files = directory.listFiles((dir, name) -> name.endsWith(".meta.json"));
+        if (files == null) return metas;
+        java.util.Arrays.sort(files, (a, b) -> Long.compare(b.lastModified(), a.lastModified()));
+        for (File file : files) {
+            try (InputStream in = new FileInputStream(file)) {
+                ByteArrayOutputStream out = new ByteArrayOutputStream();
+                byte[] buffer = new byte[4096];
+                int n;
+                while ((n = in.read(buffer)) > 0) out.write(buffer, 0, n);
+                JSONObject json = new JSONObject(new String(out.toByteArray(), StandardCharsets.UTF_8));
+                Meta meta = new Meta();
+                meta.white = json.has("white") ? json.getString("white") : null;
+                meta.black = json.has("black") ? json.getString("black") : null;
+                meta.date = json.has("date") ? json.getString("date") : null;
+                meta.result = json.has("result") ? json.getString("result") : null;
+                org.json.JSONArray brilliants = json.getJSONArray("brilliants");
+                for (int i = 0; i < brilliants.length(); i++) meta.brilliants.add(brilliants.getString(i));
+                metas.add(meta);
+            } catch (Exception e) {
+                Utils.logError("A saved review's summary could not be read", e);
+            }
+        }
+        return metas;
+    }
+
     static int count(Context context) {
-        File[] files = directory(context).listFiles((dir, name) -> name.endsWith(".json"));
+        File[] files = directory(context).listFiles((dir, name) ->
+            name.endsWith(".json") && !name.endsWith(".meta.json"));
         return files == null ? 0 : files.length;
     }
 

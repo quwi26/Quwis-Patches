@@ -508,6 +508,28 @@ public final class MorpheSettingsActivity extends Activity {
                 render();
             }));
         }
+
+        // What chess.com sells as Insights is counted on its own servers; these are the brilliant
+        // moves the reviews on this phone actually found.
+        GameReview.Brilliants brilliants = GameReview.savedBrilliants();
+        list.addView(header("Brilliant moves"));
+        if (brilliants.games > 0) {
+            LinearLayout found = card();
+            list.addView(found, cardParams());
+            String moves = brilliants.moves.size() == 1 ? "1 move" : brilliants.moves.size() + " moves";
+            String games = brilliants.games == 1 ? "1 game" : brilliants.games + " games";
+            found.addView(infoRow("Found by your reviews", moves + " in " + games));
+            int shown = Math.min(brilliants.moves.size(), 20);
+            for (int i = 0; i < shown; i++) found.addView(infoRow(brilliants.moves.get(i), null));
+            if (brilliants.moves.size() > shown) {
+                found.addView(caption("And " + (brilliants.moves.size() - shown) + " more."));
+            }
+        }
+        list.addView(caption(brilliants.games > 0
+            ? "A move the engine found best that gives up material for good, as chess.com's “!!”. Read from "
+                + "the reviews saved on this phone, which chess.com's own stats cannot see."
+            : "None yet: a game reviewed after this version can show one here. chess.com's own Brilliant "
+                + "stat is counted on its servers and needs Diamond; this one comes from your reviews."));
         list.addView(caption(stockfish
             ? "A game you review with Local Stockfish or Lichess's servers is saved on this phone and opens "
                 + "straight away the next time. Choosing a deeper depth than it was saved with analyses it again."
@@ -899,6 +921,15 @@ public final class MorpheSettingsActivity extends Activity {
             ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         params.topMargin = dp(8);
         row.addView(slider, params);
+        return row;
+    }
+
+    /** A list row that only says something: no click, no ripple. */
+    private View infoRow(String title, String summary) {
+        LinearLayout row = new LinearLayout(this);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        row.setPadding(dp(16), dp(10), dp(16), dp(10));
+        row.addView(texts(title, summary), new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
         return row;
     }
 

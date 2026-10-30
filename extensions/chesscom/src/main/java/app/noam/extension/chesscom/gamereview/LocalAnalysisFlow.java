@@ -227,6 +227,7 @@ final class LocalAnalysisFlow {
             Context context = Utils.context();
             String savedKey = SavedReviews.key(reviewer.name(), startingFen, playedLans);
             ReviewData data = SavedReviews.load(context, savedKey, savedNodes);
+            boolean fromDisk = data != null;
             if (data != null) {
                 Log.i(TAG, "Opening the saved review");
             } else {
@@ -253,8 +254,25 @@ final class LocalAnalysisFlow {
                         throw e;
                     }
                 }
-                SavedReviews.save(context, savedKey, savedNodes, data);
                 Log.i(TAG, "Review ready in " + (System.currentTimeMillis() - started) / 1000 + " s");
+            }
+
+            // Every move's mark, worked out once: the review screen uses them, and a saved review
+            // keeps them for the list of brilliant moves the fork's settings shows.
+            String[] marks = new String[totalMoves];
+            for (int i = 0; i < totalMoves; i++) {
+                marks[i] = classify(data.plies[i], i, bookPlies, lichess, fens[i],
+                    boards[i], captures, playedLans);
+            }
+            data.marks = marks;
+            data.sans = new String[totalMoves];
+            for (int i = 0; i < totalMoves; i++) data.sans[i] = playedLans[i] != null ? playedLans[i] : "";
+            if (!fromDisk) {
+                data.white = pgnHeader(pgn, "White");
+                data.black = pgnHeader(pgn, "Black");
+                data.date = pgnHeader(pgn, "Date");
+                data.result = pgnHeader(pgn, "Result");
+                SavedReviews.save(context, savedKey, savedNodes, data);
             }
             // Where Lichess marked a move, chess.com shows Lichess's better move; Stockfish keeps off it.
             if (lichess) GameReview.setLichessReview(fens, data);
@@ -314,19 +332,8 @@ final class LocalAnalysisFlow {
                 boolean isWhite = fens[i] == null || fens[i].indexOf(" b ") < 0;
                 Object color = isWhite ? colorWhite : colorBlack;
 
-                // Lichess marks inaccuracies, mistakes and blunders (a lost forced mate shows as a
-                // Miss); moves of the opening Lichess names are Book and the engine's own best move
-                // is Best, or Great when it was also the only one that held the position. Local
-                // Stockfish marks the rest Excellent or Good, as chess.com would; Lichess's review
-                // leaves them unmarked, as Lichess does.
-                // A recapture is never Great: taking back is the expected move, not the only one.
-                boolean recapture = i > 0 && captures[i - 1] != '.' && playedLan != null
-                    && playedLans[i - 1] != null && playedLan.regionMatches(2, playedLans[i - 1], 2, 2);
-                String classification = ply.miss ? LichessMath.MISS : ply.judgment != null ? ply.judgment
-                    : i < bookPlies ? LichessMath.BOOK
-                    : ply.best ? (great(ply, isWhite, recapture) ? GREAT : LichessMath.BEST)
-                    : lichess ? LichessMath.EXCELLENT
-                    : LichessMath.unjudged(ply.scoreBefore, ply.mateBefore, ply.scoreAfter, ply.mateAfter, isWhite);
+                // The mark was worked out above (see classify) and kept with the saved review.
+                String classification = marks[i];
                 int[] tally = isWhite ? wT : bT;
                 tally[tallyIndex(classification)]++;
 
@@ -364,8 +371,9 @@ final class LocalAnalysisFlow {
                     bestMove = bmConstructor.newInstance(ply.bestMove);
                 }
 
-                // Great is worth stopping on, as the marks Lichess gives are.
-                boolean keyMoment = GREAT.equals(classification) || ply.judgment != null;
+                // A sacrifice or a Great is worth stopping on, as the marks Lichess gives are.
+                boolean keyMoment = BRILLIANT.equals(classification) || GREAT.equals(classification)
+                    || ply.judgment != null;
                 Object scenarios = scConstructor.newInstance(keyMoment, false);
                 positions.add(apConstructor.newInstance(
                     color, playedMove, suggestedMove, bestMove, classification, scenarios
@@ -610,6 +618,50 @@ final class LocalAnalysisFlow {
      * a mark Lichess has no verdict for, so it is ours to work out.
      */
     private static final String GREAT = "greatFind";
+    /** chess.com's Brilliant ("!!"), also a name its AnalysisMoveClassification knows. */
+    private static final String BRILLIANT = "brilliant";
+
+    /**
+     * The mark a move gets, once. Lichess marks inaccuracies, mistakes and blunders (a lost forced
+     * mate shows as a Miss); moves of the opening Lichess names are Book and the engine's own best
+     * move is Brilliant, Great or Best. Local Stockfish marks the rest Excellent or Good, as
+     * chess.com would; Lichess's review leaves them unmarked, as Lichess does.
+     */
+    private static String classify(ReviewData.Ply ply, int i, int bookPlies, boolean lichess,
+                                   String fen, char[] boardBefore, char[] captures, String[] playedLans) {
+        String playedLan = playedLans[i];
+        boolean isWhite = fen == null || fen.indexOf(" b ") < 0;
+        boolean recapture = BoardUtil.isRecapture(i > 0 ? playedLans[i - 1] : null,
+            i > 0 && captures[i - 1] != '.', playedLan);
+        if (ply.miss) return LichessMath.MISS;
+        if (ply.judgment != null) return ply.judgment;
+        if (i < bookPlies) return LichessMath.BOOK;
+        if (ply.best) {
+            double before = winExpectation(ply.scoreBefore, ply.mateBefore);
+            double after = winExpectation(ply.scoreAfter, ply.mateAfter);
+            if (!isWhite) {
+                before = 1 - before;
+                after = 1 - after;
+            }
+            if (brilliant(ply, boardBefore, isWhite, playedLan, recapture, before, after)) return BRILLIANT;
+            return great(ply, isWhite, recapture) ? GREAT : LichessMath.BEST;
+        }
+        return lichess ? LichessMath.EXCELLENT
+            : LichessMath.unjudged(ply.scoreBefore, ply.mateBefore, ply.scoreAfter, ply.mateAfter, isWhite);
+    }
+
+    /**
+     * Whether a move is chess.com's Brilliant: the engine's best move that gives up material for
+     * good, as PrathxmOp's ReviewMath has it (sacrifice && !recapture && winAfter >= 0.50 &&
+     * winBefore < 0.97). The sacrifice is read from the engine's own line after the move, so an
+     * ordinary trade, where the material comes back, is not one.
+     */
+    private static boolean brilliant(ReviewData.Ply ply, char[] boardBefore, boolean isWhite,
+                                     String playedLan, boolean recapture, double before, double after) {
+        if (recapture || playedLan == null || boardBefore == null) return false;
+        if (after < 0.50 || before >= 0.97) return false;
+        return BoardUtil.isSacrifice(boardBefore, isWhite, playedLan, ply.lineAfter, 5);
+    }
 
     /**
      * Whether a move is chess.com's Great: the engine's own best move, and the only one that keeps
@@ -647,6 +699,7 @@ final class LocalAnalysisFlow {
     private static int tallyIndex(String c) {
         switch (c) {
             case LichessMath.BOOK: return 0;
+            case BRILLIANT: return 1;
             case GREAT: return 2;
             case LichessMath.BEST: return 3;
             case LichessMath.GOOD: return 5;
@@ -668,6 +721,20 @@ final class LocalAnalysisFlow {
         if (accuracy >= 70) return LichessMath.INACCURACY;
         if (accuracy >= 55) return LichessMath.MISTAKE;
         return LichessMath.BLUNDER;
+    }
+
+    /** A PGN header value, or null when the game did not have one (chess.com writes "?"). */
+    private static String pgnHeader(String pgn, String tag) {
+        if (pgn == null) return null;
+        String prefix = "[" + tag + " \"";
+        int start = pgn.indexOf(prefix);
+        if (start < 0) return null;
+        int from = start + prefix.length();
+        int end = pgn.indexOf('"', from);
+        if (end < 0) return null;
+        String value = pgn.substring(from, end).trim();
+        if (value.replace("?", "").replace(".", "").trim().isEmpty()) return null;
+        return value;
     }
 
     /** Engine line that starts with {@code first} (never null, never empty). */

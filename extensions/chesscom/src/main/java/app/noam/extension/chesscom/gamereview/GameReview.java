@@ -126,9 +126,9 @@ public final class GameReview {
     /**
      * Whether chess.com's review shows a move type: in a Lichess-style review only Lichess's own,
      * inaccuracies, mistakes and blunders, and chess.com's Book (Lichess's opening), Miss (a lost
-     * forced mate) and, from an engine review, Great, Best, Excellent and Good (Lichess leaves the
-     * moves it doesn't judge unmarked, and never says which of them was best or whether it was the
-     * only one that held the position).
+     * forced mate) and, from an engine review, Brilliant, Great, Best, Excellent and Good (Lichess
+     * leaves the moves it doesn't judge unmarked, and never says which of them was best, whether it
+     * was the only one that held the position, or whether it gave up material).
      */
     public static boolean shows(Object classification) {
         if (!lichessStyle() || !(classification instanceof Enum)) return true;
@@ -137,7 +137,8 @@ public final class GameReview {
         boolean engine = mode() != Mode.LICHESS;
         return name.equals("BOOK") || name.equals("MISS")
             || name.equals("INACCURACY") || name.equals("MISTAKE") || name.equals("BLUNDER")
-            || (engine && (name.equals("GREAT_FIND") || name.equals("GREAT") || name.equals("BEST")
+            || (engine && (name.equals("BRILLIANT")
+                || name.equals("GREAT_FIND") || name.equals("GREAT") || name.equals("BEST")
                 || name.equals("EXCELLENT") || name.equals("GOOD")));
     }
 
@@ -161,18 +162,18 @@ public final class GameReview {
 
     /**
      * In a Lichess-style review: "inaccuracy", "mistake" or "blunder", or "" for a move Lichess does not
-     * mark. Null for Book, Best, Miss, Good and (from Local Stockfish) Excellent, which keep chess.com's
-     * marks, and anywhere else.
+     * mark. Null for Book, Brilliant, Best, Miss, Good and (from Local Stockfish) Excellent, which keep
+     * chess.com's marks, and anywhere else.
      */
     private static String lichessType(Object classification) {
         if (!lichessStyle() || !(classification instanceof Enum)) return null;
         Activity activity = Utils.topActivity();
         if (activity == null || !activity.getClass().getName().equals(REVIEW_SCREEN)) return null;
         String name = ((Enum<?>) classification).name();
-        // Book, Great, Best and Miss keep chess.com's marks; so does Good, also the mark of a game
-        // phase Lichess colors as good (85% or more), and Excellent where it shows (Local Stockfish).
-        if (name.equals("BOOK") || name.equals("GREAT_FIND") || name.equals("GREAT") || name.equals("BEST")
-            || name.equals("GOOD")) return null;
+        // Book, Brilliant, Great, Best and Miss keep chess.com's marks; so does Good, also the mark
+        // of a game phase Lichess colors as good (85% or more), and Excellent where it shows.
+        if (name.equals("BOOK") || name.equals("BRILLIANT") || name.equals("GREAT_FIND")
+            || name.equals("GREAT") || name.equals("BEST") || name.equals("GOOD")) return null;
         if (name.equals("EXCELLENT") && shows(classification)) return null;
         return shows(classification) ? name.toLowerCase(Locale.ROOT) : "";
     }
@@ -293,6 +294,34 @@ public final class GameReview {
     public static void deleteSavedReviews() {
         Context context = Utils.context();
         if (context != null) SavedReviews.clear(context);
+    }
+
+    /** Brilliant moves the fork's own reviews found, across the reviews saved on this phone. */
+    public static final class Brilliants {
+        /** Saved games that had at least one. */
+        public final int games;
+        /** Newest first, each "10.Nxb5 — Morphy – Duke, 1858" (or just the move). */
+        public final java.util.List<String> moves;
+
+        Brilliants(int games, java.util.List<String> moves) {
+            this.games = games;
+            this.moves = moves;
+        }
+    }
+
+    public static Brilliants savedBrilliants() {
+        Context context = Utils.context();
+        java.util.List<String> moves = new java.util.ArrayList<>();
+        int games = 0;
+        if (context != null) {
+            for (SavedReviews.Meta meta : SavedReviews.metas(context)) {
+                if (meta.brilliants.isEmpty()) continue;
+                games++;
+                String game = meta.game();
+                for (String move : meta.brilliants) moves.add(game == null ? move : move + " — " + game);
+            }
+        }
+        return new Brilliants(games, moves);
     }
 
     /** The review runs on the phone, not on chess.com's servers. */
