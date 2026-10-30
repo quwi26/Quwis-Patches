@@ -27,6 +27,9 @@ https://raw.githubusercontent.com/quwi26/Noams-Morphe-Patches-StockfishPlus/main
   more than 100k is rarely worth it on a phone, while 300k is a fraction of a second on a computer.
 - **A benchmark for the computer** in the settings: times those four budgets in a row, with Stockfish's start-up
   (paid once per review) measured separately.
+- **Great moves**, chess.com's “!”: the engine's own best move when it was also the only one that kept the
+  game good (PrathxmOp's `greatFind` rule, on the second-best line's expected points). It needs two lines
+  from the engine, so it has a switch in the settings; Lichess's own reviews are left as Lichess sends them.
 - The patches for other apps (Block Blast, Gboard, Geocaching) are **not** in this bundle.
 
 Everything else is Noam's work, unchanged: chess.com 4.10.18 with arrows in games, board and accent colours,

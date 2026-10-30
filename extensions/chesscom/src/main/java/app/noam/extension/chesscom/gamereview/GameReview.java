@@ -126,8 +126,9 @@ public final class GameReview {
     /**
      * Whether chess.com's review shows a move type: in a Lichess-style review only Lichess's own,
      * inaccuracies, mistakes and blunders, and chess.com's Book (Lichess's opening), Miss (a lost
-     * forced mate) and, from an engine review, Best, Excellent and Good (Lichess leaves the moves
-     * it doesn't judge unmarked, and never says which of them was best).
+     * forced mate) and, from an engine review, Great, Best, Excellent and Good (Lichess leaves the
+     * moves it doesn't judge unmarked, and never says which of them was best or whether it was the
+     * only one that held the position).
      */
     public static boolean shows(Object classification) {
         if (!lichessStyle() || !(classification instanceof Enum)) return true;
@@ -136,7 +137,8 @@ public final class GameReview {
         boolean engine = mode() != Mode.LICHESS;
         return name.equals("BOOK") || name.equals("MISS")
             || name.equals("INACCURACY") || name.equals("MISTAKE") || name.equals("BLUNDER")
-            || (engine && (name.equals("BEST") || name.equals("EXCELLENT") || name.equals("GOOD")));
+            || (engine && (name.equals("GREAT_FIND") || name.equals("GREAT") || name.equals("BEST")
+                || name.equals("EXCELLENT") || name.equals("GOOD")));
     }
 
     // Lichess's own marks in chess.com's review screen: its colors, its ?! ? ?? badges and words.
@@ -167,9 +169,10 @@ public final class GameReview {
         Activity activity = Utils.topActivity();
         if (activity == null || !activity.getClass().getName().equals(REVIEW_SCREEN)) return null;
         String name = ((Enum<?>) classification).name();
-        // Book, Best and Miss keep chess.com's marks; so does Good, also the mark of a game phase
-        // Lichess colors as good (85% or more), and Excellent where it shows (Local Stockfish).
-        if (name.equals("BOOK") || name.equals("BEST") || name.equals("MISS") || name.equals("GOOD")) return null;
+        // Book, Great, Best and Miss keep chess.com's marks; so does Good, also the mark of a game
+        // phase Lichess colors as good (85% or more), and Excellent where it shows (Local Stockfish).
+        if (name.equals("BOOK") || name.equals("GREAT_FIND") || name.equals("GREAT") || name.equals("BEST")
+            || name.equals("GOOD")) return null;
         if (name.equals("EXCELLENT") && shows(classification)) return null;
         return shows(classification) ? name.toLowerCase(Locale.ROOT) : "";
     }
@@ -214,6 +217,23 @@ public final class GameReview {
     private static final String REVIEW_DEPTH = "review_depth";
     /** The computer has its own: a budget the phone can just afford costs it seconds. */
     private static final String REVIEW_DEPTH_LAPTOP = "review_depth_laptop";
+    /** Whether a review looks for chess.com's Great moves, which costs the engine a second line. */
+    private static final String GREAT_MOVES = "review_great";
+
+    /**
+     * Whether a review marks Great moves. It needs the engine's second-best line, so the review asks
+     * Stockfish for two lines (MultiPV 2): no extra time at the same node budget, but the top line
+     * ends a ply or two shallower.
+     */
+    public static boolean greatMoves() {
+        SharedPreferences preferences = Features.preferences();
+        return preferences == null || preferences.getBoolean(GREAT_MOVES, true);
+    }
+
+    public static void setGreatMoves(boolean great) {
+        SharedPreferences preferences = Features.preferences();
+        if (preferences != null) preferences.edit().putBoolean(GREAT_MOVES, great).apply();
+    }
 
     /** How hard Stockfish on this phone looks. */
     public static int reviewDepthIndex() {
@@ -226,7 +246,7 @@ public final class GameReview {
     }
 
     /** How hard Stockfish on the computer looks. */
-    public static int laptopDepthIndex() {
+    public static int computerDepthIndex() {
         return depthIndex(REVIEW_DEPTH_LAPTOP);
     }
 
@@ -243,7 +263,7 @@ public final class GameReview {
 
     /** The budget for a review: the phone's depth, or your computer's when it reviews. */
     static String reviewDepth(Mode mode) {
-        return REVIEW_DEPTHS[mode == Mode.LAPTOP ? laptopDepthIndex() : reviewDepthIndex()];
+        return REVIEW_DEPTHS[mode == Mode.LAPTOP ? computerDepthIndex() : reviewDepthIndex()];
     }
 
     private static final String REVIEW_ENGINES = "review_engines";

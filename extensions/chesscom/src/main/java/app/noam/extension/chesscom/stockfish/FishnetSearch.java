@@ -38,11 +38,12 @@ public final class FishnetSearch {
      * Every position of a game: {@code fens[0]} is the start and {@code fens[i]} the position
      * after {@code i} moves. {@code moves} are the game's UCI moves, or null to send each position
      * as its FEN. {@code nodesPerMove} is the budget as lila gives it (1,000,000 for an analysis a
-     * player asks for), and {@code engines} search side by side. A {@code remote} review searches on
-     * the computer through sf-bridge instead of on the phone.
+     * player asks for), {@code lines} how many moves to keep from each search (2 when the review
+     * marks Great moves, which needs the second-best line), and {@code engines} search side by side.
+     * A {@code remote} review searches on the computer through sf-bridge instead of on the phone.
      */
     public static Engine.Result[] search(Context context, String startFen, List<String> moves, String[] fens,
-                                         long nodesPerMove, int engines, boolean remote, Progress progress)
+                                         long nodesPerMove, int lines, int engines, boolean remote, Progress progress)
         throws Throwable {
         // fishnet's NodeLimit.get spreads the budget over the repeated positions too.
         long nodes = nodesPerMove * CHUNK / (CHUNK + 1);
@@ -78,7 +79,7 @@ public final class FishnetSearch {
                             Engine.Result result = finished(fens[ply]);
                             if (result == null) {
                                 result = engine.analyseGame(startFen, moves != null ? moves.subList(0, ply) : null,
-                                    fens[ply], 0, nodes, 1);
+                                    fens[ply], 0, nodes, Math.max(1, lines));
                                 if (!result.valid()) return;
                             }
                             if (k > 0) results[ply] = result;

@@ -29,6 +29,15 @@ final class ReviewData {
         int depth;
         /** How the game goes on after the move, in UCI. */
         List<String> lineAfter = new ArrayList<>();
+        /**
+         * The engine's second-best line at the position before the move, white POV: the move is only
+         * "great" when the alternative was much worse. NaN when the engine was asked for one line.
+         */
+        float secondScore = Float.NaN;
+
+        boolean hasSecond() {
+            return !Float.isNaN(secondScore);
+        }
     }
 
     Ply[] plies;
@@ -78,6 +87,7 @@ final class ReviewData {
             move.put("bestLine", new JSONArray(ply.bestLine));
             move.put("depth", ply.depth);
             move.put("lineAfter", new JSONArray(ply.lineAfter));
+            if (ply.hasSecond()) move.put("secondScore", (double) ply.secondScore);
             moves.put(move);
         }
         JSONObject json = new JSONObject();
@@ -116,6 +126,7 @@ final class ReviewData {
             ply.bestLine = strings(move.getJSONArray("bestLine"));
             ply.depth = move.getInt("depth");
             ply.lineAfter = strings(move.getJSONArray("lineAfter"));
+            if (move.has("secondScore")) ply.secondScore = (float) move.getDouble("secondScore");
             data.plies[i] = ply;
         }
         data.startBest = json.has("startBest") ? json.getString("startBest") : null;

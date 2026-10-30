@@ -178,6 +178,9 @@ final class LocalAnalysisFlow {
             // Stockfish-safe move list (standard castling notation) + lightweight boards.
             char[][] boards = new char[totalMoves + 1][];
             boards[0] = BoardUtil.parseBoard(startingFen);
+            // What each move took, for telling a recapture from a Great move. '.' when not known.
+            char[] captures = new char[totalMoves];
+            Arrays.fill(captures, '.');
             List<String> engineMoves = new ArrayList<>(totalMoves);
             boolean historyUsable = startingFen != null;
             for (int i = 0; i < totalMoves; i++) {
@@ -189,7 +192,7 @@ final class LocalAnalysisFlow {
                 }
                 engineMoves.add(BoardUtil.normalizeCastling(boards[i], m));
                 char[] next = boards[i].clone();
-                BoardUtil.apply(next, m);
+                captures[i] = BoardUtil.apply(next, m);
                 boards[i + 1] = next;
                 // Cross-check against the app's own position; on any disagreement stop sending
                 // history (FEN-only analysis is still correct, just less informed).
@@ -313,10 +316,15 @@ final class LocalAnalysisFlow {
 
                 // Lichess marks inaccuracies, mistakes and blunders (a lost forced mate shows as a
                 // Miss); moves of the opening Lichess names are Book and the engine's own best move
-                // is Best. Local Stockfish marks the rest Excellent or Good, as chess.com would;
-                // Lichess's review leaves them unmarked, as Lichess does.
+                // is Best, or Great when it was also the only one that held the position. Local
+                // Stockfish marks the rest Excellent or Good, as chess.com would; Lichess's review
+                // leaves them unmarked, as Lichess does.
+                // A recapture is never Great: taking back is the expected move, not the only one.
+                boolean recapture = i > 0 && captures[i - 1] != '.' && playedLan != null
+                    && playedLans[i - 1] != null && playedLan.regionMatches(2, playedLans[i - 1], 2, 2);
                 String classification = ply.miss ? LichessMath.MISS : ply.judgment != null ? ply.judgment
-                    : i < bookPlies ? LichessMath.BOOK : ply.best ? LichessMath.BEST
+                    : i < bookPlies ? LichessMath.BOOK
+                    : ply.best ? (great(ply, isWhite, recapture) ? GREAT : LichessMath.BEST)
                     : lichess ? LichessMath.EXCELLENT
                     : LichessMath.unjudged(ply.scoreBefore, ply.mateBefore, ply.scoreAfter, ply.mateAfter, isWhite);
                 int[] tally = isWhite ? wT : bT;
@@ -356,7 +364,9 @@ final class LocalAnalysisFlow {
                     bestMove = bmConstructor.newInstance(ply.bestMove);
                 }
 
-                Object scenarios = scConstructor.newInstance(ply.judgment != null, false);
+                // Great is worth stopping on, as the marks Lichess gives are.
+                boolean keyMoment = GREAT.equals(classification) || ply.judgment != null;
+                Object scenarios = scConstructor.newInstance(keyMoment, false);
                 positions.add(apConstructor.newInstance(
                     color, playedMove, suggestedMove, bestMove, classification, scenarios
                 ));
@@ -503,8 +513,11 @@ final class LocalAnalysisFlow {
         if (context == null) throw new IOException("Stockfish could not start for the review");
         int total = playedLans.length;
         int engines = remote ? 1 : GameReview.reviewEngines(context);
+        // Two lines when Great moves are marked: the second-best line is how we know the move was
+        // the only one that kept the position good.
+        int lines = GameReview.greatMoves() ? 2 : 1;
         Engine.Result[] results = FishnetSearch.search(context, startingFen, engineMoves, fens, nodesPerMove,
-            engines, remote, step::progress);
+            lines, engines, remote, step::progress);
 
         ReviewData data = new ReviewData();
         int[] depths = new int[total + 1];
@@ -548,6 +561,8 @@ final class LocalAnalysisFlow {
             ply.scoreAfter = after.score;
             ply.mateAfter = after.mate;
             ply.depth = after.depth;
+            // The alternative to the best move, when the engine was asked for two lines.
+            if (before.lineScores.length > 1 && before.moves.size() > 1) ply.secondScore = before.lineScores[1];
             ply.best = (after.over && after.mate != 0)
                 || (bestLan != null && (bestLan.equals(playedNorm) || bestLan.equals(played)));
             // Lichess only judges inaccuracies, mistakes and blunders, and never the engine's own
@@ -591,12 +606,48 @@ final class LocalAnalysisFlow {
     }
 
     /**
+     * chess.com's Great, under the name its AnalysisMoveClassification knows it by ("greatFind"):
+     * a mark Lichess has no verdict for, so it is ours to work out.
+     */
+    private static final String GREAT = "greatFind";
+
+    /**
+     * Whether a move is chess.com's Great: the engine's own best move, and the only one that keeps
+     * the game good. This is PrathxmOp's rule (ReviewMath.classify), which this fork's review is
+     * built on: the second-best line must be worth 15% of the expected points less, the mover must
+     * not already be winning outright (win 0.97), must still be in the game after the move (win
+     * 0.35), and a recapture is never great.
+     */
+    private static boolean great(ReviewData.Ply ply, boolean isWhite, boolean recapture) {
+        if (!ply.hasSecond() || recapture) return false;
+        double before = winExpectation(ply.scoreBefore, ply.mateBefore);
+        double after = winExpectation(ply.scoreAfter, ply.mateAfter);
+        if (!isWhite) {
+            before = 1 - before;
+            after = 1 - after;
+        }
+        double best = winExpectation(ply.scoreBefore, 0);
+        double second = winExpectation(ply.secondScore, 0);
+        double gap = isWhite ? best - second : second - best;
+        return gap >= 0.15 && after >= 0.35 && before <= 0.97;
+    }
+
+    /** Expected points (0..1, white POV) a score is worth: Lichess's model, a mate at either end. */
+    private static double winExpectation(float score, int mate) {
+        if (mate != 0) return mate > 0 ? 1 : 0;
+        // A mate score whose number we were not given (the second line).
+        if (Math.abs(score) >= 90) return score > 0 ? 1 : 0;
+        return LichessMath.winPercent(score, 0) / 100.0;
+    }
+
+    /**
      * Tally slot for a classification, in MovesTally order: book, brilliant, great, best,
      * excellent, good, inaccuracy, mistake, blunder, forced, miss.
      */
     private static int tallyIndex(String c) {
         switch (c) {
             case LichessMath.BOOK: return 0;
+            case GREAT: return 2;
             case LichessMath.BEST: return 3;
             case LichessMath.GOOD: return 5;
             case LichessMath.INACCURACY: return 6;

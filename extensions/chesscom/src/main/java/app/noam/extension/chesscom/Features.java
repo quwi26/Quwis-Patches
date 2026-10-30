@@ -124,7 +124,8 @@ public final class Features {
             "Game Review asks who reviews: chess.com, Lichess's servers (with your Lichess account) or, "
                 + "with Stockfish analysis, Stockfish on your phone. The phone and Lichess both judge moves "
                 + "the Lichess way: ?! ? ??, accuracy and centipawn loss. The phone also marks the moves "
-                + "Lichess leaves unmarked Best, Excellent or Good, as chess.com does. Reviews are saved, so a game opens "
+                + "Lichess leaves unmarked Best, Excellent or Good, as chess.com does, and Great for the one "
+                + "move that was the only one keeping the position good. Reviews are saved, so a game opens "
                 + "straight away the next time.",
             PAGE_GAME_REVIEW, Features::gameReviewPatched),
         new Feature(LIMIT_TOASTS, "Less clutter", "glyph_message_bubble_fill_pair", "Limits as toasts",

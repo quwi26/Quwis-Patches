@@ -480,6 +480,14 @@ public final class MorpheSettingsActivity extends Activity {
         boolean stockfish = Features.stockfishPatched();
         if (stockfish) {
             reviewDepthChoice();
+            list.addView(switchRow("Great moves", "chess.com's “!” for the move that was the only one "
+                + "keeping the position good.", GameReview.greatMoves(), GameReview::setGreatMoves));
+            list.addView(caption("Great needs the engine's second-best line, so a review asks Stockfish "
+                + "for two lines at once (MultiPV 2) instead of one. At the same node budget that costs "
+                + "no extra time, but the best line ends a ply or two shallower — most noticeable at Fast "
+                + "(100,000 nodes a move), barely at all from 300,000 up. It marks Great in Local Stockfish "
+                + "and on your computer; Lichess's own review stays as Lichess sends it, and a review saved "
+                + "earlier keeps the marks it was made with."));
             list.addView(header("Local Stockfish engines"));
             list.addView(segments(new String[]{"Auto", "1", "2", "3", "4"}, GameReview.reviewEnginesSetting(),
                 GameReview::setReviewEngines), cardParams());
@@ -560,7 +568,7 @@ public final class MorpheSettingsActivity extends Activity {
             "Times 100k, 300k, 1M and 5M nodes a move there, start-up kept apart.", this::benchmarkComputer));
 
         list.addView(header("Computer Stockfish depth"));
-        list.addView(segments(GameReview.REVIEW_DEPTH_NAMES, GameReview.laptopDepthIndex(),
+        list.addView(segments(GameReview.REVIEW_DEPTH_NAMES, GameReview.computerDepthIndex(),
             GameReview::setComputerDepthIndex), cardParams());
         list.addView(caption("How hard the computer looks, on its own scale: a budget this phone can just "
             + "afford costs a computer seconds, so Standard (300,000 nodes a move) or Deep (1,000,000) "
