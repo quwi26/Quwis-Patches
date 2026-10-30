@@ -27,7 +27,7 @@ public final class BridgeSettings {
         return host == null ? "" : host.trim();
     }
 
-    /** Takes what people paste: "192.168.1.10:7892", "192.168.1.10", "ws://192.168.1.10:7891". */
+    /** Takes what people paste: "192.168.1.10:7892", "192.168.1.10", or a pasted URL with a scheme. */
     public static void setHost(String address) {
         String host = address == null ? "" : address.trim();
         int scheme = host.indexOf("://");

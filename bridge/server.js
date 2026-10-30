@@ -14,8 +14,8 @@
  * Every connection gets its own Stockfish, so a review running several engines side by side works
  * over the network as it does on the phone.
  *
- * Nothing leaves your network: the bridge listens, the phone connects to it, and there is no
- * outbound traffic anywhere.
+ * Nothing leaves your network: the bridge listens on one port, the phone connects to it, and there
+ * is no outbound traffic anywhere.
  *
  *   node server.js          (Node 18 or newer; no dependencies to install)
  */
@@ -25,15 +25,12 @@
 const { spawn } = require('child_process');
 const crypto = require('crypto');
 const fs = require('fs');
-const http = require('http');
 const net = require('net');
 const os = require('os');
 const path = require('path');
 
-/** The port the patched app connects to. */
+/** The only port: what the patched app connects to. Nothing else listens. */
 const TCP_PORT = Number(process.env.TCP_PORT || 7892);
-/** A plain "is it there?" page for a browser, on another port so it cannot be confused with UCI. */
-const HTTP_PORT = Number(process.env.PORT || 7891);
 const TOKEN_FILE = path.join(__dirname, 'token.txt');
 const SF_PATH = process.env.SF_PATH || path.join(__dirname, 'stockfish.exe');
 /** A connection that never authenticates is dropped, so a port scan does not tie up sockets. */
@@ -144,31 +141,15 @@ const uciServer = net.createServer((socket) => {
 });
 
 uciServer.listen(TCP_PORT, '0.0.0.0', () => {
+  const addresses = [];
+  for (const name of Object.keys(os.networkInterfaces())) {
+    for (const net of os.networkInterfaces()[name] || []) {
+      if (net.family === 'IPv4' && !net.internal) addresses.push(net.address);
+    }
+  }
   console.log(`sf-bridge: UCI over TCP on port ${TCP_PORT}`);
+  for (const address of addresses) console.log(`  on your network: ${address}:${TCP_PORT}  (the address the phone wants)`);
+  console.log(`  cores:           ${os.cpus().length}`);
+  console.log(`  token:           ${TOKEN.slice(0, 8)}…${TOKEN.slice(-6)}   (whole one in ${TOKEN_FILE})`);
+  console.log('Waiting for the phone. Ctrl+C to stop.');
 });
-
-// A page you can open in any browser to see whether the computer is reachable at all. It carries no
-// token and no engine output: only "yes, the bridge is running".
-http
-  .createServer((req, res) => {
-    if (req.url === '/health') {
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ ok: true, bridge: 'sf-bridge', port: TCP_PORT }));
-      return;
-    }
-    res.writeHead(404, { 'Content-Type': 'text/plain' });
-    res.end('sf-bridge: the app talks UCI over TCP, not HTTP. Try /health.');
-  })
-  .listen(HTTP_PORT, '0.0.0.0', () => {
-    const addresses = [];
-    for (const name of Object.keys(os.networkInterfaces())) {
-      for (const net of os.networkInterfaces()[name] || []) {
-        if (net.family === 'IPv4' && !net.internal) addresses.push(net.address);
-      }
-    }
-    console.log(`  health page:     http://localhost:${HTTP_PORT}/health`);
-    for (const address of addresses) console.log(`  on your network: ${address}:${TCP_PORT}  (the address the phone wants)`);
-    console.log(`  cores:           ${os.cpus().length}`);
-    console.log(`  token:           ${TOKEN.slice(0, 8)}…${TOKEN.slice(-6)}   (whole one in ${TOKEN_FILE})`);
-    console.log('Waiting for the phone. Ctrl+C to stop.');
-  });

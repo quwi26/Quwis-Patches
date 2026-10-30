@@ -34,7 +34,6 @@ and sends nothing anywhere. There are no accounts, no telemetry, no dependencies
 
    ```
    sf-bridge: UCI over TCP on port 7892
-     health page:     http://localhost:7891/health
      on your network: 192.168.1.10:7892  (the address the phone wants)
      cores:           12
      token:           3f9c1a2b…8d41e6   (whole one in token.txt)
@@ -96,17 +95,21 @@ Each connection starts its own Stockfish of this machine (a few tenths of a seco
 the whole review, so every move of the game is searched by the same warm engine; it is told to quit
 when the phone hangs up.
 
-Port **7891** only answers `/health` with `{"ok":true,...}`, so you can check from a phone browser
-whether the computer is reachable at all before blaming the app.
+That is the only port the bridge opens. An earlier version also served a `/health` page on 7891 from
+a WebSocket experiment; the app never used it, so it is gone — one listener, one firewall rule.
 
 ## If the phone does not see the computer
 
+The bridge prints a line whenever a connection arrives, so the console tells you which half is
+broken:
+
 1. Both on the same Wi-Fi; turn mobile data off on the phone for the test.
-2. In the phone's browser open `http://<computer's address>:7891/health`. If that fails, it is the
-   firewall rule in step 3, or the router isolating clients — not the app.
-3. "The bridge refused the token" means `token.txt` and the token on the phone differ (typing one
-   character wrong is enough). Copy it again, or delete `token.txt`, restart the bridge and re-enter
-   the new one.
+2. Press **Test the connection** in the app. If it says it could not connect and *nothing* appeared
+   in the bridge's console, the phone never reached the computer: it is the firewall rule in step 3
+   or the router isolating its clients — not the app.
+3. "The bridge refused the token" means `token.txt` and the token on the phone differ (one character
+   wrong is enough). Copy it again, or delete `token.txt`, restart the bridge and re-enter the new
+   one.
 4. Timeouts in the middle of a review usually mean the computer went to sleep. Turn sleep off, or
    keep the bridge window visible.
 5. The computer's address changes when it reconnects to Wi-Fi unless the router reserves one for it
