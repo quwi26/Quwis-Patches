@@ -2,12 +2,12 @@ group = "app.noam"
 
 patches {
     about {
-        name = "Noam's Morphe Patches"
-        description = "My Morphe patches for the apps I use."
-        source = "git@github.com:ImNoammm/Noams-Morphe-Patches.git"
-        author = "ImNoammm"
+        name = "Noam's Morphe Patches Stockfish+"
+        description = "Noam's Morphe patches, plus Game Review on the Stockfish of my laptop."
+        source = "git@github.com:quwi26/Noams-Morphe-Patches.git"
+        author = "ImNoammm, quwi26"
         contact = "na"
-        website = "https://github.com/ImNoammm/Noams-Morphe-Patches"
+        website = "https://github.com/quwi26/Noams-Morphe-Patches"
         license = "GNU General Public License v3.0"
     }
 }
