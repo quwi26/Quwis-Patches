@@ -42,7 +42,7 @@ public final class GameReview {
     private GameReview() {}
 
     /** Who reviews the next game, picked in the review chooser. */
-    enum Mode { CHESSCOM, STOCKFISH, LICHESS }
+    enum Mode { CHESSCOM, STOCKFISH, LAPTOP, LICHESS }
 
     private static final String REVIEW_SCREEN = "com.chess.gamereview.v2.GameReviewActivity";
 
@@ -74,7 +74,8 @@ public final class GameReview {
 
     /** Local Stockfish needs the engine, which comes with Stockfish analysis; without it chess.com reviews. */
     private static Mode usable(Mode chosen) {
-        return chosen == Mode.STOCKFISH && !Features.stockfishPatched() ? Mode.CHESSCOM : chosen;
+        boolean engine = chosen == Mode.STOCKFISH || chosen == Mode.LAPTOP;
+        return engine && !Features.stockfishPatched() ? Mode.CHESSCOM : chosen;
     }
 
     static void setMode(Mode chosen) {
@@ -125,16 +126,17 @@ public final class GameReview {
     /**
      * Whether chess.com's review shows a move type: in a Lichess-style review only Lichess's own,
      * inaccuracies, mistakes and blunders, and chess.com's Book (Lichess's opening), Miss (a lost
-     * forced mate) and, from Local Stockfish only, Best, Excellent and Good (Lichess leaves the
-     * moves it doesn't judge unmarked, and never says which of them was best).
+     * forced mate) and, from an engine review, Best, Excellent and Good (Lichess leaves the moves
+     * it doesn't judge unmarked, and never says which of them was best).
      */
     public static boolean shows(Object classification) {
         if (!lichessStyle() || !(classification instanceof Enum)) return true;
         String name = ((Enum<?>) classification).name();
-        boolean phone = mode() == Mode.STOCKFISH;
+        // Stockfish on the phone or on the laptop: both are ours, and mark the rest as chess.com would.
+        boolean engine = mode() != Mode.LICHESS;
         return name.equals("BOOK") || name.equals("MISS")
             || name.equals("INACCURACY") || name.equals("MISTAKE") || name.equals("BLUNDER")
-            || (phone && (name.equals("BEST") || name.equals("EXCELLENT") || name.equals("GOOD")));
+            || (engine && (name.equals("BEST") || name.equals("EXCELLENT") || name.equals("GOOD")));
     }
 
     // Lichess's own marks in chess.com's review screen: its colors, its ?! ? ?? badges and words.

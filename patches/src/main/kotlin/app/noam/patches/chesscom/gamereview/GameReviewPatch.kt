@@ -98,9 +98,10 @@ val gameReviewPatch = bytecodePatch(
     name = "Unlimited Game Review",
     description = "Game Review asks who reviews the game: chess.com, Lichess's servers (online, with your " +
         "Lichess account) or, with the Stockfish analysis patch, Stockfish on your phone (offline, no daily " +
-        "limit). The phone and Lichess " +
+        "limit) or Stockfish on your laptop over Wi-Fi (much faster, see the bridge in the settings). The phone, " +
+        "the laptop and Lichess " +
         "judge moves the Lichess way (?! inaccuracies, ? mistakes, ?? blunders, accuracy and centipawn " +
-        "loss) in chess.com's own review screen, and the phone marks the moves Lichess leaves unmarked " +
+        "loss) in chess.com's own review screen, and the engines mark the moves Lichess leaves unmarked " +
         "Best, Excellent or Good, as chess.com does. Finished games only; a live game on screen is never analysed.",
 ) {
     compatibleWith(Constants.COMPATIBILITY)

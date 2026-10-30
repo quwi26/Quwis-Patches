@@ -9,17 +9,20 @@ import java.lang.reflect.Modifier;
 
 import app.noam.extension.chesscom.Features;
 import app.noam.extension.chesscom.Utils;
+import app.noam.extension.chesscom.stockfish.BridgeSettings;
 
 /**
- * Game Review asks who reviews the game: chess.com's servers, Stockfish on the phone, or
- * Lichess's servers (the last two mark moves the Lichess way). The app's navigation call is held
- * back while the chooser is open and replayed once a reviewer is picked.
+ * Game Review asks who reviews the game: chess.com's servers, Stockfish on the phone, Stockfish on
+ * the user's laptop (over the local network, sf-bridge), or Lichess's servers (every one of ours
+ * marks moves the Lichess way). The app's navigation call is held back while the chooser is open
+ * and replayed once a reviewer is picked.
  */
 public final class ReviewChooser {
     /** The reviewers on offer: Local Stockfish only when the app was patched with Stockfish analysis (its engine). */
     private static GameReview.Mode[] modes() {
         return Features.stockfishPatched()
-            ? new GameReview.Mode[]{GameReview.Mode.CHESSCOM, GameReview.Mode.STOCKFISH, GameReview.Mode.LICHESS}
+            ? new GameReview.Mode[]{GameReview.Mode.CHESSCOM, GameReview.Mode.STOCKFISH,
+                GameReview.Mode.LAPTOP, GameReview.Mode.LICHESS}
             : new GameReview.Mode[]{GameReview.Mode.CHESSCOM, GameReview.Mode.LICHESS};
     }
 
@@ -27,6 +30,7 @@ public final class ReviewChooser {
         switch (mode) {
             case CHESSCOM: return "Review on chess.com";
             case STOCKFISH: return "Local Stockfish";
+            case LAPTOP: return "Stockfish on my laptop";
             default: return "Analyze with Lichess";
         }
     }
@@ -58,12 +62,17 @@ public final class ReviewChooser {
         AlertDialog dialog = new AlertDialog.Builder(activity, android.R.style.Theme_Material_Dialog_Alert)
             .setTitle("Game Review")
             .setItems(options, (shown, which) -> {
-                if (modes[which] != GameReview.Mode.LICHESS) {
-                    review(modes[which], method, first, second, third);
-                } else if (GameReview.lichessMethod() == null) {
-                    GameReview.askLichessMethod(activity, () -> lichess(activity, method, first, second, third));
+                GameReview.Mode picked = modes[which];
+                if (picked == GameReview.Mode.LICHESS) {
+                    if (GameReview.lichessMethod() == null) {
+                        GameReview.askLichessMethod(activity, () -> lichess(activity, method, first, second, third));
+                    } else {
+                        lichess(activity, method, first, second, third);
+                    }
+                } else if (picked == GameReview.Mode.LAPTOP && !BridgeSettings.configured()) {
+                    askLaptop(activity);
                 } else {
-                    lichess(activity, method, first, second, third);
+                    review(picked, method, first, second, third);
                 }
             })
             .create();
@@ -75,6 +84,19 @@ public final class ReviewChooser {
         GameReview.setMode(mode);
         chosenAt = System.currentTimeMillis();
         replay(method, first, second, third);
+    }
+
+    /**
+     * Stockfish on the laptop needs the laptop: without an address and a token there is nothing to
+     * connect to, so the chooser sends the user to where both are set instead of reviewing nothing.
+     */
+    private static void askLaptop(Activity activity) {
+        new AlertDialog.Builder(activity, android.R.style.Theme_Material_Dialog_Alert)
+            .setTitle("Stockfish on my laptop")
+            .setMessage("Set the laptop's address and the token sf-bridge shows in More → Noam's Patches "
+                + "→ Game Review, then pick it again.")
+            .setPositiveButton("OK", null)
+            .show();
     }
 
     /** Lichess's servers review it in chess.com's screen, or it opens on Lichess's analysis board. */

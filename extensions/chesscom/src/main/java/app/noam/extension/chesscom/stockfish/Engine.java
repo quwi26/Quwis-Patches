@@ -31,7 +31,7 @@ import app.noam.extension.chesscom.Utils;
  * sharing this one: the two features are independently toggleable, and a review's exclusive
  * use of the process for up to a minute would otherwise stall live analysis arrows.
  */
-public final class Engine {
+public class Engine {
     /** Loading the network embedded in the binary takes a few seconds on slow phones. */
     private static final int READY_TIMEOUT_MS = 30_000;
     private static final int SEARCH_TIMEOUT_MS = 60_000;
@@ -103,9 +103,25 @@ public final class Engine {
             ProcessBuilder builder = new ProcessBuilder(binary.getAbsolutePath());
             builder.redirectErrorStream(true);
             process = builder.start();
-            stdin = new PrintWriter(new OutputStreamWriter(process.getOutputStream()), true);
-            stdout = new BufferedReader(new InputStreamReader(process.getInputStream()), 1 << 16);
-            multiPv = -1;
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()), 1 << 16);
+            PrintWriter writer = new PrintWriter(new OutputStreamWriter(process.getOutputStream()), true);
+            return handshake(context, reader, writer);
+        } catch (IOException e) {
+            Utils.logError("Stockfish did not start", e);
+            return failed();
+        }
+    }
+
+    /**
+     * The UCI opening moves on a pipe that is already open: the phone's own process, or (NetEngine)
+     * a socket to the laptop. Threads and hash are sized from the phone unless a subclass says
+     * otherwise.
+     */
+    protected boolean handshake(Context context, BufferedReader reader, PrintWriter writer) {
+        stdout = reader;
+        stdin = writer;
+        multiPv = -1;
+        try {
             send("uci");
             if (!waitFor("uciok")) return failed();
             // Threads before Hash, as Stockfish asks. Half the cores by default, so the phone stays cool and smooth.
@@ -117,16 +133,26 @@ public final class Engine {
             ready = true;
             return true;
         } catch (IOException e) {
-            Utils.logError("Stockfish did not start", e);
+            Utils.logError("Stockfish did not answer UCI", e);
             return failed();
         }
     }
 
     public boolean ready() {
-        if (!ready || process == null) return false;
-        try {
-            process.exitValue();
+        if (!ready) return false;
+        if (!alive()) {
             ready = false;
+            return false;
+        }
+        return true;
+    }
+
+    /** Whether the far end is still there: the process is running, or the socket is open. */
+    protected boolean alive() {
+        Process current = process;
+        if (current == null) return false;
+        try {
+            current.exitValue();
             return false;
         } catch (IllegalThreadStateException running) {
             return true;
@@ -187,9 +213,14 @@ public final class Engine {
         } catch (Throwable ignored) {
             // Gone already.
         }
-        if (process != null) process.destroy();
+        Process current = process;
         process = null;
+        if (current != null) current.destroy();
+        closeTransport();
     }
+
+    /** Hangs up the pipe, when it is not a process the JVM can destroy (NetEngine's socket). */
+    protected void closeTransport() {}
 
     private Result readSearch(int lines, boolean whiteToMove, int targetDepth, Progress progress) throws IOException {
         String[] firstMoves = new String[lines];

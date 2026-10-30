@@ -217,6 +217,8 @@ final class LocalAnalysisFlow {
             // Stockfish, one searched at least as hard).
             final Object progressDepth = depthEnum;
             boolean lichess = reviewer == GameReview.Mode.LICHESS;
+            // Stockfish on the laptop: the same review, searched there over sf-bridge.
+            boolean remote = reviewer == GameReview.Mode.LAPTOP;
             long savedNodes = lichess ? 0 : searchNodes;
             Context context = Utils.context();
             String savedKey = SavedReviews.key(reviewer.name(), startingFen, playedLans);
@@ -235,11 +237,17 @@ final class LocalAnalysisFlow {
                         throw e;
                     }
                 } else {
-                    data = engineReview(startingFen, fens, playedLans, boards, historyUsable ? engineMoves : null,
-                        searchNodes, progress -> {
-                            emitter.ensureActive();
-                            emitter.emit(ipConstructor.newInstance(progress, progressDepth, sourceEnum));
-                        });
+                    try {
+                        data = engineReview(startingFen, fens, playedLans, boards, historyUsable ? engineMoves : null,
+                            searchNodes, remote, progress -> {
+                                emitter.ensureActive();
+                                emitter.emit(ipConstructor.newInstance(progress, progressDepth, sourceEnum));
+                            });
+                    } catch (IOException e) {
+                        // The message says what to check: the laptop's address, its token, sf-bridge running.
+                        Utils.toast(e.getMessage());
+                        throw e;
+                    }
                 }
                 SavedReviews.save(context, savedKey, savedNodes, data);
                 Log.i(TAG, "Review ready in " + (System.currentTimeMillis() - started) / 1000 + " s");
@@ -484,16 +492,18 @@ final class LocalAnalysisFlow {
     /**
      * Stockfish on the phone looks at every position as Lichess's servers do (FishnetSearch: with
      * the moves that led there, so it sees repetitions and the 50-move rule), and the moves are
-     * scored the Lichess way.
+     * scored the Lichess way. On the laptop the same search runs over sf-bridge; it gets one
+     * connection, because its Stockfish is told to use all of the laptop's threads at once.
      */
     private static ReviewData engineReview(String startingFen, String[] fens, String[] playedLans, char[][] boards,
-                                           List<String> engineMoves, long nodesPerMove,
+                                           List<String> engineMoves, long nodesPerMove, boolean remote,
                                            LichessServerReview.Waiting step) throws Throwable {
         Context context = Utils.context();
         if (context == null) throw new IOException("Stockfish could not start for the review");
         int total = playedLans.length;
+        int engines = remote ? 1 : GameReview.reviewEngines(context);
         Engine.Result[] results = FishnetSearch.search(context, startingFen, engineMoves, fens, nodesPerMove,
-            GameReview.reviewEngines(context), step::progress);
+            engines, remote, step::progress);
 
         ReviewData data = new ReviewData();
         int[] depths = new int[total + 1];

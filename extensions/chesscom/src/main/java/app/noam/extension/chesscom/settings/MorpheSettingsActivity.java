@@ -2,6 +2,7 @@ package app.noam.extension.chesscom.settings;
 
 import android.animation.ValueAnimator;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.graphics.Canvas;
@@ -24,6 +25,7 @@ import android.view.ViewGroup;
 import android.view.WindowInsets;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.ImageView;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.ScrollView;
@@ -48,6 +50,8 @@ import app.noam.extension.chesscom.home.HomeLayout;
 import app.noam.extension.chesscom.home.HomeTabs;
 import app.noam.extension.chesscom.lichesspuzzle.LichessPuzzles;
 import app.noam.extension.chesscom.stockfish.Analysis;
+import app.noam.extension.chesscom.stockfish.BridgeSettings;
+import app.noam.extension.chesscom.stockfish.NetEngine;
 import app.noam.extension.chesscom.theme.Accent;
 import app.noam.extension.chesscom.theme.Amoled;
 
@@ -481,6 +485,7 @@ public final class MorpheSettingsActivity extends Activity {
                 + "more memory and battery; Auto runs " + GameReview.reviewEngines(this) + " on this phone. "
                 + "chess.com's own Game Review settings (Chess Engine, Analysis Depth) only change Review on "
                 + "chess.com; its Torch Human engine only runs on chess.com's servers."));
+            renderLaptopBridge();
         }
 
         list.addView(header("Saved reviews"));
@@ -527,6 +532,105 @@ public final class MorpheSettingsActivity extends Activity {
         };
         list.addView(caption(meaning[depth] + " Local Stockfish works offline on this phone. It judges moves "
             + "the Lichess way and marks the rest Best, Excellent or Good, as chess.com does."));
+    }
+
+    /**
+     * Stockfish on the laptop: sf-bridge's address and token, the laptop's own thread count, and a
+     * button that asks the laptop whether it is really there.
+     */
+    private void renderLaptopBridge() {
+        list.addView(header("Stockfish on my laptop"));
+        String host = BridgeSettings.host();
+        String token = BridgeSettings.token();
+        LinearLayout rows = card();
+        list.addView(rows, cardParams());
+        rows.addView(actionRow("Laptop address",
+            host.isEmpty() ? "Not set" : host + ":" + BridgeSettings.port(), this::askLaptopAddress));
+        rows.addView(divider(16));
+        rows.addView(actionRow("Token",
+            token.isEmpty() ? "Not set" : "…" + token.substring(Math.max(0, token.length() - 4)),
+            this::askLaptopToken));
+        rows.addView(divider(16));
+        rows.addView(actionRow("Test the connection",
+            "Connects to the laptop and asks its Stockfish to say hello.", this::testLaptopBridge));
+
+        int[] threadChoices = {0, 2, 4, 6, 8, 12};
+        String[] threadNames = {"Auto", "2", "4", "6", "8", "12"};
+        int selected = 0;
+        for (int i = 1; i < threadChoices.length; i++) {
+            if (threadChoices[i] == BridgeSettings.threads()) selected = i;
+        }
+        list.addView(header("Laptop Stockfish threads"));
+        list.addView(segments(threadNames, selected, index -> BridgeSettings.setThreads(threadChoices[index])),
+            cardParams());
+        list.addView(caption("A review picked as “Stockfish on my laptop” is searched on the computer instead "
+            + "of this phone: sf-bridge there starts Stockfish 19, and the moves come back exactly as this "
+            + "phone's own engine would give them, only much sooner. Both devices need to be on the same "
+            + "Wi-Fi; the address is the laptop's, and the token is the one sf-bridge prints when it starts "
+            + "(token.txt next to it). Auto threads leaves the count to the laptop."));
+    }
+
+    private void askLaptopAddress() {
+        String host = BridgeSettings.host();
+        EditText field = dialogField(host.isEmpty() ? "" : host + ":" + BridgeSettings.port());
+        field.setHint("192.168.0.101:7892");
+        new AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
+            .setTitle("Laptop address")
+            .setView(inset(field))
+            .setPositiveButton("Save", (dialog, which) -> {
+                BridgeSettings.setHost(field.getText().toString());
+                render();
+            })
+            .setNegativeButton("Cancel", null)
+            .show();
+    }
+
+    private void askLaptopToken() {
+        EditText field = dialogField(BridgeSettings.token());
+        field.setHint("the token sf-bridge printed");
+        new AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
+            .setTitle("Bridge token")
+            .setView(inset(field))
+            .setPositiveButton("Save", (dialog, which) -> {
+                BridgeSettings.setToken(field.getText().toString());
+                render();
+            })
+            .setNegativeButton("Cancel", null)
+            .show();
+    }
+
+    /** Asks the laptop from a worker thread: a sleeping laptop would otherwise freeze this screen. */
+    private void testLaptopBridge() {
+        Toast.makeText(this, "Asking the laptop…", Toast.LENGTH_SHORT).show();
+        new Thread(() -> {
+            String problem = NetEngine.ping();
+            runOnUiThread(() -> Toast.makeText(this,
+                problem == null ? "The laptop answered: its Stockfish is ready" : problem,
+                Toast.LENGTH_LONG).show());
+        }, "MorpheBridgeTest").start();
+    }
+
+    /** A text field that stays readable on the dialog's own theme. */
+    private EditText dialogField(String value) {
+        EditText field = new EditText(this);
+        field.setText(value);
+        field.setSingleLine(true);
+        field.setTextColor(TEXT);
+        field.setHintTextColor(TEXT_SECONDARY);
+        GradientDrawable shape = new GradientDrawable();
+        shape.setColor(cardColor);
+        shape.setCornerRadius(dp(10));
+        field.setBackground(shape);
+        field.setPadding(dp(14), dp(12), dp(14), dp(12));
+        return field;
+    }
+
+    private View inset(View view) {
+        LinearLayout wrap = new LinearLayout(this);
+        wrap.setPadding(dp(20), dp(8), dp(20), 0);
+        wrap.addView(view, new LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        return wrap;
     }
 
     private void renderPuzzles() {

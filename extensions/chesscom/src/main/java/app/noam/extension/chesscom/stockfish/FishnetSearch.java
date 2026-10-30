@@ -38,10 +38,12 @@ public final class FishnetSearch {
      * Every position of a game: {@code fens[0]} is the start and {@code fens[i]} the position
      * after {@code i} moves. {@code moves} are the game's UCI moves, or null to send each position
      * as its FEN. {@code nodesPerMove} is the budget as lila gives it (1,000,000 for an analysis a
-     * player asks for), and {@code engines} search side by side.
+     * player asks for), and {@code engines} search side by side. A {@code remote} review searches on
+     * the laptop through sf-bridge instead of on the phone.
      */
     public static Engine.Result[] search(Context context, String startFen, List<String> moves, String[] fens,
-                                         long nodesPerMove, int engines, Progress progress) throws Throwable {
+                                         long nodesPerMove, int engines, boolean remote, Progress progress)
+        throws Throwable {
         // fishnet's NodeLimit.get spreads the budget over the repeated positions too.
         long nodes = nodesPerMove * CHUNK / (CHUNK + 1);
         int last = fens.length - 1;
@@ -64,7 +66,7 @@ public final class FishnetSearch {
         Thread[] workers = new Thread[Math.max(1, Math.min(engines, chunks.size()))];
         for (int w = 0; w < workers.length; w++) {
             workers[w] = new Thread(() -> {
-                Engine engine = new Engine(THREADS, HASH_MB);
+                Engine engine = remote ? new NetEngine() : new Engine(THREADS, HASH_MB);
                 running.add(engine);
                 try {
                     if (!engine.start(context)) return;
@@ -106,7 +108,11 @@ public final class FishnetSearch {
             throw stopped;
         }
         for (Engine.Result result : results) {
-            if (result == null) throw new IOException("Stockfish could not analyse the game");
+            if (result == null) {
+                throw new IOException(remote
+                    ? "The laptop's Stockfish did not answer: check the address, the token and that sf-bridge is running"
+                    : "Stockfish could not analyse the game");
+            }
         }
         return results;
     }
