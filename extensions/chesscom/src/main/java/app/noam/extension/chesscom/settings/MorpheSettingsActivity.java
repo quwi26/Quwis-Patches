@@ -567,7 +567,8 @@ public final class MorpheSettingsActivity extends Activity {
             + "of this phone: sf-bridge there starts Stockfish 19, and the moves come back exactly as this "
             + "phone's own engine would give them, only much sooner. Both devices need to be on the same "
             + "Wi-Fi; the address is the laptop's, and the token is the one sf-bridge prints when it starts "
-            + "(token.txt next to it). Auto threads leaves the count to the laptop."));
+            + "(token.txt next to it). Auto gives Stockfish every core the laptop has — sf-bridge says how "
+            + "many — and 32 MB of hash for each of them."));
     }
 
     private void askLaptopAddress() {

@@ -19,15 +19,19 @@ import app.noam.extension.chesscom.Utils;
  * untouched. Everything above this class (FishnetSearch, LocalAnalysisFlow, the review's marks)
  * cannot tell the two apart — the Result is built the same way from the same info lines.
  *
- * The bridge speaks one line of its own first: it greets with "sf-bridge 1", expects
+ * The bridge speaks one line of its own first: it greets with "sf-bridge 1 cores 8", expects
  * "auth &lt;token&gt;" and answers "auth ok" (or "auth fail" and hangs up). After that it is plain UCI.
  */
 public final class NetEngine extends Engine {
     private static final int CONNECT_TIMEOUT_MS = 5_000;
     private static final int AUTH_TIMEOUT_MS = 8_000;
+    /** When an older bridge does not say: a typical laptop, and half of it for a review. */
+    private static final int UNKNOWN_CORES = 8;
 
     private Socket socket;
     private volatile boolean hungUp;
+    /** The laptop's cores, from the bridge's greeting: what Auto threads and hash are sized for. */
+    private int hostCores = UNKNOWN_CORES;
 
     /** Sized for the laptop: its threads and hash from the settings, or its own when none are set. */
     public NetEngine() {
@@ -60,6 +64,8 @@ public final class NetEngine extends Engine {
 
             String greeting = reader.readLine();
             if (greeting == null) throw new IOException("the bridge said nothing");
+            int cores = coresIn(greeting);
+            if (cores > 0) hostCores = cores;
             writer.println("auth " + BridgeSettings.token());
             String answer = reader.readLine();
             if (!"auth ok".equals(answer)) {
@@ -93,6 +99,32 @@ public final class NetEngine extends Engine {
                 // Already gone.
             }
         }
+    }
+
+    /** Auto on the laptop means every one of its cores: nothing else is using them during a review. */
+    @Override
+    protected int autoThreads(Context context) {
+        return Math.max(1, Math.min(32, hostCores));
+    }
+
+    /** Auto hash on the laptop: 32 MB a core, kept between 128 MB and 1 GB. */
+    @Override
+    protected int autoHashMb(Context context) {
+        return Math.max(128, Math.min(1_024, hostCores * 32));
+    }
+
+    /** The laptop's cores from the bridge's greeting ("sf-bridge 1 cores 8"), or 0 when it names none. */
+    private static int coresIn(String greeting) {
+        String[] parts = greeting.trim().split("\\s+");
+        for (int i = 0; i + 1 < parts.length; i++) {
+            if (!parts[i].equals("cores")) continue;
+            try {
+                return Integer.parseInt(parts[i + 1]);
+            } catch (NumberFormatException ignored) {
+                return 0;
+            }
+        }
+        return 0;
     }
 
     /**

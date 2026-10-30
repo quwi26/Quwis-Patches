@@ -124,10 +124,9 @@ public class Engine {
         try {
             send("uci");
             if (!waitFor("uciok")) return failed();
-            // Threads before Hash, as Stockfish asks. Half the cores by default, so the phone stays cool and smooth.
-            int cores = Runtime.getRuntime().availableProcessors();
-            send("setoption name Threads value " + (threads > 0 ? threads : Math.max(1, Math.min(4, cores / 2))));
-            send("setoption name Hash value " + (hash > 0 ? hash : hashMb(context)));
+            // Threads before Hash, as Stockfish asks.
+            send("setoption name Threads value " + (threads > 0 ? threads : autoThreads(context)));
+            send("setoption name Hash value " + (hash > 0 ? hash : autoHashMb(context)));
             send("isready");
             if (!waitFor("readyok")) return failed();
             ready = true;
@@ -346,6 +345,19 @@ public class Engine {
 
     private static Result empty() {
         return new Result(new ArrayList<>(), 0f, 0, 0, false, new ArrayList<>(), new float[0]);
+    }
+
+    /**
+     * Threads when the settings say Auto: half the phone's cores, so the phone stays cool and
+     * smooth. A review on the laptop has the laptop's cores to spend instead.
+     */
+    protected int autoThreads(Context context) {
+        return Math.max(1, Math.min(4, Runtime.getRuntime().availableProcessors() / 2));
+    }
+
+    /** The transposition table when the settings say Auto: the phone's own memory. */
+    protected int autoHashMb(Context context) {
+        return hashMb(context);
     }
 
     /** The transposition table, sized from the phone's memory. */
