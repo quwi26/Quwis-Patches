@@ -13,7 +13,7 @@ import app.noam.extension.chesscom.stockfish.BridgeSettings;
 
 /**
  * Game Review asks who reviews the game: chess.com's servers, Stockfish on the phone, Stockfish on
- * the user's laptop (over the local network, sf-bridge), or Lichess's servers (every one of ours
+ * the user's own computer (over the local network, sf-bridge), or Lichess's servers (every one of ours
  * marks moves the Lichess way). The app's navigation call is held back while the chooser is open
  * and replayed once a reviewer is picked.
  */
@@ -30,7 +30,7 @@ public final class ReviewChooser {
         switch (mode) {
             case CHESSCOM: return "Review on chess.com";
             case STOCKFISH: return "Local Stockfish";
-            case LAPTOP: return "Stockfish on my laptop";
+            case LAPTOP: return "Stockfish on your computer";
             default: return "Analyze with Lichess";
         }
     }
@@ -70,7 +70,7 @@ public final class ReviewChooser {
                         lichess(activity, method, first, second, third);
                     }
                 } else if (picked == GameReview.Mode.LAPTOP && !BridgeSettings.configured()) {
-                    askLaptop(activity);
+                    askComputer(activity);
                 } else {
                     review(picked, method, first, second, third);
                 }
@@ -87,13 +87,13 @@ public final class ReviewChooser {
     }
 
     /**
-     * Stockfish on the laptop needs the laptop: without an address and a token there is nothing to
+     * Stockfish on the computer needs the computer: without an address and a token there is nothing to
      * connect to, so the chooser sends the user to where both are set instead of reviewing nothing.
      */
-    private static void askLaptop(Activity activity) {
+    private static void askComputer(Activity activity) {
         new AlertDialog.Builder(activity, android.R.style.Theme_Material_Dialog_Alert)
-            .setTitle("Stockfish on my laptop")
-            .setMessage("Set the laptop's address and the token sf-bridge shows in More → Noam's Patches "
+            .setTitle("Stockfish on your computer")
+            .setMessage("Set your computer's address and the token sf-bridge shows in More → Noam's Patches "
                 + "→ Game Review, then pick it again.")
             .setPositiveButton("OK", null)
             .show();

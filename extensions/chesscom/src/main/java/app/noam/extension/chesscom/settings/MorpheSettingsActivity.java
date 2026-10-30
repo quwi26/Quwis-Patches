@@ -487,7 +487,7 @@ public final class MorpheSettingsActivity extends Activity {
                 + "more memory and battery; Auto runs " + GameReview.reviewEngines(this) + " on this phone. "
                 + "chess.com's own Game Review settings (Chess Engine, Analysis Depth) only change Review on "
                 + "chess.com; its Torch Human engine only runs on chess.com's servers."));
-            renderLaptopBridge();
+            renderComputerBridge();
         }
 
         list.addView(header("Saved reviews"));
@@ -537,32 +537,32 @@ public final class MorpheSettingsActivity extends Activity {
     }
 
     /**
-     * Stockfish on the laptop: sf-bridge's address and token, the laptop's own thread count, and a
-     * button that asks the laptop whether it is really there.
+     * Stockfish on the computer: sf-bridge's address and token, your computer's own thread count, and a
+     * button that asks the computer whether it is really there.
      */
-    private void renderLaptopBridge() {
-        list.addView(header("Stockfish on my laptop"));
+    private void renderComputerBridge() {
+        list.addView(header("Stockfish on your computer"));
         String host = BridgeSettings.host();
         String token = BridgeSettings.token();
         LinearLayout rows = card();
         list.addView(rows, cardParams());
-        rows.addView(actionRow("Laptop address",
-            host.isEmpty() ? "Not set" : host + ":" + BridgeSettings.port(), this::askLaptopAddress));
+        rows.addView(actionRow("Computer address",
+            host.isEmpty() ? "Not set" : host + ":" + BridgeSettings.port(), this::askComputerAddress));
         rows.addView(divider(16));
         rows.addView(actionRow("Token",
             token.isEmpty() ? "Not set" : "…" + token.substring(Math.max(0, token.length() - 4)),
-            this::askLaptopToken));
+            this::askComputerToken));
         rows.addView(divider(16));
         rows.addView(actionRow("Test the connection",
-            "Connects to the laptop and asks its Stockfish to say hello.", this::testLaptopBridge));
+            "Connects to the computer and asks its Stockfish to say hello.", this::testComputerBridge));
         rows.addView(divider(16));
-        rows.addView(actionRow("Benchmark the laptop",
-            "Times 100k, 300k, 1M and 5M nodes a move there, start-up kept apart.", this::benchmarkLaptop));
+        rows.addView(actionRow("Benchmark your computer",
+            "Times 100k, 300k, 1M and 5M nodes a move there, start-up kept apart.", this::benchmarkComputer));
 
-        list.addView(header("Laptop Stockfish depth"));
+        list.addView(header("Computer Stockfish depth"));
         list.addView(segments(GameReview.REVIEW_DEPTH_NAMES, GameReview.laptopDepthIndex(),
-            GameReview::setLaptopDepthIndex), cardParams());
-        list.addView(caption("How hard the laptop looks, on its own scale: a budget this phone can just "
+            GameReview::setComputerDepthIndex), cardParams());
+        list.addView(caption("How hard the computer looks, on its own scale: a budget this phone can just "
             + "afford costs a computer seconds, so Standard (300,000 nodes a move) or Deep (1,000,000) "
             + "are sensible there, and Maximum is still a few seconds. The phone has its own depth above; "
             + "both are the same numbers Lichess's servers use."));
@@ -573,23 +573,23 @@ public final class MorpheSettingsActivity extends Activity {
         for (int i = 1; i < threadChoices.length; i++) {
             if (threadChoices[i] == BridgeSettings.threads()) selected = i;
         }
-        list.addView(header("Laptop Stockfish threads"));
+        list.addView(header("Computer Stockfish threads"));
         list.addView(segments(threadNames, selected, index -> BridgeSettings.setThreads(threadChoices[index])),
             cardParams());
-        list.addView(caption("A review picked as “Stockfish on my laptop” is searched on the computer instead "
+        list.addView(caption("A review picked as “Stockfish on your computer” is searched on the computer instead "
             + "of this phone: sf-bridge there starts Stockfish 19, and the moves come back exactly as this "
             + "phone's own engine would give them, only much sooner. Both devices need to be on the same "
-            + "Wi-Fi; the address is the laptop's, and the token is the one sf-bridge prints when it starts "
-            + "(token.txt next to it). Auto gives Stockfish every core the laptop has — sf-bridge says how "
+            + "Wi-Fi; the address is your computer's, and the token is the one sf-bridge prints when it starts "
+            + "(token.txt next to it). Auto gives Stockfish every core the computer has — sf-bridge says how "
             + "many — and 32 MB of hash for each of them."));
     }
 
-    private void askLaptopAddress() {
+    private void askComputerAddress() {
         String host = BridgeSettings.host();
         EditText field = dialogField(host.isEmpty() ? "" : host + ":" + BridgeSettings.port());
-        field.setHint("192.168.0.101:7892");
+        field.setHint("192.168.1.10:7892");
         new AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
-            .setTitle("Laptop address")
+            .setTitle("Computer address")
             .setView(inset(field))
             .setPositiveButton("Save", (dialog, which) -> {
                 BridgeSettings.setHost(field.getText().toString());
@@ -599,7 +599,7 @@ public final class MorpheSettingsActivity extends Activity {
             .show();
     }
 
-    private void askLaptopToken() {
+    private void askComputerToken() {
         EditText field = dialogField(BridgeSettings.token());
         field.setHint("the token sf-bridge printed");
         new AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
@@ -613,23 +613,23 @@ public final class MorpheSettingsActivity extends Activity {
             .show();
     }
 
-    /** Asks the laptop from a worker thread: a sleeping laptop would otherwise freeze this screen. */
-    private void testLaptopBridge() {
-        Toast.makeText(this, "Asking the laptop…", Toast.LENGTH_SHORT).show();
+    /** Asks the computer from a worker thread: a sleeping computer would otherwise freeze this screen. */
+    private void testComputerBridge() {
+        Toast.makeText(this, "Asking the computer…", Toast.LENGTH_SHORT).show();
         new Thread(() -> {
             String problem = NetEngine.ping();
             runOnUiThread(() -> Toast.makeText(this,
-                problem == null ? "The laptop answered: its Stockfish is ready" : problem,
+                problem == null ? "The computer answered: its Stockfish is ready" : problem,
                 Toast.LENGTH_LONG).show());
         }, "MorpheBridgeTest").start();
     }
 
     /**
-     * Times the laptop on the review's four budgets: one connection, one Stockfish, the start-up
+     * Times the computer on the review's four budgets: one connection, one Stockfish, the start-up
      * measured apart because a review pays it once and not for every move.
      */
-    private void benchmarkLaptop() {
-        Toast.makeText(this, "Benchmarking the laptop…", Toast.LENGTH_SHORT).show();
+    private void benchmarkComputer() {
+        Toast.makeText(this, "Benchmarking your computer…", Toast.LENGTH_SHORT).show();
         new Thread(() -> {
             String message;
             try {
@@ -639,7 +639,7 @@ public final class MorpheSettingsActivity extends Activity {
             }
             String result = message;
             runOnUiThread(() -> new AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
-                .setTitle("Laptop Stockfish")
+                .setTitle("Computer Stockfish")
                 .setMessage(result)
                 .setPositiveButton("OK", null)
                 .show());

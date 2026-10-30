@@ -10,7 +10,7 @@ import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 
 /**
- * Times the laptop's Stockfish on the four review budgets, over one connection and one engine, the
+ * Times your computer's Stockfish on the four review budgets, over one connection and one engine, the
  * way a review runs it. Starting Stockfish happens once per review (a review reuses the process for
  * every move of the game), so that start is measured on its own and kept out of the search times.
  */
@@ -44,7 +44,7 @@ public final class BridgeBenchmark {
     public static Report run() throws IOException {
         String host = BridgeSettings.host();
         int port = BridgeSettings.port();
-        if (host.isEmpty()) throw new IOException("Set the laptop's address first");
+        if (host.isEmpty()) throw new IOException("Set your computer's address first");
         if (BridgeSettings.token().isEmpty()) throw new IOException("Set the bridge token first");
 
         long[] millis = new long[BUDGETS.length];

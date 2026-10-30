@@ -39,7 +39,7 @@ public final class FishnetSearch {
      * after {@code i} moves. {@code moves} are the game's UCI moves, or null to send each position
      * as its FEN. {@code nodesPerMove} is the budget as lila gives it (1,000,000 for an analysis a
      * player asks for), and {@code engines} search side by side. A {@code remote} review searches on
-     * the laptop through sf-bridge instead of on the phone.
+     * the computer through sf-bridge instead of on the phone.
      */
     public static Engine.Result[] search(Context context, String startFen, List<String> moves, String[] fens,
                                          long nodesPerMove, int engines, boolean remote, Progress progress)
@@ -110,7 +110,7 @@ public final class FishnetSearch {
         for (Engine.Result result : results) {
             if (result == null) {
                 throw new IOException(remote
-                    ? "The laptop's Stockfish did not answer: check the address, the token and that sf-bridge is running"
+                    ? "The computer's Stockfish did not answer: check the address, the token and that sf-bridge is running"
                     : "Stockfish could not analyse the game");
             }
         }

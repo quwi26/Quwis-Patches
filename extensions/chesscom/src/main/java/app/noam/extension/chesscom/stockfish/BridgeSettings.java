@@ -5,8 +5,8 @@ import android.content.SharedPreferences;
 import app.noam.extension.chesscom.Features;
 
 /**
- * The laptop's Stockfish bridge: the address sf-bridge listens on and the token it was started
- * with. Set in More → Noam's Patches → Game Review; a review on the laptop asks for none of this
+ * The computer's Stockfish bridge: the address sf-bridge listens on and the token it was started
+ * with. Set in More → Noam's Patches → Game Review; a review on the computer asks for none of this
  * if the phone's own Stockfish is picked.
  */
 public final class BridgeSettings {
@@ -20,14 +20,14 @@ public final class BridgeSettings {
 
     private BridgeSettings() {}
 
-    /** The laptop's address on the network, without a scheme or port ("192.168.0.101"). */
+    /** The computer's address on the network, without a scheme or port ("192.168.1.10"). */
     public static String host() {
         SharedPreferences preferences = Features.preferences();
         String host = preferences == null ? "" : preferences.getString(HOST, "");
         return host == null ? "" : host.trim();
     }
 
-    /** Takes what people paste: "192.168.0.101:7892", "192.168.0.101", "ws://192.168.0.101:7891". */
+    /** Takes what people paste: "192.168.1.10:7892", "192.168.1.10", "ws://192.168.1.10:7891". */
     public static void setHost(String address) {
         String host = address == null ? "" : address.trim();
         int scheme = host.indexOf("://");
@@ -66,14 +66,14 @@ public final class BridgeSettings {
         put(TOKEN, token == null ? "" : token.trim());
     }
 
-    /** Whether a review can even try the laptop: an address and a token are both needed. */
+    /** Whether a review can even try the computer: an address and a token are both needed. */
     public static boolean configured() {
         return !host().isEmpty() && !token().isEmpty();
     }
 
     /**
-     * Threads and hash the laptop's Stockfish should use, or 0 for Stockfish's own sizing. The
-     * laptop has the cores and the memory the phone doesn't, so this is the one place a review's
+     * Threads and hash your computer's Stockfish should use, or 0 for Stockfish's own sizing. The
+     * computer has the cores and the memory the phone doesn't, so this is the one place a review's
      * search gets bigger than fishnet's single thread and 16 MB.
      */
     public static int threads() {

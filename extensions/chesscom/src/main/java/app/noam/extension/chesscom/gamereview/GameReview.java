@@ -132,7 +132,7 @@ public final class GameReview {
     public static boolean shows(Object classification) {
         if (!lichessStyle() || !(classification instanceof Enum)) return true;
         String name = ((Enum<?>) classification).name();
-        // Stockfish on the phone or on the laptop: both are ours, and mark the rest as chess.com would.
+        // Stockfish on the phone or on the computer: both are ours, and mark the rest as chess.com would.
         boolean engine = mode() != Mode.LICHESS;
         return name.equals("BOOK") || name.equals("MISS")
             || name.equals("INACCURACY") || name.equals("MISTAKE") || name.equals("BLUNDER")
@@ -212,7 +212,7 @@ public final class GameReview {
     private static final String[] REVIEW_DEPTHS = {"FAST", "STANDARD", "DEEP", "MAXIMUM"};
     public static final String[] REVIEW_DEPTH_NAMES = {"Fast", "Standard", "Deep", "Maximum"};
     private static final String REVIEW_DEPTH = "review_depth";
-    /** The laptop has its own: a budget the phone can just afford costs it seconds. */
+    /** The computer has its own: a budget the phone can just afford costs it seconds. */
     private static final String REVIEW_DEPTH_LAPTOP = "review_depth_laptop";
 
     /** How hard Stockfish on this phone looks. */
@@ -225,12 +225,12 @@ public final class GameReview {
         if (preferences != null) preferences.edit().putInt(REVIEW_DEPTH, index).apply();
     }
 
-    /** How hard Stockfish on the laptop looks. */
+    /** How hard Stockfish on the computer looks. */
     public static int laptopDepthIndex() {
         return depthIndex(REVIEW_DEPTH_LAPTOP);
     }
 
-    public static void setLaptopDepthIndex(int index) {
+    public static void setComputerDepthIndex(int index) {
         SharedPreferences preferences = Features.preferences();
         if (preferences != null) preferences.edit().putInt(REVIEW_DEPTH_LAPTOP, index).apply();
     }
@@ -241,7 +241,7 @@ public final class GameReview {
         return Math.max(0, Math.min(REVIEW_DEPTHS.length - 1, index));
     }
 
-    /** The budget for a review: the phone's depth, or the laptop's when it reviews. */
+    /** The budget for a review: the phone's depth, or your computer's when it reviews. */
     static String reviewDepth(Mode mode) {
         return REVIEW_DEPTHS[mode == Mode.LAPTOP ? laptopDepthIndex() : reviewDepthIndex()];
     }

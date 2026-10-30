@@ -114,7 +114,7 @@ public class Engine {
 
     /**
      * The UCI opening moves on a pipe that is already open: the phone's own process, or (NetEngine)
-     * a socket to the laptop. Threads and hash are sized from the phone unless a subclass says
+     * a socket to the computer. Threads and hash are sized from the phone unless a subclass says
      * otherwise.
      */
     protected boolean handshake(Context context, BufferedReader reader, PrintWriter writer) {
@@ -349,7 +349,7 @@ public class Engine {
 
     /**
      * Threads when the settings say Auto: half the phone's cores, so the phone stays cool and
-     * smooth. A review on the laptop has the laptop's cores to spend instead.
+     * smooth. A review on the computer has your computer's cores to spend instead.
      */
     protected int autoThreads(Context context) {
         return Math.max(1, Math.min(4, Runtime.getRuntime().availableProcessors() / 2));

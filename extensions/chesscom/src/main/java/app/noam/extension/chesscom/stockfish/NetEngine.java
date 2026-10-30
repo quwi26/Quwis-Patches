@@ -14,7 +14,7 @@ import java.nio.charset.StandardCharsets;
 import app.noam.extension.chesscom.Utils;
 
 /**
- * The same Stockfish, running on the laptop instead of the phone: the UCI conversation goes over a
+ * The same Stockfish, running on the computer instead of the phone: the UCI conversation goes over a
  * socket to sf-bridge, which starts a Stockfish per connection and passes every line through
  * untouched. Everything above this class (FishnetSearch, LocalAnalysisFlow, the review's marks)
  * cannot tell the two apart — the Result is built the same way from the same info lines.
@@ -25,15 +25,15 @@ import app.noam.extension.chesscom.Utils;
 public final class NetEngine extends Engine {
     private static final int CONNECT_TIMEOUT_MS = 5_000;
     private static final int AUTH_TIMEOUT_MS = 8_000;
-    /** When an older bridge does not say: a typical laptop, and half of it for a review. */
+    /** When an older bridge does not say: a typical desktop, and half of it for a review. */
     private static final int UNKNOWN_CORES = 8;
 
     private Socket socket;
     private volatile boolean hungUp;
-    /** The laptop's cores, from the bridge's greeting: what Auto threads and hash are sized for. */
+    /** The computer's cores, from the bridge's greeting: what Auto threads and hash are sized for. */
     private int hostCores = UNKNOWN_CORES;
 
-    /** Sized for the laptop: its threads and hash from the settings, or its own when none are set. */
+    /** Sized for the computer: its threads and hash from the settings, or its own when none are set. */
     public NetEngine() {
         super(BridgeSettings.threads(), BridgeSettings.hashMb());
     }
@@ -43,11 +43,11 @@ public final class NetEngine extends Engine {
         String host = BridgeSettings.host();
         int port = BridgeSettings.port();
         if (host.isEmpty()) {
-            Utils.log("Laptop Stockfish: no address set");
+            Utils.log("Computer Stockfish: no address set");
             return false;
         }
         if (BridgeSettings.token().isEmpty()) {
-            Utils.log("Laptop Stockfish: no token set");
+            Utils.log("Computer Stockfish: no token set");
             return false;
         }
         try {
@@ -75,7 +75,7 @@ public final class NetEngine extends Engine {
             opened.setSoTimeout(0);
             return handshake(context, reader, writer);
         } catch (IOException e) {
-            Utils.logError("Laptop Stockfish did not connect to " + host + ":" + port, e);
+            Utils.logError("Computer Stockfish did not connect to " + host + ":" + port, e);
             quit();
             return false;
         }
@@ -101,19 +101,19 @@ public final class NetEngine extends Engine {
         }
     }
 
-    /** Auto on the laptop means every one of its cores: nothing else is using them during a review. */
+    /** Auto on the computer means every one of its cores: nothing else is using them during a review. */
     @Override
     protected int autoThreads(Context context) {
         return Math.max(1, Math.min(32, hostCores));
     }
 
-    /** Auto hash on the laptop: 32 MB a core, kept between 128 MB and 1 GB. */
+    /** Auto hash on the computer: 32 MB a core, kept between 128 MB and 1 GB. */
     @Override
     protected int autoHashMb(Context context) {
         return Math.max(128, Math.min(1_024, hostCores * 32));
     }
 
-    /** The laptop's cores from the bridge's greeting ("sf-bridge 1 cores 8"), or 0 when it names none. */
+    /** The computer's cores from the bridge's greeting ("sf-bridge 1 cores 8"), or 0 when it names none. */
     static int coresIn(String greeting) {
         String[] parts = greeting.trim().split("\\s+");
         for (int i = 0; i + 1 < parts.length; i++) {
@@ -128,14 +128,14 @@ public final class NetEngine extends Engine {
     }
 
     /**
-     * Asks the laptop whether it is there: connects, sends the token and waits for Stockfish's
+     * Asks the computer whether it is there: connects, sends the token and waits for Stockfish's
      * uciok. Null when all is well, otherwise what is wrong, in words the settings screen can show.
      * Called off the UI thread.
      */
     public static String ping() {
         String host = BridgeSettings.host();
         int port = BridgeSettings.port();
-        if (host.isEmpty()) return "Set the laptop's address first";
+        if (host.isEmpty()) return "Set your computer's address first";
         if (BridgeSettings.token().isEmpty()) return "Set the bridge token first";
 
         Socket opened = new Socket();

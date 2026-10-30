@@ -106,8 +106,8 @@ final class LocalAnalysisFlow {
 
         if (Utils.context() == null) return;
 
-        // How hard to look: the depth picked for this reviewer in Noam's Patches (the phone and the
-        // laptop have their own, because a budget the phone can just afford is cheap for a computer).
+        // How hard to look: the depth picked for this reviewer in Noam's Patches. The phone and the
+        // computer have their own, because a budget the phone can just afford is cheap for a computer.
         GameReview.Mode reviewer = GameReview.mode();
         String depth = GameReview.reviewDepth(reviewer);
         long searchNodes = nodesFor(depth);
@@ -218,7 +218,7 @@ final class LocalAnalysisFlow {
             // Stockfish, one searched at least as hard).
             final Object progressDepth = depthEnum;
             boolean lichess = reviewer == GameReview.Mode.LICHESS;
-            // Stockfish on the laptop: the same review, searched there over sf-bridge.
+            // Stockfish on the computer: the same review, searched there over sf-bridge.
             boolean remote = reviewer == GameReview.Mode.LAPTOP;
             long savedNodes = lichess ? 0 : searchNodes;
             Context context = Utils.context();
@@ -245,7 +245,7 @@ final class LocalAnalysisFlow {
                                 emitter.emit(ipConstructor.newInstance(progress, progressDepth, sourceEnum));
                             });
                     } catch (IOException e) {
-                        // The message says what to check: the laptop's address, its token, sf-bridge running.
+                        // The message says what to check: your computer's address, its token, sf-bridge running.
                         Utils.toast(e.getMessage());
                         throw e;
                     }
@@ -493,8 +493,8 @@ final class LocalAnalysisFlow {
     /**
      * Stockfish on the phone looks at every position as Lichess's servers do (FishnetSearch: with
      * the moves that led there, so it sees repetitions and the 50-move rule), and the moves are
-     * scored the Lichess way. On the laptop the same search runs over sf-bridge; it gets one
-     * connection, because its Stockfish is told to use all of the laptop's threads at once.
+     * scored the Lichess way. On the computer the same search runs over sf-bridge; it gets one
+     * connection, because its Stockfish is told to use all of your computer's threads at once.
      */
     private static ReviewData engineReview(String startingFen, String[] fens, String[] playedLans, char[][] boards,
                                            List<String> engineMoves, long nodesPerMove, boolean remote,
