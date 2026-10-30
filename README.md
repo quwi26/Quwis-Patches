@@ -22,8 +22,11 @@ https://raw.githubusercontent.com/quwi26/Noams-Morphe-Patches-StockfishPlus/main
 - **Game Review gets a fourth reviewer: “Stockfish on my laptop.”** Instead of searching on the phone, the
   review is searched by [`sf-bridge`](#stockfish-on-my-laptop) on your computer over the local network: the same
   Stockfish 19, on all of that machine's threads, and the same Lichess-style marks come back. A review that took
-  a minute on the phone takes seconds; the node budget per move (Fast 100k, Standard 300k, Deep 1M, Maximum 5M)
-  is the one from the settings, exactly as on the phone.
+  a minute on the phone takes seconds.
+- **The phone and the laptop have their own depth** (Fast 100k, Standard 300k, Deep 1M, Maximum 5M nodes a move):
+  more than 100k is rarely worth it on a phone, while 300k is a fraction of a second on a computer.
+- **A benchmark for the laptop** in the settings: times those four budgets in a row, with Stockfish's start-up
+  (paid once per review) measured separately.
 - The patches for other apps (Block Blast, Gboard, Geocaching) are **not** in this bundle.
 
 Everything else is Noam's work, unchanged: chess.com 4.10.18 with arrows in games, board and accent colours,
@@ -47,10 +50,14 @@ Then in the app: **More → Noam's Patches → Game Review → Stockfish on my l
 
 - **Laptop address** — `192.168.0.101:7892` (the laptop's address on the same Wi-Fi);
 - **Token** — the one sf-bridge prints when it starts (`token.txt` next to it);
+- **Laptop Stockfish depth** — its own budget, apart from the phone's;
 - **Laptop Stockfish threads** — Auto uses every core the laptop reports, with 32 MB of hash each.
 
-Press **Test the connection**; it should answer “The laptop answered: its Stockfish is ready.” The review
-chooser then offers **Stockfish on my laptop** next to chess.com, Local Stockfish and Lichess.
+Press **Test the connection**; it should answer “The laptop answered: its Stockfish is ready.”
+**Benchmark the laptop** then runs 100k, 300k, 1M and 5M nodes on one position each, over one engine,
+with the start-up time kept separate — on an i5-12450H that is 0.57 s to start and 0.09 / 0.14 / 0.32 /
+1.49 s for the four budgets. The review chooser offers **Stockfish on my laptop** next to chess.com,
+Local Stockfish and Lichess.
 
 The bridge lives outside this repository (Node.js + `stockfish.exe`, `server.js`, `README.md` with the firewall
 rule for TCP 7892). Nothing is sent anywhere else: the phone talks to your laptop on your network only.

@@ -212,11 +212,12 @@ public final class GameReview {
     private static final String[] REVIEW_DEPTHS = {"FAST", "STANDARD", "DEEP", "MAXIMUM"};
     public static final String[] REVIEW_DEPTH_NAMES = {"Fast", "Standard", "Deep", "Maximum"};
     private static final String REVIEW_DEPTH = "review_depth";
+    /** The laptop has its own: a budget the phone can just afford costs it seconds. */
+    private static final String REVIEW_DEPTH_LAPTOP = "review_depth_laptop";
 
+    /** How hard Stockfish on this phone looks. */
     public static int reviewDepthIndex() {
-        SharedPreferences preferences = Features.preferences();
-        int index = preferences == null ? 1 : preferences.getInt(REVIEW_DEPTH, 1);
-        return Math.max(0, Math.min(REVIEW_DEPTHS.length - 1, index));
+        return depthIndex(REVIEW_DEPTH);
     }
 
     public static void setReviewDepthIndex(int index) {
@@ -224,8 +225,25 @@ public final class GameReview {
         if (preferences != null) preferences.edit().putInt(REVIEW_DEPTH, index).apply();
     }
 
-    static String reviewDepth() {
-        return REVIEW_DEPTHS[reviewDepthIndex()];
+    /** How hard Stockfish on the laptop looks. */
+    public static int laptopDepthIndex() {
+        return depthIndex(REVIEW_DEPTH_LAPTOP);
+    }
+
+    public static void setLaptopDepthIndex(int index) {
+        SharedPreferences preferences = Features.preferences();
+        if (preferences != null) preferences.edit().putInt(REVIEW_DEPTH_LAPTOP, index).apply();
+    }
+
+    private static int depthIndex(String key) {
+        SharedPreferences preferences = Features.preferences();
+        int index = preferences == null ? 1 : preferences.getInt(key, 1);
+        return Math.max(0, Math.min(REVIEW_DEPTHS.length - 1, index));
+    }
+
+    /** The budget for a review: the phone's depth, or the laptop's when it reviews. */
+    static String reviewDepth(Mode mode) {
+        return REVIEW_DEPTHS[mode == Mode.LAPTOP ? laptopDepthIndex() : reviewDepthIndex()];
     }
 
     private static final String REVIEW_ENGINES = "review_engines";

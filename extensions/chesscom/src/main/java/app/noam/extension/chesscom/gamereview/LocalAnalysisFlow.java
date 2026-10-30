@@ -106,10 +106,11 @@ final class LocalAnalysisFlow {
 
         if (Utils.context() == null) return;
 
-        // How hard to look: the depth picked on the welcome screens or in Noam's Patches.
-        String depth = GameReview.reviewDepth();
-        long searchNodes = nodesFor(depth);
+        // How hard to look: the depth picked for this reviewer in Noam's Patches (the phone and the
+        // laptop have their own, because a budget the phone can just afford is cheap for a computer).
         GameReview.Mode reviewer = GameReview.mode();
+        String depth = GameReview.reviewDepth(reviewer);
+        long searchNodes = nodesFor(depth);
         long started = System.currentTimeMillis();
         Log.i(TAG, "Review by " + reviewer + (reviewer == GameReview.Mode.LICHESS ? "" : " at " + depth));
         GameReview.clearLichessReview();

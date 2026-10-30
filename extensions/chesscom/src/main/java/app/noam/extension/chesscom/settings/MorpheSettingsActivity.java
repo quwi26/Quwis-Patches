@@ -35,6 +35,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.window.OnBackInvokedDispatcher;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -50,6 +51,7 @@ import app.noam.extension.chesscom.home.HomeLayout;
 import app.noam.extension.chesscom.home.HomeTabs;
 import app.noam.extension.chesscom.lichesspuzzle.LichessPuzzles;
 import app.noam.extension.chesscom.stockfish.Analysis;
+import app.noam.extension.chesscom.stockfish.BridgeBenchmark;
 import app.noam.extension.chesscom.stockfish.BridgeSettings;
 import app.noam.extension.chesscom.stockfish.NetEngine;
 import app.noam.extension.chesscom.theme.Accent;
@@ -553,6 +555,17 @@ public final class MorpheSettingsActivity extends Activity {
         rows.addView(divider(16));
         rows.addView(actionRow("Test the connection",
             "Connects to the laptop and asks its Stockfish to say hello.", this::testLaptopBridge));
+        rows.addView(divider(16));
+        rows.addView(actionRow("Benchmark the laptop",
+            "Times 100k, 300k, 1M and 5M nodes a move there, start-up kept apart.", this::benchmarkLaptop));
+
+        list.addView(header("Laptop Stockfish depth"));
+        list.addView(segments(GameReview.REVIEW_DEPTH_NAMES, GameReview.laptopDepthIndex(),
+            GameReview::setLaptopDepthIndex), cardParams());
+        list.addView(caption("How hard the laptop looks, on its own scale: a budget this phone can just "
+            + "afford costs a computer seconds, so Standard (300,000 nodes a move) or Deep (1,000,000) "
+            + "are sensible there, and Maximum is still a few seconds. The phone has its own depth above; "
+            + "both are the same numbers Lichess's servers use."));
 
         int[] threadChoices = {0, 2, 4, 6, 8, 12};
         String[] threadNames = {"Auto", "2", "4", "6", "8", "12"};
@@ -609,6 +622,42 @@ public final class MorpheSettingsActivity extends Activity {
                 problem == null ? "The laptop answered: its Stockfish is ready" : problem,
                 Toast.LENGTH_LONG).show());
         }, "MorpheBridgeTest").start();
+    }
+
+    /**
+     * Times the laptop on the review's four budgets: one connection, one Stockfish, the start-up
+     * measured apart because a review pays it once and not for every move.
+     */
+    private void benchmarkLaptop() {
+        Toast.makeText(this, "Benchmarking the laptop…", Toast.LENGTH_SHORT).show();
+        new Thread(() -> {
+            String message;
+            try {
+                message = benchmarkText(BridgeBenchmark.run());
+            } catch (IOException e) {
+                message = e.getMessage() == null ? e.toString() : e.getMessage();
+            }
+            String result = message;
+            runOnUiThread(() -> new AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
+                .setTitle("Laptop Stockfish")
+                .setMessage(result)
+                .setPositiveButton("OK", null)
+                .show());
+        }, "MorpheBridgeBenchmark").start();
+    }
+
+    private static String benchmarkText(BridgeBenchmark.Report report) {
+        StringBuilder text = new StringBuilder();
+        text.append(String.format(Locale.ROOT, "Starting Stockfish once: %.2f s%n", report.startupMillis / 1000f));
+        text.append(String.format(Locale.ROOT, "threads %d, hash %d MB%n%n", report.threads, report.hashMb));
+        for (int i = 0; i < BridgeBenchmark.BUDGETS.length; i++) {
+            long nodes = BridgeBenchmark.BUDGETS[i];
+            String label = nodes >= 1_000_000 ? (nodes / 1_000_000) + "M" : (nodes / 1_000) + "k";
+            text.append(String.format(Locale.ROOT, "%-3s nodes a move: %.2f s%n", label, report.millis[i] / 1000f));
+        }
+        text.append("\nThe searches are timed on their own: the start above is paid once for a whole "
+            + "review, not for every move.");
+        return text.toString();
     }
 
     /** A text field that stays readable on the dialog's own theme. */

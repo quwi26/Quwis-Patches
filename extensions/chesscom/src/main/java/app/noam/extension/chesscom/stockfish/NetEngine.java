@@ -114,7 +114,7 @@ public final class NetEngine extends Engine {
     }
 
     /** The laptop's cores from the bridge's greeting ("sf-bridge 1 cores 8"), or 0 when it names none. */
-    private static int coresIn(String greeting) {
+    static int coresIn(String greeting) {
         String[] parts = greeting.trim().split("\\s+");
         for (int i = 0; i + 1 < parts.length; i++) {
             if (!parts[i].equals("cores")) continue;
