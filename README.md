@@ -19,14 +19,6 @@ https://raw.githubusercontent.com/quwi26/Noams-Morphe-Patches-StockfishPlus/main
 
 ## What changed from Noam's
 
-- **Game Review gets a fourth reviewer: “Stockfish on your computer.”** Instead of searching on the phone, the
-  review is searched by [`sf-bridge`](#stockfish-on-your-computer) on your computer over the local network: the same
-  Stockfish 19, on all of that machine's threads, and the same Lichess-style marks come back. A review that took
-  a minute on the phone takes seconds.
-- **The phone and the computer have their own depth** (Fast 100k, Standard 300k, Deep 1M, Maximum 5M nodes a move):
-  more than 100k is rarely worth it on a phone, while 300k is a fraction of a second on a computer.
-- **A benchmark for the computer** in the settings: times those four budgets in a row, with Stockfish's start-up
-  (paid once per review) measured separately.
 - **Great moves**, chess.com's “!”: the engine's own best move when it was also the only one that kept the
   game good (PrathxmOp's `greatFind` rule, on the second-best line's expected points). It needs two lines
   from the engine, so it has a switch in the settings; Lichess's own reviews are left as Lichess sends them.
@@ -35,6 +27,14 @@ https://raw.githubusercontent.com/quwi26/Noams-Morphe-Patches-StockfishPlus/main
   engine's line an ordinary trade is briefly down a piece too, which used to mark quiet moves). It costs
   the engine nothing extra. The settings list the brilliant moves the reviews saved on this phone
   found — chess.com counts its own Insights on its servers, and only for Diamond.
+- **Game Review gets a fourth reviewer: “Stockfish on your computer.”** Instead of searching on the phone, the
+  review is searched by [`sf-bridge`](#stockfish-on-your-computer) on your computer over the local network: the same
+  Stockfish 19, on all of that machine's threads, and the same Lichess-style marks come back. A review that took
+  a minute on the phone takes seconds.
+- **The phone and the computer have their own depth** (Fast 100k, Standard 300k, Deep 1M, Maximum 5M nodes a move):
+  more than 100k is rarely worth it on a phone, while 300k is a fraction of a second on a computer.
+- **A benchmark for the computer** in the settings: times those four budgets in a row, with Stockfish's start-up
+  (paid once per review) measured separately.
 - The patches for other apps (Block Blast, Gboard, Geocaching) are **not** in this bundle.
 
 Everything else is Noam's work, unchanged: chess.com 4.10.18 with arrows in games, board and accent colours,
