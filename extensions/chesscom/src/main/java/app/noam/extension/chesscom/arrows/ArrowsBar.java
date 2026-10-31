@@ -127,6 +127,24 @@ public final class ArrowsBar {
         return ARROWS;
     }
 
+    /** The floating chip's Arrows button (bot games have no Compose bar buttons). */
+    public static void toggle(View screen) {
+        if (screen != null) Arrows.toggleDrawing(screen);
+    }
+
+    /** The floating chip's Clear button. */
+    public static void clearMarks(View screen) {
+        if (screen != null) Arrows.clear(screen);
+    }
+
+    public static boolean isDrawing(View screen) {
+        return screen != null && Arrows.drawing(screen);
+    }
+
+    public static boolean hasMarks(View screen) {
+        return screen != null && Arrows.hasMarks(screen);
+    }
+
     public static Function0<Object> onClear() {
         return CLEAR;
     }

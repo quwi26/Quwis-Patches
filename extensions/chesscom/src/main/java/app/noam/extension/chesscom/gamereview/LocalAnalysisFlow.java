@@ -130,34 +130,68 @@ final class LocalAnalysisFlow {
         emitter.emit(initialProgress);
 
         try {
-            // Parse PGN using the app's native parser
-            Class<?> qClass = Class.forName("com.chess.chessboard.pgn.q");
+            // Parse PGN using the app's native parser. 4.10.18 keeps it in q, 4.10.23 renamed
+            // the class to o; find whichever one has the static parse method.
             Class<?> fenTypeClass = Class.forName("com.chess.chessboard.fen.FenParser$FenType");
             Object fenTypeC = fenTypeClass.getField("c").get(null);
-
-            Method parsePgnMethod = qClass.getMethod("a", String.class, boolean.class, boolean.class, fenTypeClass);
+            Method parsePgnMethod = null;
+            for (String className : new String[]{"com.chess.chessboard.pgn.q", "com.chess.chessboard.pgn.o"}) {
+                try {
+                    Method candidate = Class.forName(className)
+                        .getMethod("a", String.class, boolean.class, boolean.class, fenTypeClass);
+                    if (java.lang.reflect.Modifier.isStatic(candidate.getModifiers())) {
+                        parsePgnMethod = candidate;
+                        break;
+                    }
+                } catch (Throwable ignored) {
+                    // Try the next class.
+                }
+            }
+            if (parsePgnMethod == null) throw new IllegalStateException("The PGN parser was not found");
             Object gameObj = parsePgnMethod.invoke(null, pgn, true, true, fenTypeC);
 
-            Method getMovesMethod;
-            try {
-                getMovesMethod = gameObj.getClass().getMethod("getMoves");
-            } catch (NoSuchMethodException e) {
-                getMovesMethod = gameObj.getClass().getMethod("b");
+            Method getMovesMethod = null;
+            for (String name : new String[]{"getMoves", "b"}) {
+                try {
+                    getMovesMethod = gameObj.getClass().getMethod(name);
+                    break;
+                } catch (NoSuchMethodException ignored) {
+                    // Try the next accessor.
+                }
             }
-            List<?> moves = (List<?>) getMovesMethod.invoke(gameObj);
+            List<?> moves = getMovesMethod != null
+                ? (List<?>) getMovesMethod.invoke(gameObj)
+                : (List<?>) gameObj.getClass().getField("a").get(gameObj);
             int totalMoves = moves.size();
 
-            Method getStartingPositionMethod;
-            try {
-                getStartingPositionMethod = gameObj.getClass().getMethod("getStartingPosition");
-            } catch (NoSuchMethodException e) {
-                getStartingPositionMethod = gameObj.getClass().getMethod("c");
+            Method getStartingPositionMethod = null;
+            for (String name : new String[]{"getStartingPosition", "c"}) {
+                try {
+                    getStartingPositionMethod = gameObj.getClass().getMethod(name);
+                    break;
+                } catch (NoSuchMethodException ignored) {
+                    // Try the next accessor.
+                }
             }
-            Object startingPosition = getStartingPositionMethod.invoke(gameObj);
+            Object startingPosition = getStartingPositionMethod != null
+                ? getStartingPositionMethod.invoke(gameObj)
+                : gameObj.getClass().getField("b").get(gameObj);
             String startingFen = extractFen(startingPosition);
+            if (startingFen == null) {
+                try {
+                    startingFen = extractFen(gameObj.getClass().getField("b").get(gameObj));
+                } catch (Throwable ignored) {
+                    // Keep null; the moves are then derived without a starting board.
+                }
+            }
 
-            Class<?> moveConverterClass = Class.forName("com.chess.chessboard.compengine.MoveConverterKt");
-            Method moveConvertMethod = moveConverterClass.getMethod("b", Class.forName("com.chess.chessboard.l"));
+            Method moveConvertMethod = null;
+            try {
+                moveConvertMethod = Class.forName("com.chess.chessboard.compengine.MoveConverterKt")
+                    .getMethod("b", Class.forName("com.chess.chessboard.l"));
+            } catch (Throwable ignored) {
+                // 4.10.23 renamed the converter; moves are derived from the positions instead.
+            }
 
             // Extract every FEN and played move once.
             String[] fens = new String[totalMoves + 1];
@@ -166,13 +200,30 @@ final class LocalAnalysisFlow {
             for (int i = 0; i < totalMoves; i++) {
                 Object csrmm = moves.get(i);
                 fens[i + 1] = extractFen(getPositionAfter(csrmm));
-                Method getRawMoveMethod;
-                try {
-                    getRawMoveMethod = csrmm.getClass().getMethod("getRawMove");
-                } catch (NoSuchMethodException e) {
-                    getRawMoveMethod = csrmm.getClass().getMethod("a");
+            }
+            if (moveConvertMethod != null) {
+                for (int i = 0; i < totalMoves; i++) {
+                    Object csrmm = moves.get(i);
+                    try {
+                        Method getRawMoveMethod;
+                        try {
+                            getRawMoveMethod = csrmm.getClass().getMethod("getRawMove");
+                        } catch (NoSuchMethodException e) {
+                            getRawMoveMethod = csrmm.getClass().getMethod("a");
+                        }
+                        playedLans[i] = (String) moveConvertMethod.invoke(null, getRawMoveMethod.invoke(csrmm));
+                    } catch (Throwable ignored) {
+                        // Fall back to the position change below.
+                    }
                 }
-                playedLans[i] = (String) moveConvertMethod.invoke(null, getRawMoveMethod.invoke(csrmm));
+            }
+            for (int i = 0; i < totalMoves; i++) {
+                if (playedLans[i] == null && fens[i] != null && fens[i + 1] != null) {
+                    playedLans[i] = BoardUtil.coordinate(
+                        BoardUtil.parseBoard(fens[i]),
+                        BoardUtil.parseBoard(fens[i + 1])
+                    );
+                }
             }
 
             // Stockfish-safe move list (standard castling notation) + lightweight boards.
@@ -297,13 +348,34 @@ final class LocalAnalysisFlow {
             Constructor<?> apConstructor = apClass.getConstructor(colorClass, pmClass, smClass, bmClass, String.class, scClass);
             // PlayedMove: (depth, score, mateIn, moveLan, eval, speech, coachEmotion, skills, skillsHash, boardMarkings)
             // Everything after the first 7 parameters is optional and defaults to null/empty.
-            Constructor<?> pmConstructor = AppTypes.primaryCtor(pmClass);
+            Constructor<?> pmConstructor = null;
+            for (Constructor<?> candidate : pmClass.getConstructors()) {
+                Class<?>[] candidateTypes = candidate.getParameterTypes();
+                // 4.10.23 adds a synthetic (int, String, ...) variant; the real one starts with String.
+                if (candidateTypes.length >= 12 && candidateTypes[0] == String.class) {
+                    pmConstructor = candidate;
+                    break;
+                }
+            }
+            if (pmConstructor == null) pmConstructor = AppTypes.primaryCtor(pmClass);
             Constructor<?> smConstructor = smClass.getConstructor(
                 float.class, Integer.class, String.class, evalClass, List.class, String.class
             );
+            Class<?>[] smTypes = smConstructor.getParameterTypes();
             Constructor<?> bmConstructor = bmClass.getConstructor(String.class);
             Constructor<?> scConstructor = scClass.getConstructor(boolean.class, boolean.class);
-            Constructor<?> evalConstructor = evalClass.getConstructor(List.class, int.class);
+            Constructor<?> evalConstructor = null;
+            for (Constructor<?> candidate : evalClass.getConstructors()) {
+                Class<?>[] parameterTypes = candidate.getParameterTypes();
+                if (parameterTypes.length == 2
+                    && ((parameterTypes[0] == List.class && parameterTypes[1] == int.class)
+                        || (parameterTypes[0] == int.class && parameterTypes[1] == List.class))) {
+                    evalConstructor = candidate;
+                    break;
+                }
+            }
+            if (evalConstructor == null) throw new IllegalStateException("The review eval constructor was not found");
+            boolean evalIntFirst = evalConstructor.getParameterTypes()[0] == int.class;
 
             Object colorWhite = Enum.valueOf((Class<Enum>) colorClass, "WHITE");
             Object colorBlack = Enum.valueOf((Class<Enum>) colorClass, "BLACK");
@@ -319,14 +391,18 @@ final class LocalAnalysisFlow {
             Object startBestMove = null;
             if (data.startBest != null) {
                 List<String> startPv = data.startLine.isEmpty() ? Collections.singletonList(data.startBest) : data.startLine;
-                startSuggestedMove = smConstructor.newInstance(
+                Object[] startSmArgs = new Object[]{
                     data.startScore,
                     data.startMate != 0 ? data.startMate : null,
                     data.startBest,
-                    evalConstructor.newInstance(startPv, pvCutoff(startPv)),
+                    evalValue(evalConstructor, evalIntFirst, startPv, pvCutoff(startPv)),
                     new ArrayList<>(),
-                    null
-                );
+                    null,
+                };
+                for (int k = 0; k < startSmArgs.length && k < smTypes.length; k++) {
+                    startSmArgs[k] = coerce(smTypes[k], startSmArgs[k]);
+                }
+                startSuggestedMove = smConstructor.newInstance(startSmArgs);
                 startBestMove = bmConstructor.newInstance(data.startBest);
             }
             positions.add(apConstructor.newInstance(
@@ -358,9 +434,13 @@ final class LocalAnalysisFlow {
                 pmArgs[1] = ply.scoreAfter;                                           // score
                 pmArgs[2] = playedMateIn;                                             // mateIn
                 pmArgs[3] = safePlayed;                                               // moveLan
-                pmArgs[4] = evalConstructor.newInstance(playedPv, pvCutoff(playedPv)); // eval
+                pmArgs[4] = evalValue(evalConstructor, evalIntFirst, playedPv, pvCutoff(playedPv)); // eval
                 pmArgs[5] = new ArrayList<>();                                        // speech
                 pmArgs[6] = null;                                                     // coachEmotion
+                Class<?>[] pmTypes = pmConstructor.getParameterTypes();
+                for (int k = 0; k < pmArgs.length && k < pmTypes.length; k++) {
+                    pmArgs[k] = coerce(pmTypes[k], pmArgs[k]);
+                }
                 Object playedMove = pmConstructor.newInstance(pmArgs);
 
                 // The better move, when it is known (Lichess names it only for the moves it marks).
@@ -368,14 +448,18 @@ final class LocalAnalysisFlow {
                 Object bestMove = null;
                 if (ply.bestMove != null) {
                     List<String> line = ply.bestLine.isEmpty() ? Collections.singletonList(ply.bestMove) : ply.bestLine;
-                    suggestedMove = smConstructor.newInstance(
+                    Object[] smArgs = new Object[]{
                         ply.scoreBefore,
                         ply.mateBefore != 0 ? ply.mateBefore : null,
                         ply.bestMove,
-                        evalConstructor.newInstance(line, pvCutoff(line)),
+                        evalValue(evalConstructor, evalIntFirst, line, pvCutoff(line)),
                         new ArrayList<>(),
-                        null
-                    );
+                        null,
+                    };
+                    for (int k = 0; k < smArgs.length && k < smTypes.length; k++) {
+                        smArgs[k] = coerce(smTypes[k], smArgs[k]);
+                    }
+                    suggestedMove = smConstructor.newInstance(smArgs);
                     bestMove = bmConstructor.newInstance(ply.bestMove);
                 }
 
@@ -390,11 +474,18 @@ final class LocalAnalysisFlow {
 
             // Tallies
             Class<?> mtClass = types.agd("$Tallies$MovesTally");
-            Constructor<?> mtConstructor = mtClass.getConstructor(
-                int.class, int.class, int.class, int.class, int.class, int.class, int.class, int.class, int.class, int.class, int.class
-            );
-            Object whiteTally = mtConstructor.newInstance(wT[0], wT[1], wT[2], wT[3], wT[4], wT[5], wT[6], wT[7], wT[8], wT[9], wT[10]);
-            Object blackTally = mtConstructor.newInstance(bT[0], bT[1], bT[2], bT[3], bT[4], bT[5], bT[6], bT[7], bT[8], bT[9], bT[10]);
+            Constructor<?> mtConstructor = null;
+            for (Constructor<?> candidate : mtClass.getConstructors()) {
+                Class<?>[] candidateTypes = candidate.getParameterTypes();
+                if (candidateTypes.length < 11) continue;
+                boolean allInts = true;
+                for (Class<?> type : candidateTypes) if (type != int.class) { allInts = false; break; }
+                if (allInts) { mtConstructor = candidate; break; }
+            }
+            if (mtConstructor == null) throw new IllegalStateException("The review tally constructor was not found");
+            int tallyWidth = mtConstructor.getParameterCount();
+            Object whiteTally = mtConstructor.newInstance(tallyArgs(wT, tallyWidth));
+            Object blackTally = mtConstructor.newInstance(tallyArgs(bT, tallyWidth));
 
             Class<?> talliesClass = types.agd("$Tallies");
             Constructor<?> talliesConstructor = talliesClass.getConstructor(mtClass, mtClass, String.class, String.class);
@@ -452,8 +543,24 @@ final class LocalAnalysisFlow {
                 try {
                     int last = Math.min(bookPlies, totalMoves);
                     float openingScore = last == 0 ? data.startScore : data.plies[last - 1].scoreAfter;
-                    openingInfo = openingClass.getConstructor(String.class, String.class, float.class)
-                        .newInstance(opening.name, "", openingScore);
+                    // 4.10.18: (String name, String url, float score); 4.10.23: (name, score, url).
+                    Constructor<?> openingConstructor = null;
+                    for (Constructor<?> candidate : openingClass.getConstructors()) {
+                        Class<?>[] openingTypes = candidate.getParameterTypes();
+                        if (openingTypes.length != 3 || openingTypes[0] != String.class) continue;
+                        boolean scoreMiddle = openingTypes[1] == float.class && openingTypes[2] == String.class;
+                        boolean scoreLast = openingTypes[1] == String.class && openingTypes[2] == float.class;
+                        if (scoreMiddle || scoreLast) {
+                            openingConstructor = candidate;
+                            break;
+                        }
+                    }
+                    if (openingConstructor != null) {
+                        boolean scoreMiddle = openingConstructor.getParameterTypes()[1] == float.class;
+                        openingInfo = scoreMiddle
+                            ? openingConstructor.newInstance(opening.name, openingScore, "")
+                            : openingConstructor.newInstance(opening.name, "", openingScore);
+                    }
                 } catch (Throwable t) {
                     Log.e(TAG, "Could not build OpeningInfo", t);
                 }
@@ -465,7 +572,28 @@ final class LocalAnalysisFlow {
             // gameSummaryAudioUrlHash, gameSummaryCoachEmotion, takeaways, gameResult). Fill by
             // type in declaration order; unknown/optional parameters get null/0/empty.
             Class<?> agdClass = types.agd("");
-            Constructor<?> agdConstructor = AppTypes.primaryCtor(agdClass);
+            Constructor<?> agdConstructor = null;
+            for (Constructor<?> candidate : agdClass.getConstructors()) {
+                Class<?>[] candidateTypes = candidate.getParameterTypes();
+                boolean synthetic = false;
+                boolean hasTallies = false;
+                boolean hasPositions = false;
+                for (Class<?> type : candidateTypes) {
+                    String name = type.getName();
+                    if (name.contains("SerializationConstructorMarker") || name.contains("DefaultConstructorMarker")) {
+                        synthetic = true;
+                        break;
+                    }
+                    if (type == talliesClass) hasTallies = true;
+                    if (type == List.class) hasPositions = true;
+                }
+                if (synthetic || !hasTallies || !hasPositions) continue;
+                // The serialization constructor starts with the seen-fields bitmask (int).
+                if (candidateTypes.length == 0 || candidateTypes[0] != String.class) continue;
+                agdConstructor = candidate;
+                break;
+            }
+            if (agdConstructor == null) agdConstructor = AppTypes.primaryCtor(agdClass);
             Class<?>[] agdTypes = agdConstructor.getParameterTypes();
             Object[] agdArgs = new Object[agdTypes.length];
             int stringSlot = 0;
@@ -770,11 +898,64 @@ final class LocalAnalysisFlow {
         return Math.max(0, Math.min(pv.size(), 8) - 1);
     }
 
+    /** 4.10.23 inserts a "tricky" count after greatFind. */
+    private static Object[] tallyArgs(int[] values, int width) {
+        Object[] args = new Object[width];
+        int extra = width - values.length;
+        int out = 0;
+        for (int i = 0; i < values.length; i++) {
+            if (extra > 0 && i == 3) {
+                args[out++] = 0;
+                extra--;
+            }
+            args[out++] = values[i];
+        }
+        while (out < width) args[out++] = 0;
+        return args;
+    }
+
+    /** Fits a value to a constructor parameter type (4.10.23 changed depth to int). */
+    private static Object coerce(Class<?> type, Object value) {
+        if (value == null || type.isInstance(value)) return value;
+        if (value instanceof Number) {
+            Number number = (Number) value;
+            if (type == int.class || type == Integer.class) return number.intValue();
+            if (type == long.class || type == Long.class) return number.longValue();
+            if (type == float.class || type == Float.class) return number.floatValue();
+            if (type == double.class || type == Double.class) return number.doubleValue();
+        }
+        if (value instanceof String) {
+            String text = ((String) value).trim();
+            try {
+                if (type == int.class || type == Integer.class) return Integer.parseInt(text);
+                if (type == long.class || type == Long.class) return Long.parseLong(text);
+                if (type == float.class || type == Float.class) return Float.parseFloat(text);
+                if (type == double.class || type == Double.class) return Double.parseDouble(text);
+            } catch (NumberFormatException ignored) {
+                // Keep the original value; the constructor call will report it.
+            }
+        }
+        if (type == String.class) return String.valueOf(value);
+        return value;
+    }
+
+    /** 4.10.23's Eval takes (int, List); earlier versions take (List, int). */
+    private static Object evalValue(Constructor<?> constructor, boolean intFirst, List<?> line, int cutoff)
+        throws Exception {
+        return intFirst ? constructor.newInstance(cutoff, line) : constructor.newInstance(line, cutoff);
+    }
+
     private static Object getPositionAfter(Object csrmm) throws Exception {
         try {
             return csrmm.getClass().getMethod("getPositionAfter").invoke(csrmm);
-        } catch (NoSuchMethodException e) {
+        } catch (NoSuchMethodException ignored) {
+            // 4.10.23's PGN move exposes the position after the move as d().
+        }
+        try {
+            // 4.10.23: b() returns the position after the move, d() the position before it.
             return csrmm.getClass().getMethod("b").invoke(csrmm);
+        } catch (NoSuchMethodException ignored) {
+            return csrmm.getClass().getMethod("d").invoke(csrmm);
         }
     }
 

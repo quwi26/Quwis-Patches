@@ -6,10 +6,14 @@ import android.view.Choreographer;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewParent;
+import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.AnimationUtils;
 import android.view.animation.Interpolator;
+import android.view.animation.PathInterpolator;
 
 import java.lang.ref.WeakReference;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -58,6 +62,7 @@ public final class Arcade {
     private static final Map<ViewGroup, ArcadeLayer[]> LAYERS = new WeakHashMap<>();
     private static final List<WeakReference<View>> HOSTS = new ArrayList<>();
     private static Object castlingRook;
+    private static volatile Object dragCancelAnimation;
     private static int hoverSquare = Board.NONE;
 
     private Arcade() {}
@@ -80,6 +85,11 @@ public final class Arcade {
         return "";
     }
 
+    /** Captures the drag-cancel animation when the app builds its settings (4.10.23 has no getter). */
+    public static void onStandardAnimations(Object animations, Object dragCancel) {
+        if (dragCancel != null) dragCancelAnimation = dragCancel;
+    }
+
     /** The board's animation settings: Arcade replaces the move animation with its own timing. */
     public static Object animations(Object standardAnimations) {
         if (standardAnimations == null || !enabled()) return standardAnimations;
@@ -87,16 +97,81 @@ public final class Arcade {
         try {
             Class<?> easingCurve = Class.forName(easingCurveClass());
             Class<?> fixedDuration = Class.forName(fixedDurationClass());
-            Object duration = fixedDuration.getConstructor(long.class).newInstance(MOVE_MS);
-            Object move = easingCurve.getConstructor(Interpolator.class, fixedDuration.getSuperclass())
-                .newInstance(MOVE_INTERPOLATOR, duration);
-            Object dragCancel = standardAnimations.getClass().getMethod(dragCancelGetter()).invoke(standardAnimations);
+            Object duration = fixedDuration(fixedDuration);
+            Object move = easingCurve(easingCurve, fixedDuration, duration);
+            if (move == null) throw new IllegalStateException("No usable easing curve constructor");
+            Object dragCancel = dragCancelAnimation;
+            if (dragCancel == null && !dragCancelGetter().isEmpty()) {
+                dragCancel = standardAnimations.getClass().getMethod(dragCancelGetter()).invoke(standardAnimations);
+            }
+            if (dragCancel == null) dragCancel = move;
             Class<?> animationType = easingCurve.getSuperclass();
             return standardAnimations.getClass().getConstructor(animationType, animationType).newInstance(move, dragCancel);
         } catch (Throwable throwable) {
             Utils.logError("Arcade animation settings failed", throwable);
             return standardAnimations;
         }
+    }
+
+    /** The fixed duration: (long) on 4.10.18, a no-arg holder with a settable millis field later. */
+    private static Object fixedDuration(Class<?> fixedDuration) throws Exception {
+        try {
+            return fixedDuration.getConstructor(long.class).newInstance(MOVE_MS);
+        } catch (NoSuchMethodException missing) {
+            Object duration = fixedDuration.getDeclaredConstructor().newInstance();
+            for (Field field : fixedDuration.getDeclaredFields()) {
+                if (field.getType() != long.class || java.lang.reflect.Modifier.isStatic(field.getModifiers())) continue;
+                try {
+                    field.setAccessible(true);
+                    field.setLong(duration, MOVE_MS);
+                } catch (Throwable ignored) {
+                    // Keep the class's own default.
+                }
+                break;
+            }
+            return duration;
+        }
+    }
+
+    /** Builds the interpolated animation from whichever constructor this version has. */
+    private static Object easingCurve(Class<?> easingCurve, Class<?> fixedDuration, Object duration) {
+        for (Constructor<?> constructor : easingCurve.getConstructors()) {
+            Class<?>[] types = constructor.getParameterTypes();
+            if (types.length < 2) continue;
+            if (!types[1].isInstance(duration) && types[1] != fixedDuration.getSuperclass()) continue;
+            Object[] args = new Object[types.length];
+            args[1] = duration;
+            boolean usable = true;
+            for (int i = 0; i < types.length; i++) {
+                if (i == 1) continue;
+                Class<?> type = types[i];
+                if (type == Interpolator.class) {
+                    args[i] = MOVE_INTERPOLATOR;
+                } else if (type == PathInterpolator.class) {
+                    args[i] = new PathInterpolator(0.25f, 0.1f, 0.25f, 1f);
+                } else if (type == AccelerateDecelerateInterpolator.class) {
+                    args[i] = new AccelerateDecelerateInterpolator();
+                } else if (type == boolean.class) {
+                    args[i] = false;
+                } else if (type == int.class) {
+                    args[i] = 0;
+                } else if (type == long.class) {
+                    args[i] = MOVE_MS;
+                } else if (type.isEnum()) {
+                    args[i] = type.getEnumConstants()[0];
+                } else {
+                    usable = false;
+                    break;
+                }
+            }
+            if (!usable) continue;
+            try {
+                return constructor.newInstance(args);
+            } catch (Throwable ignored) {
+                // Try the next constructor.
+            }
+        }
+        return null;
     }
 
     /** The app's "Dynamic" style check: off while Arcade draws the effects. */

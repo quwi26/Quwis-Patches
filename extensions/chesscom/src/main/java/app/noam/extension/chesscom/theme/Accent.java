@@ -59,6 +59,18 @@ public final class Accent {
         return enabled() ? color() : CHESS_GREEN;
     }
 
+    /**
+     * 4.10.23 packs palette colours with a helper that shifts the ARGB into a Compose colour.
+     * The palette fields are read directly, so the accent is applied while they are built.
+     */
+    public static long pack(long packed) {
+        int color = (int) packed;
+        int shade = -1;
+        for (int i = 0; i < GREENS.length && shade < 0; i++) if (color == GREENS[i]) shade = i;
+        if (!enabled() || shade < 0) return packed << 32;
+        return ((long) shade(shade) & 0xFFFFFFFFL) << 32;
+    }
+
     /** A shade of the green palette (0 = green25, 5 = green300, 11 = green900), as a Compose colour. */
     public static long palette(long original, int shade) {
         if (!enabled() || shade < 0 || shade >= SHADES.length) return original;

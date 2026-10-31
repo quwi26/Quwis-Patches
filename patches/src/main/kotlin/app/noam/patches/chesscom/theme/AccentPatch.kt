@@ -13,6 +13,7 @@ import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.WideLiteralInstruction
 import com.android.tools.smali.dexlib2.iface.reference.FieldReference
+import com.android.tools.smali.dexlib2.iface.reference.MethodReference
 
 private const val ACCENT = "${Constants.EXTENSION_PACKAGE}/theme/Accent;"
 
@@ -59,7 +60,24 @@ val accentPatch = bytecodePatch(
                 }
             }
         }
-        if (shades.size != GREENS.size) throw PatchException("Found ${shades.size} of ${GREENS.size} greens")
+        if (shades.size < GREENS.size - 2 || shades.values.none { it == 5 }) {
+            throw PatchException("Found ${shades.size} of ${GREENS.size} greens")
+        }
+
+        // 4.10.23 packs every palette colour through one (J)J helper in <clinit>.
+        var converter: MethodReference? = null
+        var lastLiteral: Long? = null
+        paletteClass.methods.single { it.name == "<clinit>" }.implementation!!.instructions.forEach { instruction ->
+            if (instruction is WideLiteralInstruction) lastLiteral = instruction.wideLiteral
+            val reference = (instruction as? ReferenceInstruction)?.reference as? MethodReference
+            if (converter == null && reference != null && instruction.opcode == Opcode.INVOKE_STATIC &&
+                reference.returnType == "J" &&
+                reference.parameterTypes.map { type -> type.toString() } == listOf("J") &&
+                GREENS.contains(lastLiteral)
+            ) {
+                converter = reference
+            }
+        }
 
         var hooked = 0
         paletteClass.methods.forEach { method ->
@@ -80,6 +98,23 @@ val accentPatch = bytecodePatch(
             )
             hooked++
         }
-        if (hooked == 0) throw PatchException("No green palette getters were found")
+        if (hooked == 0) {
+            // 4.10.23: no getters, colours are built once in <clinit>.
+            val reference = converter ?: throw PatchException("The palette converter was not found")
+            mutableClassDefBy(reference.definingClass).methods.single {
+                it.name == reference.name && it.returnType == "J" &&
+                    it.parameterTypes.map { type -> type.toString() } == listOf("J") &&
+                    it.implementation != null
+            }.apply {
+                addInstructions(
+                    0,
+                    """
+                        invoke-static { p0, p1 }, $ACCENT->pack(J)J
+                        move-result-wide v0
+                        return-wide v0
+                    """,
+                )
+            }
+        }
     }
 }

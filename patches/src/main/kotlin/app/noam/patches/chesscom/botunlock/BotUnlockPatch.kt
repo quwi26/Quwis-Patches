@@ -29,8 +29,8 @@ val botUnlockPatch = bytecodePatch(
     execute {
         markFeaturePatched("botUnlockPatched")
 
-        // Bot.PersonalityBot.i() -> boolean (canPlay)
-        BotPersonalityBotGetCanPlayFingerprint.method.apply {
+        // Bot.PersonalityBot.i() -> boolean (canPlay). Removed (inlined) in 4.10.23.
+        BotPersonalityBotGetCanPlayFingerprint.matchOrNull()?.method?.apply {
             addInstructionsWithLabels(
                 0,
                 """
@@ -44,8 +44,8 @@ val botUnlockPatch = bytecodePatch(
             )
         }
 
-        // Bot.PersonalityBot.E() -> boolean (requiresAccountActivation)
-        BotPersonalityBotGetRequiresActivationFingerprint.method.apply {
+        // Bot.PersonalityBot.E() -> boolean (requiresAccountActivation). Removed in 4.10.23.
+        BotPersonalityBotGetRequiresActivationFingerprint.matchOrNull()?.method?.apply {
             addInstructionsWithLabels(
                 0,
                 """

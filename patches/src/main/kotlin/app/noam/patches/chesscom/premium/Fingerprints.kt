@@ -48,7 +48,6 @@ internal object HomeToolbarStateToStringFingerprint : Fingerprint(
  */
 internal object SessionStoreGetPremiumStatusFingerprint : Fingerprint(
     definingClass = "Lcom/chess/net/v1/users/SessionStore;",
-    name = "K",
     parameters = listOf(),
     returnType = "Lcom/chess/entities/PremiumStatus;",
 )

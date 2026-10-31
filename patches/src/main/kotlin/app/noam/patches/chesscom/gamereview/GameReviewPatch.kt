@@ -132,7 +132,9 @@ val gameReviewPatch = bytecodePatch(
         // board's other badges are not drawn. The rows stay in the data, as the overview looks
         // each one up and fails on a missing one.
         val classification = "Lcom/chess/compengine/AnalysisMoveClassification;"
-        val overview = mutableClassDefBy("Lcom/chess/gamereview/ui/GameReviewOverviewScreenKt;")
+        val overview = mutableClassDefByOrNull("Lcom/chess/gamereview/ui/GameReviewOverviewScreenKt;")
+        // 4.10.23 rewrote the overview; its rows and badges are skipped there.
+        if (overview != null) {
         val overviewModel = "Lcom/chess/gamereview/ui/u1;"
         val tallyRow = overview.methods.singleOrNull { method ->
             AccessFlags.STATIC.isSet(method.accessFlags) && method.returnType == "V" &&
@@ -172,9 +174,12 @@ val gameReviewPatch = bytecodePatch(
                 ExternalLabel("morphe_folded", getInstruction(0)),
             )
         }
+        }
 
         // In a Lichess-style review chess.com's mark lookups (color, phrase, icon per move type) answer
         // with Lichess's own; everywhere else they answer as before.
+        // 4.10.23 inlines the mark resources; the lookups are skipped there.
+        if (mutableClassDefByOrNull("Lcom/chess/colors/a;") != null) {
         val marks = mutableClassDefBy("Lcom/chess/features/analysis/d;").methods.filter { method ->
             AccessFlags.STATIC.isSet(method.accessFlags) && method.returnType == "I" &&
                 method.parameterTypes.map { it.toString() } == listOf(classification)
@@ -199,6 +204,7 @@ val gameReviewPatch = bytecodePatch(
                 """,
                 ExternalLabel("morphe_chess_mark", method.getInstruction(0)),
             )
+        }
         }
 
         // The five quota/permission flags Game Review's UI reads before it will render full

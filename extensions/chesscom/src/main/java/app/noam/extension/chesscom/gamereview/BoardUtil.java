@@ -318,4 +318,43 @@ public final class BoardUtil {
         }
         return false;
     }
+
+    /**
+     * The UCI move between two consecutive boards, for app versions whose move converter was
+     * renamed. Castling is the king moving two files; promotions keep the new piece's letter.
+     */
+    public static String coordinate(char[] before, char[] after) {
+        if (before == null || after == null) return null;
+        // Castling: the king ends two files away on the same rank. chess.com's LAN is
+        // "king takes own rook" (e1h1 / e1a1); normalizeCastling converts it for Stockfish.
+        for (int from = 0; from < 64; from++) {
+            char king = before[from];
+            if (king != 'K' && king != 'k') continue;
+            for (int to = 0; to < 64; to++) {
+                if (after[to] != king || from / 8 != to / 8) continue;
+                int fileDelta = (to % 8) - (from % 8);
+                if (Math.abs(fileDelta) != 2) continue;
+                int rookFile = fileDelta > 0 ? 7 : 0;
+                return squareName(from) + squareName((from / 8) * 8 + rookFile);
+            }
+        }
+        // Normal, capture, en passant or promotion: one piece lands on a changed square.
+        for (int to = 0; to < 64; to++) {
+            char mover = after[to];
+            if (mover == '.' || mover == before[to]) continue;
+            char lower = Character.toLowerCase(mover);
+            for (int from = 0; from < 64; from++) {
+                char piece = before[from];
+                if (piece == '.' || after[from] != '.') continue;
+                char lowerPiece = Character.toLowerCase(piece);
+                boolean samePiece = lowerPiece == lower;
+                boolean promotion = lowerPiece == 'p' && lower != 'p' && (to / 8 == 0 || to / 8 == 7);
+                if (!samePiece && !promotion) continue;
+                String move = squareName(from) + squareName(to);
+                if (promotion) move += lower;
+                return move;
+            }
+        }
+        return null;
+    }
 }

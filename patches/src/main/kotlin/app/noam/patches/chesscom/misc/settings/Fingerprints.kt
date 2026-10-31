@@ -9,3 +9,13 @@ internal object MoreMenuStateToStringFingerprint : Fingerprint(
     parameters = listOf(),
     strings = listOf("MoreMenuUiState(items="),
 )
+
+/** 4.10.23's More tap handler: a Compose function reference instead of MoreViewModel. */
+internal object HomeMoreMenuClickFingerprint : Fingerprint(
+    returnType = "V",
+    parameters = listOf("Lcom/chess/home/more/MoreMenuItemKey;"),
+    custom = { _, classDef ->
+        classDef.superclass == "Lkotlin/jvm/internal/FunctionReferenceImpl;" &&
+            classDef.type.startsWith("Lcom/chess/home/more/HomeMoreScreen")
+    },
+)

@@ -82,6 +82,10 @@ val boardColorsPatch = bytecodePatch(
         val constructor = theme.methods.filter {
             it.name == "<init>" && it.parameterTypes.firstOrNull()?.toString() == backgroundType
         }.maxByOrNull { it.parameterTypes.size } ?: throw PatchException("The board theme constructor was not found")
+        val backgroundGetter = theme.methods.singleOrNull {
+            it.parameterTypes.isEmpty() && it.returnType == backgroundType
+        }
+        if (backgroundGetter != null) {
         val firstParameter = constructor.implementation!!.registerCount - constructor.parameterTypes.size
         fun fieldFromParameter(index: Int): FieldReference = constructor.implementation!!.instructions.firstNotNullOfOrNull {
             ((it as? ReferenceInstruction)?.reference as? FieldReference)?.takeIf { _ ->
@@ -99,9 +103,25 @@ val boardColorsPatch = bytecodePatch(
                 } == true
         }
 
-        theme.methods.single { it.parameterTypes.isEmpty() && it.returnType == backgroundType }
-            .filterReturn("$BOARD_COLORS->background(Ljava/lang/Object;)Ljava/lang/Object;", backgroundType)
+        backgroundGetter.filterReturn("$BOARD_COLORS->background(Ljava/lang/Object;)Ljava/lang/Object;", backgroundType)
         getterOf(darkCoordinates).filterReturn("$BOARD_COLORS->darkSquareCoordinates(I)I")
         getterOf(lightCoordinates).filterReturn("$BOARD_COLORS->lightSquareCoordinates(I)I")
+        } else {
+            // 4.10.23 inlined the getters; replace the values where the theme is built.
+            constructor.apply {
+                addInstructions(
+                    0,
+                    """
+                        invoke-static/range { p1 .. p1 }, $BOARD_COLORS->background(Ljava/lang/Object;)Ljava/lang/Object;
+                        move-result-object p1
+                        check-cast p1, $backgroundType
+                        invoke-static { p2 }, $BOARD_COLORS->darkSquareCoordinates(I)I
+                        move-result p2
+                        invoke-static { p3 }, $BOARD_COLORS->lightSquareCoordinates(I)I
+                        move-result p3
+                    """,
+                )
+            }
+        }
     }
 }

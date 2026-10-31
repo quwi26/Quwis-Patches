@@ -91,19 +91,26 @@ val settingsPatch = bytecodePatch(
         )
 
         // Its tap opens Noam's Patches; the app handles every other row.
-        mutableClassDefBy(MORE_VIEW_MODEL).methods.single {
-            it.returnType == "V" && it.parameterTypes.map { type -> type.toString() } == listOf(MORE_KEY)
-        }.apply {
-            addInstructionsWithLabels(
-                0,
-                """
-                    invoke-static/range { p1 .. p1 }, $MORE_ENTRY->onClick(Ljava/lang/Object;)Z
-                    move-result v0
-                    if-eqz v0, :morphe_more_rows
-                    return-void
-                """,
-                ExternalLabel("morphe_more_rows", getInstruction(0)),
-            )
+        // 4.10.18 handles taps in MoreViewModel; 4.10.23 moved them into a Compose lambda.
+        val legacyViewModel = mutableClassDefByOrNull(MORE_VIEW_MODEL)
+        val clickMethod = if (legacyViewModel != null) {
+            legacyViewModel.methods.single {
+                it.returnType == "V" && it.parameterTypes.map { type -> type.toString() } == listOf(MORE_KEY)
+            }
+        } else {
+            mutableClassDefBy(HomeMoreMenuClickFingerprint.originalClassDef).methods.single {
+                it.returnType == "V" && it.parameterTypes.map { type -> type.toString() } == listOf(MORE_KEY)
+            }
         }
+        clickMethod.addInstructionsWithLabels(
+            0,
+            """
+                invoke-static/range { p1 .. p1 }, $MORE_ENTRY->onClick(Ljava/lang/Object;)Z
+                move-result v0
+                if-eqz v0, :morphe_more_rows
+                return-void
+            """,
+            ExternalLabel("morphe_more_rows", clickMethod.getInstruction(0)),
+        )
     }
 }

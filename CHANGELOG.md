@@ -1,3 +1,15 @@
+# [1.6.13](https://github.com/quwi26/Noams-Morphe-Patches-StockfishPlus/compare/v1.6.12...v1.6.13) (2026-10-31)
+
+### New Features
+
+* **Chess.com:** chess.com 4.10.23 is supported next to 4.10.18, with every patch in this bundle working on either version
+* **Chess.com:** in 4.10.23 bot games, where the bar takes no buttons, a small chip over the board switches Arrows and clears the marks
+
+### Improvements
+
+* **Chess.com:** the engine review and the local Stockfish analysis read 4.10.23's renamed PGN parser, position accessors, move converter and review data classes
+* **Chess.com:** the manager's changes button now shows this changelog instead of a single description
+
 # [1.6.12](https://github.com/quwi26/Noams-Morphe-Patches-StockfishPlus/compare/v1.6.11...v1.6.12) (2026-10-31)
 
 ### New Features

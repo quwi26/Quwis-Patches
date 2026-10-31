@@ -95,27 +95,46 @@ val amoledPatch = bytecodePatch(
         }
         val (shadeClass, shadeMethod) = shades.singleOrNull()
             ?: throw PatchException("Expected one background shade, found ${shades.size}")
-        mutableClassDefBy(shadeClass).methods.single {
+        val shade = mutableClassDefBy(shadeClass).methods.single {
             it.name == shadeMethod.name && it.parameterTypes == shadeMethod.parameterTypes && it.returnType == "V"
-        }.apply {
-            addInstructionsWithLabels(
-                0,
-                """
-                    invoke-static { }, $AMOLED->enabled()Z
-                    move-result v0
-                    if-eqz v0, :morphe_shade
-                    return-void
-                """,
-                ExternalLabel("morphe_shade", getInstruction(0)),
-            )
         }
+        // 4.10.18 keeps the shade in a private helper of the modifier; 4.10.23 inlined it into
+        // the modifier's draw method, which draws the screen's content after the gradient.
+        // Skipping that whole method hides the content, so only skip the gradient there.
+        val scopeType = shadeMethod.parameterTypes.single().toString()
+        val drawContent = shadeMethod.implementation!!.instructions.asSequence()
+            .mapNotNull { (it as? ReferenceInstruction)?.reference as? MethodReference }
+            .firstOrNull {
+                it.definingClass == scopeType && it.parameterTypes.isEmpty() && it.returnType == "V"
+            }
+        val scope = shade.implementation!!.registerCount - 1
+        val drawContentCall = when {
+            drawContent == null -> ""
+            scope <= 15 -> "invoke-virtual { v$scope }, ${drawContent.definingClass}->${drawContent.name}()V\n"
+            else -> "invoke-virtual/range { v$scope .. v$scope }, ${drawContent.definingClass}->${drawContent.name}()V\n"
+        }
+        shade.addInstructionsWithLabels(
+            0,
+            """
+                invoke-static { }, $AMOLED->enabled()Z
+                move-result v0
+                if-eqz v0, :morphe_shade
+                ${drawContentCall}return-void
+            """,
+            ExternalLabel("morphe_shade", shade.getInstruction(0)),
+        )
 
         // The theme background drawn behind the screens (a picture or a colour): black.
-        mutableClassDefBy("Lcom/chess/themes/ThemeBackgroundManagerImpl;").methods.single {
+        // 4.10.18: background(Background, Context); 4.10.23: a static helper with the
+        // manager as its first parameter.
+        val backgroundMethods = mutableClassDefBy("Lcom/chess/themes/ThemeBackgroundManagerImpl;").methods.filter {
+            val types = it.parameterTypes.map { type -> type.toString() }
             it.returnType == "Landroid/graphics/drawable/Drawable;" &&
-                it.parameterTypes.map { type -> type.toString() } ==
-                listOf("Lcom/chess/themes/CurrentTheme\$Background;", "Landroid/content/Context;")
-        }.apply {
+                types.size >= 2 &&
+                types[types.size - 2] == "Lcom/chess/themes/CurrentTheme\$Background;" &&
+                types.last() == "Landroid/content/Context;"
+        }
+        (backgroundMethods.singleOrNull { it.parameterTypes.size == 2 } ?: backgroundMethods.single()).apply {
             instructions.withIndex().filter { it.value.opcode == Opcode.RETURN_OBJECT }.map { it.index }.reversed()
                 .forEach { index ->
                     val register = getInstruction<OneRegisterInstruction>(index).registerA

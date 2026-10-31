@@ -34,7 +34,6 @@ private const val QUOTA_SERVICE = "Lcom/chess/features/versusbots/coach/CoachGam
 
 internal object CoachQuotaCanStartFingerprint : Fingerprint(
     definingClass = QUOTA_SERVICE,
-    returnType = "Ljava/lang/Object;",
     custom = { method, _ ->
         method.parameterTypes.size == 1 &&
             // The only single-parameter public suspend method whose continuation is typed
@@ -52,9 +51,10 @@ internal object CoachQuotaConsumeFingerprint : Fingerprint(
     definingClass = QUOTA_SERVICE,
     returnType = "Ljava/lang/Object;",
     custom = { method, _ ->
-        // (Coach, String, Continuation): the continuation type is obfuscated.
-        method.parameterTypes.size == 3 &&
+        // 4.10.18: (Coach, String, Continuation). 4.10.23: (String, Continuation).
+        (method.parameterTypes.size == 3 &&
             method.parameterTypes[0] == "Lcom/chess/coach/Coach;" &&
-            method.parameterTypes[1] == "Ljava/lang/String;"
+            method.parameterTypes[1] == "Ljava/lang/String;") ||
+            (method.parameterTypes.size == 2 && method.parameterTypes[0] == "Ljava/lang/String;")
     },
 )

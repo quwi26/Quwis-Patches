@@ -23,11 +23,14 @@ val noRatingPromptsPatch = bytecodePatch(
     execute {
         markFeaturePatched("noRatingPromptsPatched")
 
-        // PleaseRateManager's public "should we ask now" check.
-        mutableClassDefBy("Lcom/chess/ratedialog/PleaseRateManager;").methods.single {
+        val manager = mutableClassDefBy("Lcom/chess/ratedialog/PleaseRateManager;")
+
+        // 4.10.18: the public "should we ask now" check.
+        val shouldAsk = manager.methods.singleOrNull {
             AccessFlags.PUBLIC.isSet(it.accessFlags) && it.returnType == "Z" && it.parameterTypes.isEmpty()
-        }.apply {
-            addInstructionsWithLabels(
+        }
+        if (shouldAsk != null) {
+            shouldAsk.addInstructionsWithLabels(
                 0,
                 """
                     invoke-static { }, $RATING_PROMPTS->allowed()Z
@@ -35,8 +38,24 @@ val noRatingPromptsPatch = bytecodePatch(
                     if-nez v0, :morphe_rating
                     return v0
                 """,
-                ExternalLabel("morphe_rating", getInstruction(0)),
+                ExternalLabel("morphe_rating", shouldAsk.getInstruction(0)),
             )
+        } else {
+            // 4.10.23: the after-game hook that arms the prompt instead.
+            manager.methods.single {
+                it.returnType == "V" && it.parameterTypes.map { type -> type.toString() } == listOf("Z")
+            }.apply {
+                addInstructionsWithLabels(
+                    0,
+                    """
+                        invoke-static { }, $RATING_PROMPTS->allowed()Z
+                        move-result v0
+                        if-nez v0, :morphe_rating
+                        return-void
+                    """,
+                    ExternalLabel("morphe_rating", getInstruction(0)),
+                )
+            }
         }
     }
 }

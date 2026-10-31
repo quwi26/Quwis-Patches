@@ -44,6 +44,9 @@ public final class Amoled {
 
     /** The theme background (a picture or colour behind the app's screens): black instead. */
     public static Drawable background(Drawable background) {
+        // A screen without a theme background must stay without one: returning a black
+        // drawable here made the 4.10.23 home draw an opaque layer over its content.
+        if (background == null) return null;
         return enabled() ? new ColorDrawable(Color.BLACK) : background;
     }
 

@@ -85,6 +85,16 @@ public final class Analysis {
         return Features.stockfishPatched() && Features.isEnabled(Features.STOCKFISH);
     }
 
+    /** The 4.10.23 board state keeps the position in its first field. */
+    public static void onBoardState(Object state) {
+        if (state == null) return;
+        try {
+            onPosition(state.getClass().getField("a").get(state));
+        } catch (Throwable throwable) {
+            Utils.logError("board state position", throwable);
+        }
+    }
+
     /** The board's view state got a new position. */
     public static void onPosition(Object position) {
         if (position == null || !enabled()) return;

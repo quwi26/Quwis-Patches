@@ -51,6 +51,52 @@ public final class HomeTabs {
         }
     }
 
+    /**
+     * 4.10.23 builds [Play, Puzzles, middle tabs..., More] inside the bar composable; drop
+     * Puzzles when the user turned it off in the settings.
+     */
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public static List finalTabs(List tabs) {
+        if (tabs == null || tabs.isEmpty() || !enabled()) return tabs;
+        if (shownTabs().contains("Puzzles")) return tabs;
+        try {
+            List result = new ArrayList();
+            for (Object tab : tabs) {
+                if (tab instanceof Enum && ((Enum<?>) tab).name().equals("Puzzles")) continue;
+                result.add(tab);
+            }
+            return result.isEmpty() ? tabs : result;
+        } catch (Throwable throwable) {
+            return tabs;
+        }
+    }
+
+    /**
+     * 4.10.23's bottom bar state stores only the middle tabs; the app adds Play and More itself.
+     * Returns the user's choice, or the app's list when nothing was saved.
+     */
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public static List middleTabs(List tabs) {
+        if (tabs == null || tabs.isEmpty() || !enabled()) return tabs;
+        SharedPreferences preferences = Features.preferences();
+        if (preferences == null || !preferences.contains(SHOWN)) return tabs;
+        try {
+            Object[] all = tabs.get(0).getClass().getEnumConstants();
+            if (all == null) return tabs;
+            List result = new ArrayList();
+            for (String name : shownTabs()) {
+                // 4.10.23's bar adds Play and Puzzles itself, then More; adding them here
+                // again showed a second Puzzles tab.
+                if (name.equals("Play") || name.equals("Puzzles") || name.equals("More")) continue;
+                Object tab = byName(all, name);
+                if (tab != null) result.add(tab);
+            }
+            return result.isEmpty() ? tabs : result;
+        } catch (Throwable throwable) {
+            return tabs;
+        }
+    }
+
     /** Middle tabs in display order: the saved choice, or the app's defaults. */
     public static List<String> shownTabs() {
         SharedPreferences preferences = Features.preferences();

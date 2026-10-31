@@ -1,6 +1,7 @@
 package app.noam.patches.chesscom.premium
 
 import app.morphe.patcher.extensions.InstructionExtensions.addInstructions
+import app.morphe.patcher.extensions.InstructionExtensions.addInstructionsWithLabels
 import app.morphe.patcher.extensions.InstructionExtensions.getInstruction
 import app.morphe.patcher.extensions.InstructionExtensions.instructions
 import app.morphe.patcher.extensions.InstructionExtensions.replaceInstruction
@@ -8,6 +9,7 @@ import app.morphe.patcher.patch.BytecodePatchContext
 import app.morphe.patcher.patch.PatchException
 import app.morphe.patcher.patch.bytecodePatch
 import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod
+import app.morphe.patcher.util.smali.ExternalLabel
 import app.noam.patches.chesscom.home.HomeContentToStringFingerprint
 import app.noam.patches.chesscom.misc.settings.MoreMenuStateToStringFingerprint
 import app.noam.patches.chesscom.misc.settings.settingsPatch
@@ -24,6 +26,15 @@ import com.android.tools.smali.dexlib2.iface.reference.MethodReference
 import com.android.tools.smali.dexlib2.iface.reference.TypeReference
 
 private const val PREMIUM = "${Constants.EXTENSION_PACKAGE}/premium/Premium;"
+
+context(context: BytecodePatchContext)
+private fun findMethodOrNull(predicate: (ClassDef, Method) -> Boolean): Pair<ClassDef, Method>? {
+    val found = mutableListOf<Pair<ClassDef, Method>>()
+    context.classDefForEach { classDef ->
+        classDef.methods.forEach { method -> if (predicate(classDef, method)) found += classDef to method }
+    }
+    return found.singleOrNull()
+}
 
 context(context: BytecodePatchContext)
 private fun findMethod(description: String, predicate: (ClassDef, Method) -> Boolean): MutableMethod {
@@ -71,34 +82,112 @@ val hidePremiumPatch = bytecodePatch(
 
         // Settings: the Upgrade row leaves the list the only row-building method returns.
         val rowType = SettingsRowToStringFingerprint.originalClassDef.type
-        findMethod("settings list builder") { _, method ->
+        val settingsBuilder = findMethodOrNull { _, method ->
             method.returnType == "Ljava/util/List;" && method.parameterTypes.isEmpty() &&
                 method.implementation?.instructions?.any {
                     it.opcode == Opcode.NEW_INSTANCE && ((it as ReferenceInstruction).reference as TypeReference).type == rowType
                 } == true
-        }.apply {
-            val returnIndex = instructions.indexOfLast { it.opcode == Opcode.RETURN_OBJECT }
-            if (returnIndex < 0) throw PatchException("The settings list builder has no return")
-            val list = getInstruction<OneRegisterInstruction>(returnIndex).registerA
-            addInstructions(returnIndex, "invoke-static { v$list }, $PREMIUM->filterSettingsRows(Ljava/util/List;)V")
+        }
+        if (settingsBuilder != null) {
+            mutableClassDefBy(settingsBuilder.first).methods.first {
+                it.name == settingsBuilder.second.name && it.parameterTypes == settingsBuilder.second.parameterTypes &&
+                    it.returnType == settingsBuilder.second.returnType
+            }.apply {
+                val returnIndex = instructions.indexOfLast { it.opcode == Opcode.RETURN_OBJECT }
+                if (returnIndex < 0) throw PatchException("The settings list builder has no return")
+                val list = getInstruction<OneRegisterInstruction>(returnIndex).registerA
+                addInstructions(returnIndex, "invoke-static { v$list }, $PREMIUM->filterSettingsRows(Ljava/util/List;)V")
+            }
+        } else {
+            // 4.10.23 builds the settings rows in a constructor and keeps them in List fields.
+            val builder = findMethodOrNull { classDef, method ->
+                method.name == "<init>" && method.implementation?.instructions?.any {
+                    it.opcode == Opcode.NEW_INSTANCE && ((it as ReferenceInstruction).reference as TypeReference).type == rowType
+                } == true && classDef.fields.any { it.type == "Ljava/util/List;" }
+            } ?: throw PatchException("The settings list builder was not found")
+            val constructor = mutableClassDefBy(builder.first).methods.single {
+                it.name == "<init>" && it.parameterTypes == builder.second.parameterTypes
+            }
+            // Only the list fields this constructor actually writes, and never a static one.
+            val written = constructor.implementation!!.instructions.mapNotNull {
+                ((it as? ReferenceInstruction)?.reference as? com.android.tools.smali.dexlib2.iface.reference.FieldReference)
+                    ?.takeIf { field -> field.definingClass == builder.first.type }?.name
+            }.toSet()
+            val listFields = builder.first.fields.filter { field ->
+                (field.type == "Ljava/util/List;" || field.type == "Ljava/util/ArrayList;") &&
+                    !com.android.tools.smali.dexlib2.AccessFlags.STATIC.isSet(field.accessFlags) &&
+                    field.name in written
+            }
+            if (listFields.isEmpty()) throw PatchException("The settings list fields were not found")
+            // The constructor's `this` sits above v15, and iget-object (22c) only addresses
+            // v0-v15; smali silently drops such an access. Copy it into v0 first.
+            val self = constructor.implementation!!.registerCount - constructor.parameterTypes.size - 1
+            // The rows live in immutable lists, and the adapter also copies them into a combined
+            // ArrayList during construction. Replace each field with a mutable copy
+            // (the constructor may write its own final fields) and filter that.
+            val filter = listFields.joinToString("\n") { field ->
+                """
+                    move-object/from16 v0, v$self
+                    iget-object v1, v0, ${builder.first.type}->${field.name}:${field.type}
+                    invoke-static { v1 }, $PREMIUM->copyFilteredSettingsRows(Ljava/util/List;)Ljava/util/List;
+                    move-result-object v2
+                    iput-object v2, v0, ${builder.first.type}->${field.name}:${field.type}
+                """
+            }
+            constructor.apply {
+                instructions.withIndex().filter { it.value.opcode == Opcode.RETURN_VOID }.map { it.index }.reversed()
+                    .forEach { addInstructions(it, filter) }
+            }
         }
 
-        // Home: HomePlayAdapter.setPremiumOffer(offer, animate).
-        findMethod("Home premium card setter") { classDef, method ->
+        // Home: HomePlayAdapter.setPremiumOffer(offer, animate). 4.10.23 removed the older Home.
+        findMethodOrNull { classDef, method ->
             classDef.type == "Lcom/chess/home/play/HomePlayAdapter;" &&
                 method.returnType == "V" && method.parameterTypes.map { it.toString() } == listOf(offerType, "Z")
-        }.nullOffer(0, "p1", offerType)
+        }?.let { (classDef, method) ->
+            mutableClassDefBy(classDef).methods.first {
+                it.name == method.name && it.parameterTypes == method.parameterTypes && it.returnType == "V"
+            }.nullOffer(0, "p1", offerType)
+        }
 
-        // More: buildMenu(int, int, boolean, boolean, offer, continuation).
-        findMethod("More menu builder") { classDef, method ->
+        // More: buildMenu(int, int, boolean, boolean, offer, continuation). Gone in 4.10.23.
+        findMethodOrNull { classDef, method ->
             classDef.type.startsWith("Lcom/chess/home/more/") && method.implementation != null &&
                 method.parameterTypes.map { it.toString() }.let {
                     it.size == 6 && it.take(5) == listOf("I", "I", "Z", "Z", offerType)
                 }
-        }.nullOffer(0, "p5", offerType)
+        }?.let { (classDef, method) ->
+            mutableClassDefBy(classDef).methods.first {
+                it.name == method.name && it.parameterTypes == method.parameterTypes
+            }.nullOffer(0, "p5", offerType)
+        }
+
+        // 4.10.23: the More screen draws a fixed "Try Premium" banner from
+        // com.chess.home.premium.c; skip drawing it.
+        mutableClassDefByOrNull("Lcom/chess/home/premium/c;")?.methods
+            ?.filter { method ->
+                method.name == "b" && method.returnType == "V" &&
+                    method.parameterTypes.map(CharSequence::toString) == listOf(
+                        "Lkotlin/jvm/functions/Function0;", "Landroidx/compose/ui/b;", "Z",
+                        "Lkotlin/jvm/functions/Function0;", "Landroidx/compose/runtime/a;", "I",
+                    )
+            }
+            ?.forEach { method ->
+                method.addInstructionsWithLabels(
+                    0,
+                    """
+                        invoke-static { }, $PREMIUM->hideBanner()Z
+                        move-result v0
+                        if-eqz v0, :morphe_banner
+                        return-void
+                    """,
+                    ExternalLabel("morphe_banner", method.getInstruction(0)),
+                )
+            }
 
         // Home toolbar: the placement collector; null = no Premium icon (what members get).
-        ToolbarPremiumIconFingerprint.method.apply {
+        // 4.10.23 dropped the icon.
+        ToolbarPremiumIconFingerprint.matchOrNull()?.method?.apply {
             val castIndex = indexOfFirstOrThrow(description = "the icon placement") {
                 it.opcode == Opcode.CHECK_CAST &&
                     ((it as ReferenceInstruction).reference as TypeReference).type.endsWith("\$ToolbarPremiumIconPlacement;")
@@ -173,12 +262,15 @@ val hidePremiumPatch = bytecodePatch(
         mutableClassDefBy(HomeToolbarStateToStringFingerprint.originalClassDef).methods.single {
             it.name == "<init>" && it.parameterTypes.size == 8
         }.apply {
-            if (parameterTypes[4].toString() != "Z") throw PatchException("Unexpected Home toolbar state")
+            // 4.10.18 has one boolean; 4.10.23 adds shouldShowLogo after the diamond, so the
+            // diamond is still the first boolean parameter.
+            val diamond = parameterTypes.indexOfFirst { it.toString() == "Z" }
+            if (diamond < 0) throw PatchException("Unexpected Home toolbar state")
             addInstructions(
                 0,
                 """
-                    invoke-static/range { p5 .. p5 }, $PREMIUM->showDiamond(Z)Z
-                    move-result p5
+                    invoke-static/range { p${diamond + 1} .. p${diamond + 1} }, $PREMIUM->showDiamond(Z)Z
+                    move-result p${diamond + 1}
                 """,
             )
         }

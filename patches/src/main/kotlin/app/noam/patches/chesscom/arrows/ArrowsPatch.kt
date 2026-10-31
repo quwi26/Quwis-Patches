@@ -24,10 +24,11 @@ import org.w3c.dom.Element
 
 private const val ARROWS = "${Constants.EXTENSION_PACKAGE}/arrows/Arrows;"
 private const val ARROWS_BAR = "${Constants.EXTENSION_PACKAGE}/arrows/ArrowsBar;"
+private const val ARROWS_CHIP = "${Constants.EXTENSION_PACKAGE}/arrows/ArrowsChip;"
 private const val BOARD_VIEWS = "${Constants.EXTENSION_PACKAGE}/board/BoardViews;"
 private const val BOARD = "Lcom/chess/chessboard/view/ChessBoardView;"
 private const val V2_BOARD = "Lcom/chess/chessboard/v2/ChessBoardView;"
-private const val V2_PIECES = "Lcom/chess/chessboard/v2/PiecesView;"
+
 private const val BUTTON_CLASS = "app.noam.extension.chesscom.arrows.ArrowsButton"
 /** Compose game screens whose bottom bar gets Arrows and Clear: bots, guided coach games. */
 private val COMPOSE_GAME_BARS = listOf(
@@ -83,7 +84,9 @@ private val arrowsResourcePatch = resourcePatch(
         }
 
         CONTROL_BARS.forEach { (layout, neighbours) ->
-            document("res/layout/$layout.xml").use { document ->
+            // 4.10.23 dropped the archived live game bar; the other bars remain.
+            val bar = runCatching { document("res/layout/$layout.xml") }.getOrNull() ?: return@forEach
+            bar.use { document ->
                 val (beforeId, afterId) = neighbours
                 val before = document.elementWithId(beforeId)
                 val after = document.elementWithId(afterId)
@@ -157,11 +160,17 @@ val arrowsPatch = bytecodePatch(
 
         // The v2 board: the marks layers once it has built its piece view, and its orientation,
         // which it reports only through this setter (its getter is obfuscated).
+        // 4.10.18 has v2/PiecesView; 4.10.23 keeps the piece layer in an obfuscated ViewGroup.
+        val v2Pieces = classDefByOrNull { classDef ->
+            classDef.type.startsWith("Lcom/chess/chessboard/v2/") &&
+                classDef.superclass == "Landroid/view/ViewGroup;" &&
+                classDef.methods.any { method -> method.name == "setPiecesGraphics" }
+        }?.type ?: throw PatchException("The v2 piece layer was not found")
         mutableClassDefBy(V2_BOARD).methods.apply {
             val constructors = filter {
                 it.name == "<init>" && it.implementation?.instructions?.any { instruction ->
                     ((instruction as? ReferenceInstruction)?.reference as? MethodReference)?.let { reference ->
-                        reference.name == "<init>" && reference.definingClass == V2_PIECES
+                        reference.name == "<init>" && reference.definingClass == v2Pieces
                     } == true
                 } == true
             }
@@ -188,155 +197,177 @@ val arrowsPatch = bytecodePatch(
                 }
         }
 
-        // Bot and coach games have Compose bars: Arrows and Clear go in as two more of chess.com's bar
-        // buttons. They read a state of ours, so the bar redraws them when the arrows change.
-        val button = BottomButtonFingerprint.method
-        val buttonCall = "${button.definingClass}->${button.name}(${button.parameterTypes.joinToString("")})V"
-        val expected = "Lcom/google/android/era;ILjava/lang/String;Landroidx/compose/ui/b;ZLcom/google/android/ei1;Z" +
-            "Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function0;${COMPOSER}II"
-        if (button.parameterTypes.joinToString("") != expected) throw PatchException("Unexpected bar button: $buttonCall")
-
-        // Compose colours are boxed by their class's one static (J) method.
-        val colorType = button.parameterTypes[5].toString()
-        val colorClass = classDefByOrNull { it.type == colorType } ?: throw PatchException("$colorType was not found")
-        val box = colorClass.methods.filter {
-            AccessFlags.STATIC.isSet(it.accessFlags) && it.returnType == colorType &&
-                it.parameterTypes.joinToString("") == "J"
-        }.singleOrNull() ?: throw PatchException("The colour box method was not found")
-        val boxCall = "$colorType->${box.name}(J)$colorType"
-
-        // mutableStateOf(value, policy = default): (value, policy, defaults mask, marker).
-        val stateClass = classDefByOrNull { it.type == PARCELABLE_STATE } ?: throw PatchException("$PARCELABLE_STATE was not found")
-        val policyType = stateClass.methods.single {
-            it.name == "<init>" && it.parameterTypes.size == 2 && it.parameterTypes[0].toString() == "Ljava/lang/Object;"
-        }.parameterTypes[1].toString()
-        val stateFactories = mutableListOf<String>()
-        classDefForEach { classDef ->
-            if (classDef.type.substringBeforeLast('/') != "Landroidx/compose/runtime") return@classDefForEach
-            classDef.methods.forEach { method ->
-                if (AccessFlags.STATIC.isSet(method.accessFlags) && method.returnType.startsWith("L") &&
-                    method.parameterTypes.joinToString("") == "Ljava/lang/Object;${policyType}ILjava/lang/Object;"
-                ) {
-                    stateFactories += "${classDef.type}->${method.name}(Ljava/lang/Object;${policyType}ILjava/lang/Object;)${method.returnType}"
+        // 4.10.23's bot bar is a Compose bar we cannot add buttons to; a small chip over the
+        // board toggles Arrows and clears the marks instead.
+        val chipActivity = "Lcom/chess/features/versusbots/game/BotGameActivityV2;"
+        run {
+            val type = mutableClassDefByOrNull(chipActivity) ?: return@run
+            val resume = type.methods.firstOrNull { it.name == "onResume" && it.parameterTypes.isEmpty() }
+            if (resume != null) {
+                resume.addInstructions(0, "invoke-static/range { p0 .. p0 }, $ARROWS_CHIP->attach(Landroid/app/Activity;)V")
+            } else {
+                type.methods.firstOrNull { it.name == "onCreate" }?.apply {
+                    instructions.withIndex().filter { it.value.opcode == Opcode.RETURN_VOID }.map { it.index }
+                        .sortedDescending()
+                        .forEach { index ->
+                            addInstructions(index, "invoke-static/range { p0 .. p0 }, $ARROWS_CHIP->attach(Landroid/app/Activity;)V")
+                        }
                 }
             }
         }
-        val mutableStateOf = stateFactories.minOrNull() ?: throw PatchException("mutableStateOf was not found")
 
-        // A button is (row, icon, label, modifier, enabled, colour, flag, onHold, onClick, composer,
-        // changed, defaults); Arrows sets the colour, Clear sets enabled.
-        val rowType = button.parameterTypes[0].toString()
-        COMPOSE_GAME_BARS.forEach { type ->
-            val bars = mutableClassDefBy(type).methods.filter { method ->
-                method.implementation?.instructions?.any {
-                    ((it as? ReferenceInstruction)?.reference as? StringReference)?.string == "\$this\$BottomActionsBar"
-                } == true
-            }
-            if (bars.size != 1) throw PatchException("Expected one bottom bar in $type, found ${bars.size}")
-            bars.single().apply {
-                val types = parameterTypes.map { it.toString() }
-                if (!AccessFlags.STATIC.isSet(accessFlags) || types.any { it == "J" || it == "D" }) {
-                    throw PatchException("Unexpected bottom bar method in $type")
-                }
-                val row = "p${types.indexOf(rowType).takeIf { it >= 0 } ?: throw PatchException("No row in $type")}"
-                val composer = "p${types.indexOf(COMPOSER).takeIf { it >= 0 } ?: throw PatchException("No composer in $type")}"
-                if (implementation!!.registerCount - types.size < 12) throw PatchException("Too few registers in $type")
+        // 4.10.23's Compose bars are out of reach for now; the older boards still get arrows.
+        BottomButtonFingerprint.matchOrNull()?.let { match ->
+            // Bot and coach games have Compose bars: Arrows and Clear go in as two more of chess.com's bar
+            // buttons. They read a state of ours, so the bar redraws them when the arrows change.
+            val button = match.method
+            val buttonCall = "${button.definingClass}->${button.name}(${button.parameterTypes.joinToString("")})V"
+            val expected = "Lcom/google/android/era;ILjava/lang/String;Landroidx/compose/ui/b;ZLcom/google/android/ei1;Z" +
+                "Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function0;${COMPOSER}II"
+            if (button.parameterTypes.joinToString("") != expected) throw PatchException("Unexpected bar button: $buttonCall")
 
-                val last = instructions.indexOfLast { instruction ->
-                    val reference = (instruction as? ReferenceInstruction)?.reference as? MethodReference
-                    reference != null && reference.definingClass == button.definingClass && reference.name == button.name &&
-                        reference.parameterTypes.joinToString("") == expected
-                }
-                if (last < 0) throw PatchException("The bottom bar's buttons were not found in $type")
-                // The bar's end: the trace check every way through the bar reaches last (some jump
-                // there from their own last button). Our buttons go in before each way in.
-                val end = (last + 1 until instructions.size).firstOrNull { index ->
-                    val instruction = instructions[index]
-                    instruction.opcode == Opcode.INVOKE_STATIC && (instruction as ReferenceInstruction).reference.let {
-                        it is MethodReference && it.parameterTypes.isEmpty() && it.returnType == "Z"
+            // Compose colours are boxed by their class's one static (J) method.
+            val colorType = button.parameterTypes[5].toString()
+            val colorClass = classDefByOrNull { it.type == colorType } ?: throw PatchException("$colorType was not found")
+            val box = colorClass.methods.filter {
+                AccessFlags.STATIC.isSet(it.accessFlags) && it.returnType == colorType &&
+                    it.parameterTypes.joinToString("") == "J"
+            }.singleOrNull() ?: throw PatchException("The colour box method was not found")
+            val boxCall = "$colorType->${box.name}(J)$colorType"
+
+            // mutableStateOf(value, policy = default): (value, policy, defaults mask, marker).
+            val stateClass = classDefByOrNull { it.type == PARCELABLE_STATE } ?: throw PatchException("$PARCELABLE_STATE was not found")
+            val policyType = stateClass.methods.single {
+                it.name == "<init>" && it.parameterTypes.size == 2 && it.parameterTypes[0].toString() == "Ljava/lang/Object;"
+            }.parameterTypes[1].toString()
+            val stateFactories = mutableListOf<String>()
+            classDefForEach { classDef ->
+                if (classDef.type.substringBeforeLast('/') != "Landroidx/compose/runtime") return@classDefForEach
+                classDef.methods.forEach { method ->
+                    if (AccessFlags.STATIC.isSet(method.accessFlags) && method.returnType.startsWith("L") &&
+                        method.parameterTypes.joinToString("") == "Ljava/lang/Object;${policyType}ILjava/lang/Object;"
+                    ) {
+                        stateFactories += "${classDef.type}->${method.name}(Ljava/lang/Object;${policyType}ILjava/lang/Object;)${method.returnType}"
                     }
-                } ?: throw PatchException("The end of the bottom bar was not found in $type")
-                val entries = instructions.withIndex().filter { (_, instruction) ->
-                    (instruction as? BuilderOffsetInstruction)?.target?.location?.index == end
                 }
-                entries.firstOrNull { it.value.opcode !in JUMPS }?.let {
-                    throw PatchException("A conditional branch reaches the end of the bottom bar in $type")
+            }
+            val mutableStateOf = stateFactories.minOrNull() ?: throw PatchException("mutableStateOf was not found")
+
+            // A button is (row, icon, label, modifier, enabled, colour, flag, onHold, onClick, composer,
+            // changed, defaults); Arrows sets the colour, Clear sets enabled.
+            val rowType = button.parameterTypes[0].toString()
+            COMPOSE_GAME_BARS.forEach { type ->
+                val bars = mutableClassDefBy(type).methods.filter { method ->
+                    method.implementation?.instructions?.any {
+                        ((it as? ReferenceInstruction)?.reference as? StringReference)?.string == "\$this\$BottomActionsBar"
+                    } == true
                 }
-                val ways = entries.map { it.index }.toMutableList()
-                if (instructions[end - 1].opcode !in JUMPS + Opcode.RETURN_OBJECT + Opcode.RETURN_VOID + Opcode.THROW) ways += end
-                if (ways.isEmpty()) throw PatchException("No way into the end of the bottom bar in $type")
-                ways.sortedDescending().forEach { way -> addInstructionsWithLabels(
-                    way,
-                    """
-                        move-object/from16 v9, $composer
-                        const v10, 0x4e6f616d
-                        invoke-interface { v9, v10 }, $COMPOSER->y(I)V
-                        invoke-static { }, $ARROWS_BAR->show()Z
-                        move-result v0
-                        if-eqz v0, :morphe_arrows_bar
+                if (bars.size != 1) throw PatchException("Expected one bottom bar in $type, found ${bars.size}")
+                bars.single().apply {
+                    val types = parameterTypes.map { it.toString() }
+                    if (!AccessFlags.STATIC.isSet(accessFlags) || types.any { it == "J" || it == "D" }) {
+                        throw PatchException("Unexpected bottom bar method in $type")
+                    }
+                    val row = "p${types.indexOf(rowType).takeIf { it >= 0 } ?: throw PatchException("No row in $type")}"
+                    val composer = "p${types.indexOf(COMPOSER).takeIf { it >= 0 } ?: throw PatchException("No composer in $type")}"
+                    if (implementation!!.registerCount - types.size < 12) throw PatchException("Too few registers in $type")
 
-                        invoke-static { }, $ARROWS_BAR->needsState()Z
-                        move-result v0
-                        if-eqz v0, :morphe_arrows_state
-                        const/4 v0, 0x0
-                        invoke-static { v0 }, Ljava/lang/Integer;->valueOf(I)Ljava/lang/Integer;
-                        move-result-object v0
-                        const/4 v1, 0x0
-                        const/4 v2, 0x2
-                        const/4 v3, 0x0
-                        invoke-static { v0, v1, v2, v3 }, $mutableStateOf
-                        move-result-object v0
-                        invoke-static { v0 }, $ARROWS_BAR->bind(Ljava/lang/Object;)V
-                        :morphe_arrows_state
+                    val last = instructions.indexOfLast { instruction ->
+                        val reference = (instruction as? ReferenceInstruction)?.reference as? MethodReference
+                        reference != null && reference.definingClass == button.definingClass && reference.name == button.name &&
+                            reference.parameterTypes.joinToString("") == expected
+                    }
+                    if (last < 0) throw PatchException("The bottom bar's buttons were not found in $type")
+                    // The bar's end: the trace check every way through the bar reaches last (some jump
+                    // there from their own last button). Our buttons go in before each way in.
+                    val end = (last + 1 until instructions.size).firstOrNull { index ->
+                        val instruction = instructions[index]
+                        instruction.opcode == Opcode.INVOKE_STATIC && (instruction as ReferenceInstruction).reference.let {
+                            it is MethodReference && it.parameterTypes.isEmpty() && it.returnType == "Z"
+                        }
+                    } ?: throw PatchException("The end of the bottom bar was not found in $type")
+                    val entries = instructions.withIndex().filter { (_, instruction) ->
+                        (instruction as? BuilderOffsetInstruction)?.target?.location?.index == end
+                    }
+                    entries.firstOrNull { it.value.opcode !in JUMPS }?.let {
+                        throw PatchException("A conditional branch reaches the end of the bottom bar in $type")
+                    }
+                    val ways = entries.map { it.index }.toMutableList()
+                    if (instructions[end - 1].opcode !in JUMPS + Opcode.RETURN_OBJECT + Opcode.RETURN_VOID + Opcode.THROW) ways += end
+                    if (ways.isEmpty()) throw PatchException("No way into the end of the bottom bar in $type")
+                    ways.sortedDescending().forEach { way -> addInstructionsWithLabels(
+                        way,
+                        """
+                            move-object/from16 v9, $composer
+                            const v10, 0x4e6f616d
+                            invoke-interface { v9, v10 }, $COMPOSER->y(I)V
+                            invoke-static { }, $ARROWS_BAR->show()Z
+                            move-result v0
+                            if-eqz v0, :morphe_arrows_bar
 
-                        invoke-static { }, $ARROWS_BAR->arrowsColor()J
-                        move-result-wide v0
-                        const-wide/16 v2, 0x0
-                        cmp-long v4, v0, v2
-                        const/4 v5, 0x0
-                        if-eqz v4, :morphe_arrows_plain
-                        invoke-static { v0, v1 }, $boxCall
-                        move-result-object v5
-                        :morphe_arrows_plain
-                        move-object/from16 v0, $row
-                        invoke-static { }, $ARROWS_BAR->arrowsIcon()I
-                        move-result v1
-                        invoke-static { }, $ARROWS_BAR->arrowsLabel()Ljava/lang/String;
-                        move-result-object v2
-                        const/4 v3, 0x0
-                        const/4 v4, 0x0
-                        const/4 v6, 0x0
-                        const/4 v7, 0x0
-                        invoke-static { }, $ARROWS_BAR->onArrows()Lkotlin/jvm/functions/Function0;
-                        move-result-object v8
-                        move-object/from16 v9, $composer
-                        const/4 v10, 0x0
-                        const/16 v11, 0x6c
-                        invoke-static/range { v0 .. v11 }, $buttonCall
+                            invoke-static { }, $ARROWS_BAR->needsState()Z
+                            move-result v0
+                            if-eqz v0, :morphe_arrows_state
+                            const/4 v0, 0x0
+                            invoke-static { v0 }, Ljava/lang/Integer;->valueOf(I)Ljava/lang/Integer;
+                            move-result-object v0
+                            const/4 v1, 0x0
+                            const/4 v2, 0x2
+                            const/4 v3, 0x0
+                            invoke-static { v0, v1, v2, v3 }, $mutableStateOf
+                            move-result-object v0
+                            invoke-static { v0 }, $ARROWS_BAR->bind(Ljava/lang/Object;)V
+                            :morphe_arrows_state
 
-                        move-object/from16 v0, $row
-                        invoke-static { }, $ARROWS_BAR->clearIcon()I
-                        move-result v1
-                        invoke-static { }, $ARROWS_BAR->clearLabel()Ljava/lang/String;
-                        move-result-object v2
-                        const/4 v3, 0x0
-                        invoke-static { }, $ARROWS_BAR->clearEnabled()Z
-                        move-result v4
-                        const/4 v5, 0x0
-                        const/4 v6, 0x0
-                        const/4 v7, 0x0
-                        invoke-static { }, $ARROWS_BAR->onClear()Lkotlin/jvm/functions/Function0;
-                        move-result-object v8
-                        move-object/from16 v9, $composer
-                        const/4 v10, 0x0
-                        const/16 v11, 0x74
-                        invoke-static/range { v0 .. v11 }, $buttonCall
+                            invoke-static { }, $ARROWS_BAR->arrowsColor()J
+                            move-result-wide v0
+                            const-wide/16 v2, 0x0
+                            cmp-long v4, v0, v2
+                            const/4 v5, 0x0
+                            if-eqz v4, :morphe_arrows_plain
+                            invoke-static { v0, v1 }, $boxCall
+                            move-result-object v5
+                            :morphe_arrows_plain
+                            move-object/from16 v0, $row
+                            invoke-static { }, $ARROWS_BAR->arrowsIcon()I
+                            move-result v1
+                            invoke-static { }, $ARROWS_BAR->arrowsLabel()Ljava/lang/String;
+                            move-result-object v2
+                            const/4 v3, 0x0
+                            const/4 v4, 0x0
+                            const/4 v6, 0x0
+                            const/4 v7, 0x0
+                            invoke-static { }, $ARROWS_BAR->onArrows()Lkotlin/jvm/functions/Function0;
+                            move-result-object v8
+                            move-object/from16 v9, $composer
+                            const/4 v10, 0x0
+                            const/16 v11, 0x6c
+                            invoke-static/range { v0 .. v11 }, $buttonCall
 
-                        :morphe_arrows_bar
-                        move-object/from16 v9, $composer
-                        invoke-interface { v9 }, $COMPOSER->u()V
-                    """,
-                ) }
+                            move-object/from16 v0, $row
+                            invoke-static { }, $ARROWS_BAR->clearIcon()I
+                            move-result v1
+                            invoke-static { }, $ARROWS_BAR->clearLabel()Ljava/lang/String;
+                            move-result-object v2
+                            const/4 v3, 0x0
+                            invoke-static { }, $ARROWS_BAR->clearEnabled()Z
+                            move-result v4
+                            const/4 v5, 0x0
+                            const/4 v6, 0x0
+                            const/4 v7, 0x0
+                            invoke-static { }, $ARROWS_BAR->onClear()Lkotlin/jvm/functions/Function0;
+                            move-result-object v8
+                            move-object/from16 v9, $composer
+                            const/4 v10, 0x0
+                            const/16 v11, 0x74
+                            invoke-static/range { v0 .. v11 }, $buttonCall
+
+                            :morphe_arrows_bar
+                            move-object/from16 v9, $composer
+                            invoke-interface { v9 }, $COMPOSER->u()V
+                        """,
+                    ) }
+                }
             }
         }
     }

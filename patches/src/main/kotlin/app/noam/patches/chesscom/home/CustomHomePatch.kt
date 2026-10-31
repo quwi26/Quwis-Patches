@@ -63,6 +63,8 @@ val customHomePatch = bytecodePatch(
     execute {
         markFeaturePatched("customHomePatched")
 
+        // 4.10.18 still has the older Home list; 4.10.23 only has the redesign.
+        if (VsBotTileToStringFingerprint.matchOrNull() != null) {
         // Tell the extension which (obfuscated) class is which section.
         val sectionBase = VsBotTileToStringFingerprint.originalClassDef.superclass
             ?: throw PatchException("The Home section type was not found")
@@ -120,6 +122,7 @@ val customHomePatch = bytecodePatch(
                 )
             }
         }
+        }
 
         // The redesigned Home: its Content receives every section in its constructor.
         val content = HomeContentToStringFingerprint.originalClassDef
@@ -130,7 +133,7 @@ val customHomePatch = bytecodePatch(
                     val method = when {
                         type == ACTIVITIES -> "recommendedActivities"
                         type == "Ljava/util/List;" -> "onlineNow"
-                        printedName(type)?.let { name -> REDESIGN_SECTIONS.any { name.startsWith(it) } } == true -> "section"
+                        sectionPrefix(type) != null -> "section"
                         else -> return@mapIndexedNotNull null
                     }
                     val register = "p${index + 1}"
@@ -154,6 +157,15 @@ private fun printedName(type: String): String? =
     context.classDefByOrNull { it.type == type }?.methods?.firstOrNull { it.name == "toString" }
         ?.implementation?.instructions?.firstOrNull { it.opcode == Opcode.CONST_STRING }
         ?.let { ((it as ReferenceInstruction).reference as StringReference).string }
+
+/** The redesign section a class prints, wherever in its toString the prefix sits. */
+context(context: app.morphe.patcher.patch.BytecodePatchContext)
+private fun sectionPrefix(type: String): String? =
+    context.classDefByOrNull { it.type == type }?.methods?.firstOrNull { it.name == "toString" }
+        ?.implementation?.instructions
+        ?.mapNotNull { (it as? ReferenceInstruction)?.reference as? StringReference }
+        ?.firstOrNull { reference -> REDESIGN_SECTIONS.any { reference.string.startsWith(it) } }
+        ?.let { reference -> REDESIGN_SECTIONS.first { reference.string.startsWith(it) } }
 
 /** Whether this method calls the loader state's map accessor. */
 private fun com.android.tools.smali.dexlib2.iface.Method.reads(stateType: String) =

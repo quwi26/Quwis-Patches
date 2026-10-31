@@ -49,10 +49,10 @@ public final class LichessPuzzles {
     private static boolean solving;
     /** Between Puzzles from Lichess and Solve Puzzles, guest puzzles are Lichess's. */
     private static volatile boolean active;
+    private static volatile boolean freshQueue = true;
+    private static final java.util.List<Runnable> countWaiters = new java.util.ArrayList<>();
     /** The Lichess puzzle screen is the activity in front. */
     private static volatile boolean puzzleVisible;
-    /** The session has yet to store its first puzzles, which replace what the guest queue holds. */
-    private static volatile boolean freshQueue;
     private static boolean watching;
     private static final String PUZZLE_SCREEN = "com.chess.features.puzzles.rated.RatedPuzzlesGameActivity";
     private static final String HOME_SCREEN = "com.chess.home.HomeActivity";
@@ -86,6 +86,7 @@ public final class LichessPuzzles {
     private static String problemIdGetter() { return ""; }
     private static String puzzleDbField() { return ""; }
     private static String puzzleDbClear() { return ""; }
+    private static String guestRepositoryClass() { return ""; }
 
     public static boolean enabled() {
         return Features.lichessPuzzlesPatched() && Features.isEnabled(Features.LICHESS_PUZZLES);
@@ -118,11 +119,86 @@ public final class LichessPuzzles {
         frozenUser = lastUser;
         freezeActive = frozenPath != null || frozenUser != null;
         unfreezeAt = Long.MAX_VALUE;
+        return LICHESS_PUZZLES;
+    }
+
+    /** Enters the session only once the puzzle screen is actually opening. */
+    private static void beginSession() {
         active = true;
         freshQueue = true;
         puzzleVisible = true;
+        unfreezeAt = Long.MAX_VALUE;
         watchScreen();
-        return LICHESS_PUZZLES;
+    }
+
+    /**
+     * The tab listener's big-button click: 0 plays chess.com's puzzles, 1 opens the Lichess
+     * puzzles in chess.com's screen, 2 is already handled.
+     */
+    public static boolean interceptBigButton(Object listener, String directionsType, String guestField) {
+        int action = onBigButton();
+        if (action == SOLVE_PUZZLES) return false;
+        if (action == LICHESS_PUZZLES) {
+            try {
+                navigateGuest(listener, directionsType, guestField);
+                beginSession();
+            } catch (Throwable throwable) {
+                Utils.logError("open Lichess puzzles", throwable);
+                // No session without the screen: drop the freeze so the app is not left in it.
+                freezeActive = false;
+                frozenPath = null;
+                frozenUser = null;
+                Utils.toast("Couldn't open Lichess puzzles");
+            }
+        }
+        return true;
+    }
+
+    /** Finds the listener's router and activity, builds the puzzle directions and navigates. */
+    private static void navigateGuest(Object listener, String directionsType, String guestField) throws Exception {
+        Class<?> directions = Class.forName("com.chess.navigationinterface.NavigationDirections");
+        Object activity = null;
+        Object router = null;
+        java.util.List<Object> values = new java.util.ArrayList<>();
+        for (java.lang.reflect.Field field : listener.getClass().getFields()) {
+            Object value = field.get(listener);
+            if (value != null) values.add(value);
+        }
+        for (Object value : new java.util.ArrayList<>(values)) {
+            for (java.lang.reflect.Field field : value.getClass().getFields()) {
+                Object held = field.get(value);
+                if (held != null) values.add(held);
+            }
+        }
+        for (Object value : values) {
+            if (value instanceof android.app.Activity) activity = value;
+        }
+        for (Object value : values) {
+            for (java.lang.reflect.Method method : value.getClass().getMethods()) {
+                Class<?>[] parameters = method.getParameterTypes();
+                if (parameters.length == 2 && parameters[1] == directions &&
+                    (activity == null || parameters[0].isAssignableFrom(activity.getClass())) &&
+                    method.getReturnType() == void.class) {
+                    router = value;
+                    break;
+                }
+            }
+            if (router != null) break;
+        }
+        if (router == null || activity == null) throw new IllegalStateException("The puzzle router was not found");
+        Class<?> mode = Class.forName("com.chess.navigationinterface.PathPuzzlesMode");
+        Object guest = mode.getField(guestField).get(null);
+        String name = directionsType.substring(1, directionsType.length() - 1).replace('/', '.');
+        Object target = Class.forName(name).getConstructor(mode).newInstance(guest);
+        for (java.lang.reflect.Method method : router.getClass().getMethods()) {
+            Class<?>[] parameters = method.getParameterTypes();
+            if (parameters.length == 2 && parameters[1] == directions &&
+                parameters[0].isAssignableFrom(activity.getClass()) && method.getReturnType() == void.class) {
+                method.invoke(router, activity, target);
+                return;
+            }
+        }
+        throw new IllegalStateException("The puzzle navigation method was not found");
     }
 
     /** True while the Lichess puzzle screen is in front. */
@@ -272,61 +348,78 @@ public final class LichessPuzzles {
 
     // The puzzle repository.
 
-    /**
-     * Stores Lichess puzzles for the guest puzzle flow. Only a session's first call empties the
-     * queue, so a later one never takes away the puzzle being played.
-     */
+    /** Stores Lichess puzzles for the guest puzzle flow. */
     public static void onGuestPuzzles(Object repository) {
         if (!active) return;
         boolean fresh = freshQueue;
-        freshQueue = false;
         new Thread(() -> {
             Context context = Utils.context();
             if (context == null) return;
             PuzzleStore store = PuzzleStore.get(context);
-            if (fresh) clearGuestQueue(repository, store);
-            give(repository, store, BATCH);
+            boolean cleared = !fresh || clearGuestQueue(repository, store);
+            boolean given = give(repository, store, BATCH);
+            // Only a session whose first insert worked has emptied the queue; otherwise retry.
+            if (fresh && cleared && given) freshQueue = false;
         }, "MorpheLichessPuzzles").start();
     }
 
     /**
-     * Empties the guest queue. A signed-out user has chess.com's own guest puzzles in it, older than
-     * ours and so served first, and chess.com's screen would send their answers to its server. The
-     * Lichess puzzles that were in it are new again.
+     * Empties the guest queue once a session starts, so chess.com's own signed-out guest puzzles
+     * (older and served first) cannot be played in a Lichess session. 4.10.23's delete lives in a
+     * coroutine the patch cannot name, so this is a no-op there.
      */
-    private static void clearGuestQueue(Object repository, PuzzleStore store) {
+    private static boolean clearGuestQueue(Object repository, PuzzleStore store) {
+        if (puzzleDbField().isEmpty() || puzzleDbClear().isEmpty()) return true;
         try {
             Class<?> sourceClass = Class.forName("com.chess.features.puzzles.db.model.ProblemSource");
             Field field = repository.getClass().getDeclaredField(puzzleDbField());
             field.setAccessible(true);
             Object puzzleDb = field.get(repository);
-            puzzleDb.getClass().getMethod(puzzleDbClear(), sourceClass).invoke(puzzleDb, enumValue(sourceClass, "RATED_GUEST"));
+            puzzleDb.getClass().getMethod(puzzleDbClear(), sourceClass)
+                .invoke(puzzleDb, enumValue(sourceClass, "RATED_GUEST"));
             store.ungive();
+            return true;
         } catch (Throwable throwable) {
             Utils.logError("Guest puzzles not cleared", throwable);
+            return false;
         }
     }
 
-    /**
-     * Scores a session's puzzles locally; null lets chess.com score others. No answer of a session
-     * ever reaches chess.com, as its server refuses them.
-     */
+    /** Seeds the guest store from the puzzle view model, which holds the repository. */
+    public static void onGuestPuzzlesFrom(Object holder) {
+        if (!active || holder == null) return;
+        String name = guestRepositoryClass();
+        if (name == null || name.length() == 0) return;
+        try {
+            for (Class<?> type = holder.getClass(); type != null; type = type.getSuperclass()) {
+                for (Field field : type.getDeclaredFields()) {
+                    if (!field.getType().getName().equals(name)) continue;
+                    field.setAccessible(true);
+                    Object repository = field.get(holder);
+                    if (repository != null) onGuestPuzzles(repository);
+                    return;
+                }
+            }
+        } catch (Throwable throwable) {
+            Utils.logError("Lichess puzzles from the view model failed", throwable);
+        }
+    }
+
+    /** Scores Lichess puzzles locally; null lets chess.com score others. */
     public static Object solved(Object repository, Object solution) {
         if (!active || solution == null) return null;
         try {
-            long id = ((Number) solution.getClass().getMethod(problemIdGetter()).invoke(solution)).longValue();
+            Object idValue;
+            try {
+                idValue = solution.getClass().getMethod(problemIdGetter()).invoke(solution);
+            } catch (NoSuchMethodException noGetter) {
+                idValue = solution.getClass().getField(problemIdGetter()).get(solution);
+            }
+            long id = ((Number) idValue).longValue();
+            if (id < ID_BASE) return null;
             Context context = Utils.context();
             if (context == null) return null;
             PuzzleStore store = PuzzleStore.get(context);
-            if (id < ID_BASE) {
-                // One of chess.com's guest puzzles was served before the queue was cleared: it is
-                // left unrated, and the queue gets Lichess puzzles only.
-                Utils.log("Lichess session: chess.com puzzle " + id + " left unrated");
-                clearGuestQueue(repository, store);
-                give(repository, store, BATCH);
-                Glicko current = glicko();
-                return result(solution, current, current);
-            }
             long number = id - ID_BASE;
             int puzzleRating = store.rating(number);
             boolean correct = "CORRECT".equals(String.valueOf(fieldOfType(solution, "Outcome")));
@@ -336,51 +429,45 @@ public final class LichessPuzzles {
             save(after);
             count(correct ? SOLVED : FAILED);
             store.solved(number);
-            STORE_WORK.execute(() -> counts = null);
             give(repository, store, 1);
-            return result(solution, before, after);
+
+            int newRating = (int) Math.round(after.rating);
+            int oldRating = (int) Math.round(before.rating);
+            Object empty = emptyBytes();
+            Class<?> ratingClass = Class.forName("chesscom.puzzles.v1.Rating");
+            Class<?> algorithm = Class.forName("chesscom.puzzles.v1.RatingAlgorithm");
+            Object rating = ratingClass.getConstructor(int.class, int.class, float.class, algorithm, boolean.class,
+                    String.class, int.class, float.class, Class.forName("okio.ByteString"))
+                .newInstance(newRating, newRating - oldRating, (float) after.deviation,
+                    enumValue(algorithm, "RATING_ALGORITHM_STANDARD_RATING"), true, "", oldRating,
+                    (float) before.deviation, empty);
+            Class<?> pathResultClass = Class.forName("chesscom.puzzles.v1.PuzzlePathResult");
+            Object pathResult = null;
+            for (Constructor<?> constructor : pathResultClass.getConstructors()) {
+                Class<?>[] types = constructor.getParameterTypes();
+                if (types.length == 4 && types[0] == int.class) {
+                    pathResult = constructor.newInstance(0, null, null, empty);
+                }
+            }
+            Object score = Class.forName(scoreClass()).getConstructor(pathResultClass, ratingClass, Throwable.class)
+                .newInstance(pathResult, rating, null);
+            Class<?> result = Class.forName(resultClass());
+            for (Constructor<?> constructor : result.getConstructors()) {
+                if (constructor.getParameterTypes().length == 2) return constructor.newInstance(solution, score);
+            }
         } catch (Throwable throwable) {
             Utils.logError("Lichess puzzle not scored", throwable);
         }
         return null;
     }
 
-    /** The repository's result for a solution, with the rating before and after it. */
-    private static Object result(Object solution, Glicko before, Glicko after) throws Exception {
-        int newRating = (int) Math.round(after.rating);
-        int oldRating = (int) Math.round(before.rating);
-        Object empty = emptyBytes();
-        Class<?> ratingClass = Class.forName("chesscom.puzzles.v1.Rating");
-        Class<?> algorithm = Class.forName("chesscom.puzzles.v1.RatingAlgorithm");
-        Object rating = ratingClass.getConstructor(int.class, int.class, float.class, algorithm, boolean.class,
-                String.class, int.class, float.class, Class.forName("okio.ByteString"))
-            .newInstance(newRating, newRating - oldRating, (float) after.deviation,
-                enumValue(algorithm, "RATING_ALGORITHM_STANDARD_RATING"), true, "", oldRating,
-                (float) before.deviation, empty);
-        Class<?> pathResultClass = Class.forName("chesscom.puzzles.v1.PuzzlePathResult");
-        Object pathResult = null;
-        for (Constructor<?> constructor : pathResultClass.getConstructors()) {
-            Class<?>[] types = constructor.getParameterTypes();
-            if (types.length == 4 && types[0] == int.class) {
-                pathResult = constructor.newInstance(0, null, null, empty);
-            }
-        }
-        Object score = Class.forName(scoreClass()).getConstructor(pathResultClass, ratingClass, Throwable.class)
-            .newInstance(pathResult, rating, null);
-        Class<?> result = Class.forName(resultClass());
-        for (Constructor<?> constructor : result.getConstructors()) {
-            if (constructor.getParameterTypes().length == 2) return constructor.newInstance(solution, score);
-        }
-        return null;
-    }
-
     /** Hands Lichess puzzles near the rating to chess.com's puzzle database as guest puzzles. */
-    private static void give(Object repository, PuzzleStore store, int count) {
+    private static boolean give(Object repository, PuzzleStore store, int count) {
         try {
             List<PuzzleStore.Puzzle> puzzles = store.take(puzzleRating(), count);
             if (puzzles.isEmpty()) {
                 Utils.toast("You've played all your downloaded Lichess puzzles. Download more in settings.");
-                return;
+                return false;
             }
             Class<?> sourceClass = Class.forName("com.chess.features.puzzles.db.model.ProblemSource");
             Object guest = enumValue(sourceClass, "RATED_GUEST");
@@ -407,12 +494,19 @@ public final class LichessPuzzles {
             dao.setAccessible(true);
             Object target = dao.get(repository);
             target.getClass().getMethod(daoInsert(), List.class).invoke(target, rows);
+            counts = null;
+            return true;
         } catch (Throwable throwable) {
             Utils.logError("Lichess puzzles not stored", throwable);
+            return false;
         }
     }
 
-    /** The Lichess puzzle rating, shown where chess.com shows its own during a Lichess session. */
+    /** The Lichess rating as a long while a session runs; the app's value otherwise. */
+    public static long currentRating(long original) {
+        return session() ? rating() : original;
+    }
+
     public static int rating() {
         return (int) Math.round(glicko().rating);
     }
@@ -497,7 +591,13 @@ public final class LichessPuzzles {
     public static int[] counts(Runnable done) {
         int[] known = counts;
         Context context = Utils.context();
-        if (known != null || context == null || counting) return known;
+        if (known != null || context == null) return known;
+        if (done != null) {
+            synchronized (countWaiters) {
+                countWaiters.add(done);
+            }
+        }
+        if (counting) return null;
         counting = true;
         STORE_WORK.execute(() -> {
             try {
@@ -510,7 +610,12 @@ public final class LichessPuzzles {
             } finally {
                 counting = false;
             }
-            MAIN.post(done);
+            java.util.List<Runnable> waiters;
+            synchronized (countWaiters) {
+                waiters = new java.util.ArrayList<>(countWaiters);
+                countWaiters.clear();
+            }
+            for (Runnable waiter : waiters) MAIN.post(waiter);
         });
         return null;
     }
@@ -549,6 +654,15 @@ public final class LichessPuzzles {
     /** A Lichess session is open: chess.com's puzzle screen treats it as rated, online play. */
     public static boolean session() {
         return active;
+    }
+
+    /**
+     * The guest flow's "is_guest_mode_started". 4.10.23 throws "Signup to see content!" when the
+     * flag is set and no guest puzzle is ready yet, which is exactly the state while our Lichess
+     * puzzles are still being inserted; report it unset in a session so the flow waits instead.
+     */
+    public static boolean guestStarted(boolean started) {
+        return !session() && started;
     }
 
     private static Glicko glicko() {
