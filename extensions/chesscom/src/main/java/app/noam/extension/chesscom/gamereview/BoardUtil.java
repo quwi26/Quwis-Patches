@@ -182,7 +182,7 @@ public final class BoardUtil {
         boolean white = Character.isUpperCase(p);
         switch (Character.toLowerCase(p)) {
             case 'p':
-                return df != 0 && dr == (white ? -1 : 1);
+                return Math.abs(df) == 1 && dr == (white ? -1 : 1);
             case 'n':
                 return (Math.abs(dr) == 2 && Math.abs(df) == 1) || (Math.abs(dr) == 1 && Math.abs(df) == 2);
             case 'k':
