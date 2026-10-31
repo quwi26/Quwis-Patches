@@ -1,3 +1,9 @@
+# [1.6.20](https://github.com/quwi26/Noams-Morphe-Patches-StockfishPlus/compare/v1.6.19...v1.6.20) (2026-10-31)
+
+### Improvements
+
+* **Chess.com:** Game Review on your computer and Great and Brilliant moves analysis are selected by default again, as they were part of Unlimited Game Review before the split
+
 # [1.6.19](https://github.com/quwi26/Noams-Morphe-Patches-StockfishPlus/compare/v1.6.18...v1.6.19) (2026-10-31)
 
 ### New Features

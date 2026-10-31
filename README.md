@@ -44,6 +44,9 @@ The two add-ons work only with **Unlimited Game Review from this bundle**: selec
 Review patches, one from this bundle and one from Noam's or hyzor's, cannot be applied to the same app - they
 hook the same methods and share the same extension, so the second one fails.
 
+Both add-ons are selected by default. Uncheck them for a plain Unlimited Game Review, the way Noam's and
+hyzor's patch is.
+
 The patches for other apps (Block Blast, Gboard, Geocaching) are **not** in this bundle.
 
 Everything else is Noam's work, unchanged: chess.com 4.10.18 and 4.10.23 with arrows in games, board and accent colours,
