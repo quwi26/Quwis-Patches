@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-10-31T23:50:00",
-  "description": "A sacrifice in an already won game is no longer marked Brilliant: a +9 position sat just under the old 97% winning-outright cutoff, so the same move could look brilliant at one review depth and only good at another. The cutoff is now 95%. Noam's Patches is back in the More tab on 4.10.23.",
-  "download_url": "https://github.com/quwi26/Noams-Morphe-Patches-StockfishPlus/releases/download/v1.6.16/patches-1.6.16.mpp",
+  "created_at": "2026-10-31T23:59:00",
+  "description": "Brilliant now asks whether you were already winning without the move, not whether the move itself wins outright. Sacrifices that force mate or turn a level game into a big advantage are marked again. A sacrifice in an already won game still gets no Brilliant.",
+  "download_url": "https://github.com/quwi26/Noams-Morphe-Patches-StockfishPlus/releases/download/v1.6.17/patches-1.6.17.mpp",
   "signature_download_url": "",
-  "version": "1.6.16"
+  "version": "1.6.17"
 }

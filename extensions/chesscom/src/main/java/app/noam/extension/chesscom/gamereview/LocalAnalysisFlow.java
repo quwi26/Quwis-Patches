@@ -784,7 +784,8 @@ final class LocalAnalysisFlow {
             // most 2% of the expected points (the top of its Excellent band) still counts.
             double loss = Math.max(0, before - after);
             if (!lichess && (ply.best || loss <= 0.02)
-                && brilliant(boardBefore, isWhite, playedLan, recapture, before, after)) {
+                && brilliant(boardBefore, isWhite, playedLan, recapture,
+                    alternative(ply, isWhite, before), after)) {
                 return BRILLIANT;
             }
             if (ply.best) return great(ply, isWhite, recapture) ? GREAT : LichessMath.BEST;
@@ -795,22 +796,36 @@ final class LocalAnalysisFlow {
     }
 
     /**
+     * What the mover would have been worth without the played move: chess.com's "you should not be
+     * completely winning even if you hadn't found the move". For the engine's own best move that is
+     * the second line, because the first line is the move itself. For a "nearly best" move it is the
+     * best line already, which the engine spent on another move. With one line only (Great moves
+     * turned off) there is no alternative to compare, and the position before the move stands in.
+     */
+    private static double alternative(ReviewData.Ply ply, boolean isWhite, double before) {
+        if (!ply.best || !ply.hasSecond()) return before;
+        double second = winExpectation(ply.secondScore, 0);
+        return isWhite ? second : 1 - second;
+    }
+
+    /**
      * Whether a move is chess.com's Brilliant: a best or nearly best move that offers material for
      * good, as PrathxmOp's ReviewMath has it (sacrifice && !recapture && winAfter above equal &&
-     * winBefore below "already winning"). The sacrifice is a piece of the mover's the opponent
+     * the alternative below "already winning"). The sacrifice is a piece of the mover's the opponent
      * could take for a net gain (static exchange), not a line through the engine's PV: in an
      * ordinary trade the mover is briefly down a piece too, which made quiet moves look like
      * sacrifices.
      */
     private static boolean brilliant(char[] boardBefore, boolean isWhite,
-                                     String playedLan, boolean recapture, double before, double after) {
+                                     String playedLan, boolean recapture, double alternative, double after) {
         if (recapture || playedLan == null || boardBefore == null) return false;
         // 0.50 is a dead-equal position: a bishop given for a pawn in a drawn endgame (46.Bxb4,
         // 51...Bxh7) sat exactly there and looked brilliant. A sacrifice must leave the mover
         // better, not merely not worse.
-        // 0.95 is "already winning by a lot": at 0.97 a +9 position slipped through, and whether
-        // its sacrifice is "best" depended on the search depth (17.Re8 at 100k, not at 300k).
-        if (after < 0.55 || before >= 0.95) return false;
+        // 0.95 is "already winning by a lot", read on the position without this move. Measured on
+        // the move's own line it meant "the sacrifice must not win outright", which denied the mark
+        // to every sacrifice that forces mate and to every one that turns a level game into +9.
+        if (after < 0.55 || alternative >= 0.95) return false;
         return BoardUtil.isSacrifice(boardBefore, isWhite, playedLan);
     }
 

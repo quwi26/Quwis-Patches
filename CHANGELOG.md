@@ -1,3 +1,9 @@
+# [1.6.17](https://github.com/quwi26/Noams-Morphe-Patches-StockfishPlus/compare/v1.6.16...v1.6.17) (2026-10-31)
+
+### Bug Fixes
+
+* **Chess.com:** Brilliant now asks whether you were already winning without the move, not whether the move itself wins outright: sacrifices that force mate or turn a level game into a big advantage are marked again
+
 # [1.6.16](https://github.com/quwi26/Noams-Morphe-Patches-StockfishPlus/compare/v1.6.15...v1.6.16) (2026-10-31)
 
 ### Bug Fixes
