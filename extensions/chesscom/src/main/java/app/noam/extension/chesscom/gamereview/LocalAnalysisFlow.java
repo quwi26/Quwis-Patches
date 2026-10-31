@@ -796,7 +796,7 @@ final class LocalAnalysisFlow {
 
     /**
      * Whether a move is chess.com's Brilliant: a best or nearly best move that offers material for
-     * good, as PrathxmOp's ReviewMath has it (sacrifice && !recapture && winAfter >= 0.50 &&
+     * good, as PrathxmOp's ReviewMath has it (sacrifice && !recapture && winAfter above equal &&
      * winBefore < 0.97). The sacrifice is a piece of the mover's the opponent could take for a net
      * gain (static exchange), not a line through the engine's PV: in an ordinary trade the mover is
      * briefly down a piece too, which made quiet moves look like sacrifices.
@@ -804,7 +804,10 @@ final class LocalAnalysisFlow {
     private static boolean brilliant(char[] boardBefore, boolean isWhite,
                                      String playedLan, boolean recapture, double before, double after) {
         if (recapture || playedLan == null || boardBefore == null) return false;
-        if (after < 0.50 || before >= 0.97) return false;
+        // 0.50 is a dead-equal position: a bishop given for a pawn in a drawn endgame (46.Bxb4,
+        // 51...Bxh7) sat exactly there and looked brilliant. A sacrifice must leave the mover
+        // better, not merely not worse.
+        if (after < 0.55 || before >= 0.97) return false;
         return BoardUtil.isSacrifice(boardBefore, isWhite, playedLan);
     }
 

@@ -1,3 +1,9 @@
+# [1.6.14](https://github.com/quwi26/Noams-Morphe-Patches-StockfishPlus/compare/v1.6.13...v1.6.14) (2026-10-31)
+
+### Bug Fixes
+
+* **Chess.com:** a sacrifice that leaves the game dead equal is no longer marked Brilliant: a bishop given for a pawn in a drawn endgame sat exactly on the 50% boundary of expected points
+
 # [1.6.13](https://github.com/quwi26/Noams-Morphe-Patches-StockfishPlus/compare/v1.6.12...v1.6.13) (2026-10-31)
 
 ### New Features
