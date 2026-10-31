@@ -1,3 +1,9 @@
+# [1.7.1](https://github.com/quwi26/Quwis-Patches/compare/v1.7.0...v1.7.1) (2026-10-31)
+
+### Bug Fixes
+
+* **Chess.com:** the Lichess puzzles caption on the welcome screen uses the new Quwi's Patches name too
+
 # [1.7.0](https://github.com/quwi26/Quwis-Patches/compare/v1.6.21...v1.7.0) (2026-10-31)
 
 ### New Features

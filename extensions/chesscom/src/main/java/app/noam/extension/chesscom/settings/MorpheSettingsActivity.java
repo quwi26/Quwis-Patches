@@ -888,7 +888,7 @@ public final class MorpheSettingsActivity extends Activity {
                 + "a rating worked out on this phone. Download some now? You can also skip this."));
             list.addView(header("Offline puzzles"));
             list.addView(offlinePuzzles(), cardParams());
-            list.addView(caption("You can download more or delete them any time in More → Noam's "
+            list.addView(caption("You can download more or delete them any time in More → Quwi's "
                 + "Patches → Lichess Puzzles."));
         }
         boolean last = welcomeStep == steps.size() - 1;
