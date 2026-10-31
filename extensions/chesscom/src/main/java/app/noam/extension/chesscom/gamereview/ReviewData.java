@@ -57,6 +57,8 @@ final class ReviewData {
     String source;
     /** The game's PGN header, when it had one: who played, when, and how it ended. */
     String white, black, date, result;
+    /** The game's own address on chess.com, when its PGN carried one. */
+    String link;
     /** Every played move (SAN) and the mark the review gave it, for the saved-review list. */
     String[] sans;
     String[] marks;
@@ -114,6 +116,7 @@ final class ReviewData {
         json.putOpt("black", black);
         json.putOpt("date", date);
         json.putOpt("result", result);
+        json.putOpt("link", link);
         if (sans != null) json.put("sans", new JSONArray(sans));
         if (marks != null) json.put("marks", new JSONArray(marks));
         return json;
@@ -157,6 +160,7 @@ final class ReviewData {
         data.black = json.has("black") ? json.getString("black") : null;
         data.date = json.has("date") ? json.getString("date") : null;
         data.result = json.has("result") ? json.getString("result") : null;
+        data.link = json.has("link") ? json.getString("link") : null;
         data.sans = json.has("sans") ? strings(json.getJSONArray("sans")).toArray(new String[0]) : null;
         data.marks = json.has("marks") ? strings(json.getJSONArray("marks")).toArray(new String[0]) : null;
         return data;

@@ -41,7 +41,7 @@ final class LocalAnalysisFlow {
      * Returns a Flow (the app's obfuscated coroutine Flow interface, passed in by the patch) that
      * runs a full local Stockfish review of {@code pgn} when collected.
      */
-    static Object createFlow(final Class<?> flowClass, final String pgn) {
+    static Object createFlow(final Class<?> flowClass, final String pgn, final String link) {
         try {
             final AppTypes types = AppTypes.get(flowClass);
             Class<?> flowIface = types.flowClass;
@@ -57,7 +57,7 @@ final class LocalAnalysisFlow {
                             // review on a worker thread, suspend the caller and resume it when
                             // the review has finished (see FlowBridge).
                             return FlowBridge.collect(types, args[0], args[1], "noam-stockfish-review",
-                                emitter -> runCollect(types, pgn, emitter));
+                                emitter -> runCollect(types, pgn, link, emitter));
                         }
                         if (method.getName().equals("toString")) {
                             return "LocalAnalysisFlow(" + (pgn != null ? pgn.length() : 0) + " chars)";
@@ -96,7 +96,7 @@ final class LocalAnalysisFlow {
         }
     }
 
-    private static void runCollect(AppTypes types, String pgn, FlowBridge.Emitter emitter) throws Throwable {
+    private static void runCollect(AppTypes types, String pgn, String link, FlowBridge.Emitter emitter) throws Throwable {
         Activity activity = Utils.topActivity();
         // Fair-play gate: never analyse while a game against a person is on screen.
         if (GameReview.isLiveMatch(activity)) {
@@ -260,6 +260,7 @@ final class LocalAnalysisFlow {
             // Every move's mark, worked out once: the review screen uses them, and a saved review
             // keeps them for the list of brilliant moves the fork's settings shows.
             String[] previousMarks = data.marks;
+            String previousLink = data.link;
             String[] marks = new String[totalMoves];
             for (int i = 0; i < totalMoves; i++) {
                 marks[i] = classify(data.plies[i], i, bookPlies, lichess, fens[i],
@@ -272,10 +273,13 @@ final class LocalAnalysisFlow {
             if (data.black == null) data.black = pgnHeader(pgn, "Black");
             if (data.date == null) data.date = pgnHeader(pgn, "Date");
             if (data.result == null) data.result = pgnHeader(pgn, "Result");
+            if (data.link == null) data.link = pgnHeader(pgn, "Link");
+            if (data.link == null) data.link = link;
             if (!fromDisk) {
                 SavedReviews.save(context, savedKey, savedNodes, data);
-            } else if (previousMarks == null || !Arrays.equals(previousMarks, marks)) {
-                // Saved by an older version: its marks (and the settings list) are out of date.
+            } else if (previousMarks == null || !Arrays.equals(previousMarks, marks)
+                || (previousLink == null && data.link != null)) {
+                // Saved by an older version: its marks, link and settings entry are out of date.
                 SavedReviews.saveMeta(context, savedKey, data);
             }
             // Where Lichess marked a move, chess.com shows Lichess's better move; Stockfish keeps off it.

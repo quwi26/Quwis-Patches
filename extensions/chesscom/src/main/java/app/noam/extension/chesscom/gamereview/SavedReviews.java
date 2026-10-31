@@ -95,12 +95,16 @@ final class SavedReviews {
             putIfPresent(json, "black", data.black);
             putIfPresent(json, "date", data.date);
             putIfPresent(json, "result", data.result);
+            putIfPresent(json, "link", data.link);
             JSONArray brilliants = new JSONArray();
             if (data.marks != null && data.sans != null) {
                 for (int i = 0; i < data.marks.length && i < data.sans.length; i++) {
                     if (!"brilliant".equals(data.marks[i])) continue;
                     String san = data.sans[i] == null ? "" : data.sans[i];
-                    brilliants.put((i / 2 + 1) + (i % 2 == 0 ? "." : "...") + san);
+                    JSONObject move = new JSONObject();
+                    move.put("label", (i / 2 + 1) + (i % 2 == 0 ? "." : "...") + san);
+                    move.put("ply", i);
+                    brilliants.put(move);
                 }
             }
             json.put("brilliants", brilliants);
@@ -120,14 +124,25 @@ final class SavedReviews {
 
     /** A saved review's game and the brilliant moves it found. */
     static final class Meta {
-        String white, black, date, result;
-        final java.util.List<String> brilliants = new java.util.ArrayList<>();
+        /** One brilliant move: its label ("10.Nxb5") and its 0-based ply, -1 when unknown. */
+        static final class Move {
+            final String label;
+            final int ply;
 
-        /** "Morphy – Duke, 1858", or null when the game came without a header. */
+            Move(String label, int ply) {
+                this.label = label;
+                this.ply = ply;
+            }
+        }
+
+        String white, black, date, result, link;
+        final java.util.List<Move> brilliants = new java.util.ArrayList<>();
+
+        /** "Morphy - Duke, 1858", or null when the game came without a header. */
         String game() {
             StringBuilder text = new StringBuilder();
             if (white != null) text.append(white);
-            if (black != null) text.append(text.length() > 0 ? " – " : "").append(black);
+            if (black != null) text.append(text.length() > 0 ? " - " : "").append(black);
             if (date != null) text.append(text.length() > 0 ? ", " : "").append(date);
             return text.length() == 0 ? null : text.toString();
         }
@@ -152,8 +167,19 @@ final class SavedReviews {
                 meta.black = json.has("black") ? json.getString("black") : null;
                 meta.date = json.has("date") ? json.getString("date") : null;
                 meta.result = json.has("result") ? json.getString("result") : null;
+                meta.link = json.has("link") ? json.getString("link") : null;
                 org.json.JSONArray brilliants = json.getJSONArray("brilliants");
-                for (int i = 0; i < brilliants.length(); i++) meta.brilliants.add(brilliants.getString(i));
+                for (int i = 0; i < brilliants.length(); i++) {
+                    Object item = brilliants.get(i);
+                    if (item instanceof String) {
+                        // Saved before the list learned to link to the move.
+                        meta.brilliants.add(new Meta.Move((String) item, -1));
+                    } else if (item instanceof JSONObject) {
+                        JSONObject move = (JSONObject) item;
+                        meta.brilliants.add(new Meta.Move(move.getString("label"),
+                            move.has("ply") ? move.getInt("ply") : -1));
+                    }
+                }
                 metas.add(meta);
             } catch (Exception e) {
                 Utils.logError("A saved review's summary could not be read", e);

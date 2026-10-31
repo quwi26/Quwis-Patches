@@ -35,7 +35,30 @@ public final class GameReviewExtension {
                 if (v instanceof String) pgn = (String) v;
             } catch (Throwable ignored) {}
         }
-        return LocalAnalysisFlow.createFlow(flowClass, pgn);
+        return LocalAnalysisFlow.createFlow(flowClass, pgn, gameLink(config));
+    }
+
+    /**
+     * The game's address, when the configuration carries one: the review list links back to it.
+     * The PGN's own Link header is tried as well, further on. Null when neither has it.
+     */
+    private static String gameLink(Object config) {
+        if (config == null || config instanceof String) return null;
+        for (Method method : config.getClass().getMethods()) {
+            if (method.getParameterCount() != 0 || method.getReturnType() != String.class) continue;
+            String name = method.getName().toLowerCase(java.util.Locale.ROOT);
+            if (!name.contains("url") && !name.contains("link")) continue;
+            try {
+                Object value = method.invoke(config);
+                if (value instanceof String) {
+                    String text = (String) value;
+                    if (text.startsWith("http") && text.contains("chess.com")) return text;
+                }
+            } catch (Throwable ignored) {
+                // A getter that needs something this fork cannot give it: try the next one.
+            }
+        }
+        return null;
     }
 
     public static Object getFullGameAnalysisPermissions() {

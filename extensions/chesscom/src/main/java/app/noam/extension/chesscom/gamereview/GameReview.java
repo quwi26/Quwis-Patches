@@ -298,12 +298,28 @@ public final class GameReview {
 
     /** Brilliant moves the fork's own reviews found, across the reviews saved on this phone. */
     public static final class Brilliants {
+        /** One brilliant move, with the game it came from and the address of that move. */
+        public static final class Move {
+            /** "10.Nxb5". */
+            public final String label;
+            /** "Morphy - Duke, 1858", or null when the game had no header. */
+            public final String game;
+            /** The game at that move on chess.com, or null when its address was not saved. */
+            public final String url;
+
+            Move(String label, String game, String url) {
+                this.label = label;
+                this.game = game;
+                this.url = url;
+            }
+        }
+
         /** Saved games that had at least one. */
         public final int games;
-        /** Newest first, each "10.Nxb5 — Morphy – Duke, 1858" (or just the move). */
-        public final java.util.List<String> moves;
+        /** Newest first. */
+        public final java.util.List<Move> moves;
 
-        Brilliants(int games, java.util.List<String> moves) {
+        Brilliants(int games, java.util.List<Move> moves) {
             this.games = games;
             this.moves = moves;
         }
@@ -311,17 +327,36 @@ public final class GameReview {
 
     public static Brilliants savedBrilliants() {
         Context context = Utils.context();
-        java.util.List<String> moves = new java.util.ArrayList<>();
+        java.util.List<Brilliants.Move> moves = new java.util.ArrayList<>();
         int games = 0;
         if (context != null) {
             for (SavedReviews.Meta meta : SavedReviews.metas(context)) {
                 if (meta.brilliants.isEmpty()) continue;
                 games++;
                 String game = meta.game();
-                for (String move : meta.brilliants) moves.add(game == null ? move : move + " — " + game);
+                for (SavedReviews.Meta.Move move : meta.brilliants) {
+                    moves.add(new Brilliants.Move(move.label, game, moveLink(meta.link, move.ply)));
+                }
             }
         }
         return new Brilliants(games, moves);
+    }
+
+    /** The game's address moved to ply (0-based), replacing any move it already pointed at. */
+    private static String moveLink(String link, int ply) {
+        if (link == null || ply < 0) return null;
+        int question = link.indexOf('?');
+        String base = question >= 0 ? link.substring(0, question) : link;
+        String query = question >= 0 ? link.substring(question + 1) : "";
+        StringBuilder kept = new StringBuilder();
+        for (String part : query.split("&")) {
+            if (part.isEmpty() || part.startsWith("move=")) continue;
+            if (kept.length() > 0) kept.append('&');
+            kept.append(part);
+        }
+        StringBuilder url = new StringBuilder(base);
+        if (kept.length() > 0) url.append('?').append(kept);
+        return url.append(kept.length() > 0 ? '&' : '?').append("move=").append(ply).toString();
     }
 
     /** The review runs on the phone, not on chess.com's servers. */

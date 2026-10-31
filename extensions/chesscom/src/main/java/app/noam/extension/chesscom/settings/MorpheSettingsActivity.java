@@ -16,6 +16,7 @@ import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.LayerDrawable;
 import android.graphics.drawable.RippleDrawable;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.TypedValue;
@@ -65,6 +66,10 @@ public final class MorpheSettingsActivity extends Activity {
     public static final String EXTRA_PAGE = "morphe_page";
 
     private static final String TITLE = "Noam's Patches";
+    /** Where a wrong Brilliant mark is reported: the game, the move, and what chess.com says. */
+    private static final String REPORT_BRILLIANT =
+        "https://github.com/quwi26/Noams-Morphe-Patches-StockfishPlus/issues/new"
+            + "?title=Wrong%20Brilliant%20mark&body=Game%3A%20%0AMove%3A%20%0AWhat%20chess.com%20says%3A%20%0A";
     private static final int TEXT = 0xFFFFFFFF;
     private static final int TEXT_SECONDARY = 0xFFB4B2B0;
     /** Features that take effect when the app starts. */
@@ -236,6 +241,16 @@ public final class MorpheSettingsActivity extends Activity {
 
     private void open(String target) {
         startActivity(new Intent(this, MorpheSettingsActivity.class).putExtra(EXTRA_PAGE, target));
+    }
+
+    /** Opens a web address in whatever the phone has for it (the chess.com app, a browser). */
+    private void browse(String url) {
+        try {
+            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+        } catch (Throwable t) {
+            Utils.logError("Could not open " + url, t);
+            Utils.toast("No app on this phone can open that link.");
+        }
     }
 
     private void restartNeeded() {
@@ -520,14 +535,27 @@ public final class MorpheSettingsActivity extends Activity {
             String games = brilliants.games == 1 ? "1 game" : brilliants.games + " games";
             found.addView(infoRow("Found by your reviews", moves + " in " + games));
             int shown = Math.min(brilliants.moves.size(), 20);
-            for (int i = 0; i < shown; i++) found.addView(infoRow(brilliants.moves.get(i), null));
+            for (int i = 0; i < shown; i++) {
+                GameReview.Brilliants.Move move = brilliants.moves.get(i);
+                if (move.url != null) {
+                    found.addView(actionRow(move.label, move.game, () -> browse(move.url)));
+                } else {
+                    found.addView(infoRow(move.label, move.game));
+                }
+            }
             if (brilliants.moves.size() > shown) {
                 found.addView(caption("And " + (brilliants.moves.size() - shown) + " more."));
             }
         }
+        LinearLayout report = card();
+        list.addView(report, cardParams());
+        report.addView(actionRow("Report a wrong mark",
+            "Opens a GitHub issue: the game, the move, and what chess.com says.",
+            () -> browse(REPORT_BRILLIANT)));
         list.addView(caption(brilliants.games > 0
             ? "A move the engine found best that gives up material for good, as chess.com's “!!”. Read from "
-                + "the reviews saved on this phone, which chess.com's own stats cannot see."
+                + "the reviews saved on this phone, which chess.com's own stats cannot see. A move opens the "
+                + "game at that move on chess.com when the review saved its link."
             : "None yet: a game reviewed after this version can show one here. chess.com's own Brilliant "
                 + "stat is counted on its servers and needs Diamond; this one comes from your reviews."));
         list.addView(caption(stockfish
