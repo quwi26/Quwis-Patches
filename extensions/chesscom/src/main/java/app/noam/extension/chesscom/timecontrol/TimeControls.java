@@ -31,6 +31,14 @@ public final class TimeControls {
         return enabled() ? 1 - SUB_MINUTE_SECONDS.length : 0;
     }
 
+    /**
+     * The shared time stepper builds both rows: minutes, whose maximum is 120, and increments,
+     * which stop at 60. Only the minutes row gets the sub-minute stops.
+     */
+    public static boolean minutesSlider(int max) {
+        return max == 120;
+    }
+
     /** Slider stop for a time: whole minutes as before, or the nearest sub-minute stop. */
     public static int sliderPosition(Object gameTime) {
         int seconds = seconds(gameTime);

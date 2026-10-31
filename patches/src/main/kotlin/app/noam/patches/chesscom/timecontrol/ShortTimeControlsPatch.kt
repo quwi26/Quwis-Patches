@@ -196,11 +196,16 @@ val shortTimeControlsPatch = bytecodePatch(
                 // v11 is free until the slider call below.
                 val spare = 11
                 val target = getInstruction(toFloatMin)
-                replaceInstruction(minConst, "const/16 v$spare, 120")
+                // p2 is the row's maximum: 120 for the minutes row, 60 for the increment one. It
+                // lives above v15 in this method, and if-ne can only read v0-v15, so the check goes
+                // through a helper that takes it as a /range argument. The original minimum
+                // constant stays, so the increment row keeps its own bound.
                 addInstructionsWithLabels(
                     minConst + 1,
                     """
-                        if-ne p2, v$spare, :morphe_time_min
+                        invoke-static/range { p2 .. p2 }, $TIME_CONTROLS->minutesSlider(I)Z
+                        move-result v$spare
+                        if-eqz v$spare, :morphe_time_min
                         invoke-static { }, $TIME_CONTROLS->sliderMin()I
                         move-result v$minInt
                     """,

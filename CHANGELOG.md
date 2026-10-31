@@ -1,3 +1,9 @@
+# [1.6.18](https://github.com/quwi26/Noams-Morphe-Patches-StockfishPlus/compare/v1.6.17...v1.6.18) (2026-10-31)
+
+### Bug Fixes
+
+* **Chess.com:** Time controls under a minute no longer moves the increment slider's minimum: the shared stepper is told apart by a range-safe check, which also clears the assembler warning on 4.10.23
+
 # [1.6.17](https://github.com/quwi26/Noams-Morphe-Patches-StockfishPlus/compare/v1.6.16...v1.6.17) (2026-10-31)
 
 ### Bug Fixes
