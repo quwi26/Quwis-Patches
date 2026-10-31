@@ -63,8 +63,8 @@ Then in the app: **More → Noam's Patches → Game Review → Stockfish on your
 
 Press **Test the connection**; it should answer “The computer answered: its Stockfish is ready.”
 **Benchmark your computer** then runs 100k, 300k, 1M and 5M nodes on one position each, over one engine,
-with the start-up time kept separate — on an i5-12450H that is 0.57 s to start and 0.09 / 0.14 / 0.32 /
-1.49 s for the four budgets. The review chooser offers **Stockfish on your computer** next to chess.com,
+with the start-up time kept separate — on an i5-12450H that is 0.55 s to start and 0.08 / 0.12 / 0.28 /
+1.16 s for the four budgets. The review chooser offers **Stockfish on your computer** next to chess.com,
 Local Stockfish and Lichess.
 
 ### The bridge itself
