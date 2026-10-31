@@ -83,8 +83,9 @@ phone talks to your computer on that network only.
 ## Credits
 
 All patches are [Noam's](https://github.com/ImNoammm/Noams-Morphe-Patches) (GPL-3.0), which itself builds on
-PrathxmOp's work; the computer reviewer was added in this fork. If you want the patches for other apps too,
-use Noam's own source.
+PrathxmOp's work; the computer reviewer was added in this fork. The chess.com 4.10.23 support follows
+[hyzor's port](https://github.com/hyzor/hyzor-morphe-patches) (GPL-3.0) of the same patches. If you want the
+patches for other apps too, use Noam's own source.
 
 ## Building
 
