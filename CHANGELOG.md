@@ -1,3 +1,9 @@
+# [1.6.16](https://github.com/quwi26/Noams-Morphe-Patches-StockfishPlus/compare/v1.6.15...v1.6.16) (2026-10-31)
+
+### Bug Fixes
+
+* **Chess.com:** a sacrifice in an already won game is no longer marked Brilliant, where the old "winning outright" cutoff let a +9 position through and the mark depended on the review depth
+
 # [1.6.15](https://github.com/quwi26/Noams-Morphe-Patches-StockfishPlus/compare/v1.6.14...v1.6.15) (2026-10-31)
 
 ### Bug Fixes
