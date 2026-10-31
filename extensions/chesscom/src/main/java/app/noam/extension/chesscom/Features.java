@@ -26,6 +26,8 @@ public final class Features {
     public static final String UNLIMITED_COACH = "unlimited_coach";
     public static final String PREMIUM_UNLOCK = "premium_unlock";
     public static final String GAME_REVIEW = "game_review";
+    public static final String COMPUTER_REVIEW = "computer_review";
+    public static final String GREAT_MOVES = "great_moves";
 
     public static final String PAGE_HOME = "home";
     public static final String PAGE_TABS = "tabs";
@@ -124,12 +126,24 @@ public final class Features {
             "Game Review asks who reviews: chess.com, Lichess's servers (with your Lichess account) or, "
                 + "with Stockfish analysis, Stockfish on your phone. The phone and Lichess both judge moves "
                 + "the Lichess way: ?! ? ??, accuracy and centipawn loss. The phone also marks the moves "
-                + "Lichess leaves unmarked Best, Excellent or Good, as chess.com does, Great for the one "
-                + "move that was the only one keeping the position good, and Brilliant for a best or "
-                + "nearly best move that offers material for good. Reviews are saved, so a game opens "
-                + "straight away the next time, and the brilliant moves they found are listed in the "
-                + "settings.",
+                + "Lichess leaves unmarked Best, Excellent or Good, as chess.com does. Reviews are saved, "
+                + "so a game opens straight away the next time. Two more patches in this bundle add "
+                + "Stockfish on your computer, and Great (!) and Brilliant (!!) marks.",
             PAGE_GAME_REVIEW, Features::gameReviewPatched),
+        new Feature(COMPUTER_REVIEW, "Games", "glyph_device_computer_versus", "Game Review on your computer",
+            "Adds a fourth reviewer to Game Review: Stockfish on your own computer, over Wi-Fi, much "
+                + "faster than the phone. The settings hold its address and token, its own depth and "
+                + "thread count, a connection test and a benchmark. It needs Unlimited Game Review, "
+                + "from this bundle: two Unlimited Game Review patches cannot be applied to one app.",
+            PAGE_GAME_REVIEW, Features::computerReviewPatched),
+        new Feature(GREAT_MOVES, "Games", "glyph_element_star_hollow", "Great and Brilliant moves analysis",
+            "In a review by Local Stockfish or Stockfish on your computer, also marks chess.com's Great "
+                + "(!) and Brilliant (!!): the engine's own best move when it was the only one keeping "
+                + "the position good, and a best or nearly best move that offers material for good. It "
+                + "needs the engine's second-best line, so a review asks for two lines at once. It needs "
+                + "Unlimited Game Review, from this bundle: two Unlimited Game Review patches cannot be "
+                + "applied to one app.",
+            PAGE_GAME_REVIEW, Features::greatMovesPatched),
         new Feature(LIMIT_TOASTS, "Less clutter", "glyph_message_bubble_fill_pair", "Limits as toasts",
             "When you reach a free limit (Game Review, puzzles, lessons, drills…) a short toast says "
                 + "so instead of a full-screen Premium offer. Promotional pop-ups are not shown.",
@@ -168,6 +182,8 @@ public final class Features {
     public static boolean unlimitedCoachPatched() { return false; }
     public static boolean premiumUnlockPatched() { return false; }
     public static boolean gameReviewPatched() { return false; }
+    public static boolean computerReviewPatched() { return false; }
+    public static boolean greatMovesPatched() { return false; }
 
     public static List<Feature> patched() {
         List<Feature> list = new ArrayList<>();

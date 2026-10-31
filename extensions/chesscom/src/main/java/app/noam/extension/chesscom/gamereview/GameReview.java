@@ -74,8 +74,20 @@ public final class GameReview {
 
     /** Local Stockfish needs the engine, which comes with Stockfish analysis; without it chess.com reviews. */
     private static Mode usable(Mode chosen) {
-        boolean engine = chosen == Mode.STOCKFISH || chosen == Mode.LAPTOP;
-        return engine && !Features.stockfishPatched() ? Mode.CHESSCOM : chosen;
+        if (chosen == Mode.STOCKFISH && !Features.stockfishPatched()) return Mode.CHESSCOM;
+        // Stockfish on the computer needs its own patch, not the phone's engine: the search runs there.
+        if (chosen == Mode.LAPTOP && !computerReview()) return Mode.CHESSCOM;
+        return chosen;
+    }
+
+    /** The Game Review on your computer patch, applied and switched on. */
+    public static boolean computerReview() {
+        return Features.computerReviewPatched() && Features.isEnabled(Features.COMPUTER_REVIEW);
+    }
+
+    /** The Great and Brilliant moves analysis patch, applied and switched on. */
+    public static boolean marksMoves() {
+        return Features.greatMovesPatched() && Features.isEnabled(Features.GREAT_MOVES);
     }
 
     static void setMode(Mode chosen) {
@@ -224,9 +236,11 @@ public final class GameReview {
     /**
      * Whether a review marks Great moves. It needs the engine's second-best line, so the review asks
      * Stockfish for two lines (MultiPV 2): no extra time at the same node budget, but the top line
-     * ends a ply or two shallower.
+     * ends a ply or two shallower. With the switch off, or without the Great and Brilliant moves
+     * analysis patch, no Great or Brilliant mark is given.
      */
     public static boolean greatMoves() {
+        if (!marksMoves()) return false;
         SharedPreferences preferences = Features.preferences();
         return preferences == null || preferences.getBoolean(GREAT_MOVES, true);
     }

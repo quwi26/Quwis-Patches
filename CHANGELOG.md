@@ -1,3 +1,13 @@
+# [1.6.19](https://github.com/quwi26/Noams-Morphe-Patches-StockfishPlus/compare/v1.6.18...v1.6.19) (2026-10-31)
+
+### New Features
+
+* **Chess.com:** the fork's Game Review additions are separate patches. Unlimited Game Review is the base; Game Review on your computer adds the fourth reviewer, and Great and Brilliant moves analysis adds the Great (!) and Brilliant (!!) marks. Both add-ons need Unlimited Game Review from this bundle, and a second Unlimited Game Review from another source still cannot be applied to the same app. After updating, select the two add-ons to keep the computer reviewer and the marks
+
+### Improvements
+
+* **Chess.com:** Stockfish on your computer no longer needs the Stockfish analysis patch: the search runs on the computer, so the phone's engine is not loaded for it
+
 # [1.6.18](https://github.com/quwi26/Noams-Morphe-Patches-StockfishPlus/compare/v1.6.17...v1.6.18) (2026-10-31)
 
 ### Bug Fixes

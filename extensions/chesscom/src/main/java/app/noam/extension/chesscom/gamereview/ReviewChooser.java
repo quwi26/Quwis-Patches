@@ -6,6 +6,8 @@ import android.app.AlertDialog;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.List;
 
 import app.noam.extension.chesscom.Features;
 import app.noam.extension.chesscom.Utils;
@@ -18,12 +20,17 @@ import app.noam.extension.chesscom.stockfish.BridgeSettings;
  * and replayed once a reviewer is picked.
  */
 public final class ReviewChooser {
-    /** The reviewers on offer: Local Stockfish only when the app was patched with Stockfish analysis (its engine). */
+    /**
+     * The reviewers on offer: Local Stockfish only when the app was patched with Stockfish analysis
+     * (its engine), Stockfish on the computer only with the Game Review on your computer patch.
+     */
     private static GameReview.Mode[] modes() {
-        return Features.stockfishPatched()
-            ? new GameReview.Mode[]{GameReview.Mode.CHESSCOM, GameReview.Mode.STOCKFISH,
-                GameReview.Mode.LAPTOP, GameReview.Mode.LICHESS}
-            : new GameReview.Mode[]{GameReview.Mode.CHESSCOM, GameReview.Mode.LICHESS};
+        List<GameReview.Mode> modes = new ArrayList<>();
+        modes.add(GameReview.Mode.CHESSCOM);
+        if (Features.stockfishPatched()) modes.add(GameReview.Mode.STOCKFISH);
+        if (GameReview.computerReview()) modes.add(GameReview.Mode.LAPTOP);
+        modes.add(GameReview.Mode.LICHESS);
+        return modes.toArray(new GameReview.Mode[0]);
     }
 
     private static String title(GameReview.Mode mode) {

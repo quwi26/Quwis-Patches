@@ -761,8 +761,9 @@ final class LocalAnalysisFlow {
      * The mark a move gets, once. Lichess marks inaccuracies, mistakes and blunders (a lost forced
      * mate shows as a Miss); moves of the opening Lichess names are Book and the engine's own best
      * move is Brilliant, Great or Best (a sacrifice within 2% of the best can be Brilliant too).
-     * Local Stockfish marks the rest Excellent or Good, as chess.com would; Lichess's review leaves
-     * them unmarked, as Lichess does.
+     * Brilliant and Great only come with the Great and Brilliant moves analysis patch. Local
+     * Stockfish marks the rest Excellent or Good, as chess.com would; Lichess's review leaves them
+     * unmarked, as Lichess does.
      */
     private static String classify(ReviewData.Ply ply, int i, int bookPlies, boolean lichess,
                                    String fen, char[] boardBefore, char[] captures, String[] playedLans) {
@@ -770,6 +771,7 @@ final class LocalAnalysisFlow {
         boolean isWhite = fen == null || fen.indexOf(" b ") < 0;
         boolean recapture = BoardUtil.isRecapture(i > 0 ? playedLans[i - 1] : null,
             i > 0 && captures[i - 1] != '.', playedLan);
+        boolean marks = GameReview.marksMoves();
         if (ply.miss) return LichessMath.MISS;
         if (ply.judgment != null) return ply.judgment;
         if (i < bookPlies) return LichessMath.BOOK;
@@ -780,15 +782,15 @@ final class LocalAnalysisFlow {
                 before = 1 - before;
                 after = 1 - after;
             }
-            // chess.com: Brilliant is "the best or nearly best move" — a sacrifice that costs at
+            // chess.com: Brilliant is "the best or nearly best move" - a sacrifice that costs at
             // most 2% of the expected points (the top of its Excellent band) still counts.
             double loss = Math.max(0, before - after);
-            if (!lichess && (ply.best || loss <= 0.02)
+            if (marks && !lichess && (ply.best || loss <= 0.02)
                 && brilliant(boardBefore, isWhite, playedLan, recapture,
                     alternative(ply, isWhite, before), after)) {
                 return BRILLIANT;
             }
-            if (ply.best) return great(ply, isWhite, recapture) ? GREAT : LichessMath.BEST;
+            if (ply.best) return marks && great(ply, isWhite, recapture) ? GREAT : LichessMath.BEST;
             return LichessMath.unjudged(ply.scoreBefore, ply.mateBefore,
                 ply.scoreAfter, ply.mateAfter, isWhite);
         }

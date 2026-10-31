@@ -491,18 +491,24 @@ public final class MorpheSettingsActivity extends Activity {
 
     private void renderGameReview() {
         lichessMethodChoice();
-        // Local Stockfish needs the engine, which comes with the Stockfish analysis patch.
+        // Local Stockfish needs the engine, which comes with the Stockfish analysis patch; Stockfish
+        // on the computer and Great and Brilliant marks have patches of their own.
         boolean stockfish = Features.stockfishPatched();
-        if (stockfish) {
-            reviewDepthChoice();
-            list.addView(switchRow("Great moves", "chess.com's “!” for the move that was the only one "
+        boolean computer = GameReview.computerReview();
+        boolean marks = GameReview.marksMoves();
+        if (stockfish) reviewDepthChoice();
+        if (marks && (stockfish || computer)) {
+            list.addView(switchRow("Great moves", "chess.com's \"!\" for the move that was the only one "
                 + "keeping the position good.", GameReview.greatMoves(), GameReview::setGreatMoves));
             list.addView(caption("Great needs the engine's second-best line, so a review asks Stockfish "
                 + "for two lines at once (MultiPV 2) instead of one. At the same node budget that costs "
-                + "no extra time, but the best line ends a ply or two shallower — most noticeable at Fast "
-                + "(100,000 nodes a move), barely at all from 300,000 up. It marks Great in Local Stockfish "
-                + "and on your computer; Lichess's own review stays as Lichess sends it, and a review saved "
-                + "earlier keeps the marks it was made with."));
+                + "no extra time, but the best line ends a ply or two shallower - most noticeable at Fast "
+                + "(100,000 nodes a move), barely at all from 300,000 up. Brilliant is marked either way: "
+                + "it needs no second line. Both are marked in Local Stockfish and on your computer; "
+                + "Lichess's own review stays as Lichess sends it, and a review saved earlier keeps the "
+                + "marks it was made with."));
+        }
+        if (stockfish) {
             list.addView(header("Local Stockfish engines"));
             list.addView(segments(new String[]{"Auto", "1", "2", "3", "4"}, GameReview.reviewEnginesSetting(),
                 GameReview::setReviewEngines), cardParams());
@@ -510,8 +516,8 @@ public final class MorpheSettingsActivity extends Activity {
                 + "more memory and battery; Auto runs " + GameReview.reviewEngines(this) + " on this phone. "
                 + "chess.com's own Game Review settings (Chess Engine, Analysis Depth) only change Review on "
                 + "chess.com; its Torch Human engine only runs on chess.com's servers."));
-            renderComputerBridge();
         }
+        if (computer) renderComputerBridge();
 
         list.addView(header("Saved reviews"));
         int saved = GameReview.savedReviews();
@@ -524,44 +530,50 @@ public final class MorpheSettingsActivity extends Activity {
             }));
         }
 
-        // What chess.com sells as Insights is counted on its own servers; these are the brilliant
-        // moves the reviews on this phone actually found.
-        GameReview.Brilliants brilliants = GameReview.savedBrilliants();
-        list.addView(header("Brilliant moves"));
-        if (brilliants.games > 0) {
-            LinearLayout found = card();
-            list.addView(found, cardParams());
-            String moves = brilliants.moves.size() == 1 ? "1 move" : brilliants.moves.size() + " moves";
-            String games = brilliants.games == 1 ? "1 game" : brilliants.games + " games";
-            found.addView(infoRow("Found by your reviews", moves + " in " + games));
-            int shown = Math.min(brilliants.moves.size(), 20);
-            for (int i = 0; i < shown; i++) {
-                GameReview.Brilliants.Move move = brilliants.moves.get(i);
-                if (move.url != null) {
-                    found.addView(actionRow(move.label, move.game, () -> browse(move.url)));
-                } else {
-                    found.addView(infoRow(move.label, move.game));
+        if (marks) {
+            // What chess.com sells as Insights is counted on its own servers; these are the brilliant
+            // moves the reviews on this phone actually found.
+            GameReview.Brilliants brilliants = GameReview.savedBrilliants();
+            list.addView(header("Brilliant moves"));
+            if (brilliants.games > 0) {
+                LinearLayout found = card();
+                list.addView(found, cardParams());
+                String moves = brilliants.moves.size() == 1 ? "1 move" : brilliants.moves.size() + " moves";
+                String games = brilliants.games == 1 ? "1 game" : brilliants.games + " games";
+                found.addView(infoRow("Found by your reviews", moves + " in " + games));
+                int shown = Math.min(brilliants.moves.size(), 20);
+                for (int i = 0; i < shown; i++) {
+                    GameReview.Brilliants.Move move = brilliants.moves.get(i);
+                    if (move.url != null) {
+                        found.addView(actionRow(move.label, move.game, () -> browse(move.url)));
+                    } else {
+                        found.addView(infoRow(move.label, move.game));
+                    }
+                }
+                if (brilliants.moves.size() > shown) {
+                    found.addView(caption("And " + (brilliants.moves.size() - shown) + " more."));
                 }
             }
-            if (brilliants.moves.size() > shown) {
-                found.addView(caption("And " + (brilliants.moves.size() - shown) + " more."));
-            }
+            LinearLayout report = card();
+            list.addView(report, cardParams());
+            report.addView(actionRow("Report a wrong mark",
+                "Opens a GitHub issue: the game, the move, and what chess.com says.",
+                () -> browse(REPORT_BRILLIANT)));
+            list.addView(caption(brilliants.games > 0
+                ? "A move the engine found best that gives up material for good, as chess.com's \"!!\". Read from "
+                    + "the reviews saved on this phone, which chess.com's own stats cannot see. A move opens the "
+                    + "game at that move on chess.com when the review saved its link."
+                : "None yet: a game reviewed after this version can show one here. chess.com's own Brilliant "
+                    + "stat is counted on its servers and needs Diamond; this one comes from your reviews."));
         }
-        LinearLayout report = card();
-        list.addView(report, cardParams());
-        report.addView(actionRow("Report a wrong mark",
-            "Opens a GitHub issue: the game, the move, and what chess.com says.",
-            () -> browse(REPORT_BRILLIANT)));
-        list.addView(caption(brilliants.games > 0
-            ? "A move the engine found best that gives up material for good, as chess.com's “!!”. Read from "
-                + "the reviews saved on this phone, which chess.com's own stats cannot see. A move opens the "
-                + "game at that move on chess.com when the review saved its link."
-            : "None yet: a game reviewed after this version can show one here. chess.com's own Brilliant "
-                + "stat is counted on its servers and needs Diamond; this one comes from your reviews."));
-        list.addView(caption(stockfish
-            ? "A game you review with Local Stockfish or Lichess's servers is saved on this phone and opens "
-                + "straight away the next time. Choosing a deeper depth than it was saved with analyses it again."
-            : "A game you review with Lichess's servers is saved on this phone and opens straight away the next time."));
+
+        String reviewers = stockfish && computer
+            ? "Local Stockfish, Stockfish on your computer or Lichess's servers"
+            : computer ? "Stockfish on your computer or Lichess's servers"
+            : stockfish ? "Local Stockfish or Lichess's servers" : "Lichess's servers";
+        list.addView(caption("A game you review with " + reviewers + " is saved on this phone and opens "
+            + "straight away the next time." + (stockfish || computer
+                ? " Choosing a deeper depth than it was saved with analyses it again." : "")));
     }
 
     private void lichessMethodChoice() {
@@ -856,10 +868,14 @@ public final class MorpheSettingsActivity extends Activity {
             // What these screens show is what is used, so the Lichess method is set from the start.
             if (GameReview.lichessMethod() == null) GameReview.setLichessMethod(GameReview.LICHESS_SERVERS);
             list.addView(headline("Game reviews"));
-            if (Features.stockfishPatched()) {
-                list.addView(lead("Game Review asks who reviews each game: chess.com, Local Stockfish on this "
-                    + "phone (offline) or Lichess (online). Local Stockfish and Lichess judge moves the Lichess way."));
-                reviewDepthChoice();
+            boolean localReview = Features.stockfishPatched();
+            boolean computerReview = GameReview.computerReview();
+            if (localReview || computerReview) {
+                list.addView(lead("Game Review asks who reviews each game: chess.com"
+                    + (localReview ? ", Local Stockfish on this phone (offline)" : "")
+                    + (computerReview ? ", Stockfish on your computer" : "")
+                    + " or Lichess (online). The engines and Lichess judge moves the Lichess way."));
+                if (localReview) reviewDepthChoice();
             } else {
                 list.addView(lead("Game Review asks who reviews each game: chess.com or Lichess (online). Lichess's "
                     + "reviews show in chess.com's own screen, with Lichess's marks."));
