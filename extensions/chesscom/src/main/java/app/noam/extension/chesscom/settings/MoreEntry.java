@@ -64,18 +64,65 @@ public final class MoreEntry {
                 if (rowClass == null && printed.startsWith(ROW_PRINT)) rowClass = item.getClass();
             }
             if (rowClass == null) return items;
-            for (Constructor<?> constructor : rowClass.getConstructors()) {
-                Class<?>[] types = constructor.getParameterTypes();
-                if (types.length == 5 && types[0] == ourKey.getClass() && types[1] == boolean.class) {
-                    List result = new ArrayList(items);
-                    result.add(0, constructor.newInstance(ourKey, true, null, null, null));
-                    return result;
-                }
+            Object row = row(rowClass, ourKey);
+            if (row != null) {
+                List result = new ArrayList(items);
+                result.add(0, row);
+                return result;
             }
         } catch (Throwable throwable) {
             Utils.logError("Could not add the Noam's Patches row", throwable);
         }
         return items;
+    }
+
+    /**
+     * The model's row for the key. 4.10.18 has the plain constructor (key, enabled, badge,
+     * chipData, imageUrl); 4.10.23 keeps only Kotlin's synthetic one, whose last parameter is the
+     * default mask, so the extra fields are filled from its defaults.
+     */
+    private static Object row(Class<?> rowClass, Object key) {
+        Constructor<?> masked = null;
+        for (Constructor<?> constructor : rowClass.getConstructors()) {
+            Class<?>[] types = constructor.getParameterTypes();
+            if (types.length < 3 || types[0] != key.getClass() || types[1] != boolean.class) continue;
+            boolean hasMask = types.length >= 4 && types[types.length - 1] == int.class;
+            if (!hasMask) {
+                Object[] args = new Object[types.length];
+                args[0] = key;
+                args[1] = true;
+                for (int i = 2; i < types.length; i++) {
+                    if (types[i].isPrimitive()) throw new IllegalArgumentException("Unexpected row field");
+                    args[i] = null;
+                }
+                try {
+                    return constructor.newInstance(args);
+                } catch (Throwable throwable) {
+                    Utils.logError("Could not build the Noam's Patches row", throwable);
+                }
+            } else {
+                masked = constructor;
+            }
+        }
+        if (masked == null) return null;
+        Class<?>[] types = masked.getParameterTypes();
+        int end = types.length - 1;
+        Object[] args = new Object[types.length];
+        args[0] = key;
+        args[1] = true;
+        int defaults = 0;
+        for (int i = 2; i < end; i++) {
+            // A primitive field cannot take null; its zero is what the model's own rows use.
+            args[i] = java.lang.reflect.Array.get(java.lang.reflect.Array.newInstance(types[i], 1), 0);
+            if (!types[i].isPrimitive()) defaults |= 1 << i;
+        }
+        args[end] = defaults;
+        try {
+            return masked.newInstance(args);
+        } catch (Throwable throwable) {
+            Utils.logError("Could not build the Noam's Patches row", throwable);
+            return null;
+        }
     }
 
     /** A tapped More row; true when it was ours. */

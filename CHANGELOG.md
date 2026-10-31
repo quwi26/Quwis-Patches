@@ -1,3 +1,9 @@
+# [1.6.15](https://github.com/quwi26/Noams-Morphe-Patches-StockfishPlus/compare/v1.6.14...v1.6.15) (2026-10-31)
+
+### Bug Fixes
+
+* **Chess.com:** Noam's Patches is back in the More tab on 4.10.23, where the row model keeps only its Kotlin constructor with default values
+
 # [1.6.14](https://github.com/quwi26/Noams-Morphe-Patches-StockfishPlus/compare/v1.6.13...v1.6.14) (2026-10-31)
 
 ### Bug Fixes
