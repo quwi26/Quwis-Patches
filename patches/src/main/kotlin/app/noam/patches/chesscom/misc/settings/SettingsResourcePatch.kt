@@ -8,7 +8,7 @@ import org.w3c.dom.Element
 private const val ANDROID_NAMESPACE = "http://schemas.android.com/apk/res/android"
 
 internal val settingsResourcePatch = resourcePatch(
-    description = "Adds the Noam's Patches screen, its title and its More tab icon to the app.",
+    description = "Adds the Quwi's Patches screen, its title and its More tab icon to the app.",
 ) {
     execute {
         document("res/values/strings.xml").use { document ->
@@ -21,7 +21,7 @@ internal val settingsResourcePatch = resourcePatch(
                 resources.appendChild(
                     document.createElement("string").apply {
                         setAttribute("name", "morphe_settings_title")
-                        textContent = "Noam\\'s Patches"
+                        textContent = "Quwi\\'s Patches"
                     },
                 )
             }

@@ -6,7 +6,7 @@ import app.noam.extension.chesscom.Features;
 
 /**
  * The computer's Stockfish bridge: the address sf-bridge listens on and the token it was started
- * with. Set in More → Noam's Patches → Game Review; a review on the computer asks for none of this
+ * with. Set in More → Quwi's Patches → Game Review; a review on the computer asks for none of this
  * if the phone's own Stockfish is picked.
  */
 public final class BridgeSettings {

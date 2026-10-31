@@ -80,7 +80,7 @@ val arcadePatch = bytecodePatch(
     name = "Arcade animations",
     description = "Adds the chess.com website's Arcade piece animations to every board: light " +
         "trails, bursts when a piece is picked up, dropped or captured, a flash on check, " +
-        "outlined last-move squares and animated move hints. Switch it in Noam's Patches.",
+        "outlined last-move squares and animated move hints. Switch it in Quwi's Patches.",
 ) {
     compatibleWith(Constants.COMPATIBILITY)
 

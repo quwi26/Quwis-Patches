@@ -3,7 +3,7 @@ package app.noam.patches.chesscom.shared
 import app.morphe.patcher.extensions.InstructionExtensions.replaceInstructions
 import app.morphe.patcher.patch.BytecodePatchContext
 
-/** Makes the extension's `Features.<marker>()` return true, so Noam's Patches lists the feature. */
+/** Makes the extension's `Features.<marker>()` return true, so Quwi's Patches lists the feature. */
 context(context: BytecodePatchContext)
 internal fun markFeaturePatched(marker: String) {
     context.mutableClassDefBy(Constants.FEATURES).methods.first { it.name == marker }

@@ -62,7 +62,7 @@ private fun MutableMethod.filterReturn(hook: String, objectType: String? = null)
 val boardColorsPatch = bytecodePatch(
     name = "Board colors",
     description = "Choose the board's square colours: your own, or one of chess.com's colour " +
-        "themes, on every board of the app. In Noam's Patches → Board colors.",
+        "themes, on every board of the app. In Quwi's Patches → Board colors.",
 ) {
     compatibleWith(Constants.COMPATIBILITY)
 

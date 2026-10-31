@@ -100,7 +100,7 @@ public final class ReviewChooser {
     private static void askComputer(Activity activity) {
         new AlertDialog.Builder(activity, android.R.style.Theme_Material_Dialog_Alert)
             .setTitle("Stockfish on your computer")
-            .setMessage("Set your computer's address and the token sf-bridge shows in More → Noam's Patches "
+            .setMessage("Set your computer's address and the token sf-bridge shows in More → Quwi's Patches "
                 + "→ Game Review, then pick it again.")
             .setPositiveButton("OK", null)
             .show();

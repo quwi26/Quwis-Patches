@@ -59,13 +59,13 @@ import app.noam.extension.chesscom.theme.Accent;
 import app.noam.extension.chesscom.theme.Amoled;
 
 /**
- * The Noam's Patches screens, built in code in chess.com's dark settings style. Features with
+ * The Quwi's Patches screens, built in code in chess.com's dark settings style. Features with
  * options open their own page (Intent extra {@link #EXTRA_PAGE}).
  */
 public final class MorpheSettingsActivity extends Activity {
     public static final String EXTRA_PAGE = "morphe_page";
 
-    private static final String TITLE = "Noam's Patches";
+    private static final String TITLE = "Quwi's Patches";
     /** Where a wrong Brilliant mark is reported: the game, the move, and what chess.com says. */
     private static final String REPORT_BRILLIANT =
         "https://github.com/quwi26/Quwis-Patches/issues/new"
@@ -861,7 +861,7 @@ public final class MorpheSettingsActivity extends Activity {
                 // No icon to show.
             }
             list.addView(headline("Thanks for patching!"));
-            list.addView(lead("Noam's Patches is ready. Everything it adds is in More → Noam's Patches, "
+            list.addView(lead("Quwi's Patches is ready. Everything it adds is in More → Quwi's Patches, "
                 + "where each part can be turned on or off and set up."));
             if (steps.size() > 1) list.addView(lead("First, a couple of quick choices."));
         } else if (WELCOME_REVIEWS.equals(step)) {
@@ -881,7 +881,7 @@ public final class MorpheSettingsActivity extends Activity {
                     + "reviews show in chess.com's own screen, with Lichess's marks."));
             }
             lichessMethodChoice();
-            list.addView(caption("You can change these any time in More → Noam's Patches → Game Review."));
+            list.addView(caption("You can change these any time in More → Quwi's Patches → Game Review."));
         } else {
             list.addView(headline("Lichess puzzles"));
             list.addView(lead("Puzzles from Lichess are solved offline in chess.com's own puzzle screen, with "

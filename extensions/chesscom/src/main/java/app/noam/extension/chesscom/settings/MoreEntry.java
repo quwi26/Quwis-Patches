@@ -11,7 +11,7 @@ import java.util.List;
 import app.noam.extension.chesscom.Utils;
 
 /**
- * The Noam's Patches row atop the More tab. The patch adds a NOAM_PATCHES More key (title and icon
+ * The Quwi's Patches row atop the More tab. The patch adds a NOAM_PATCHES More key (title and icon
  * from {@link #titleRes()} and {@link #iconRes()}), puts the row first and sends its taps here.
  */
 public final class MoreEntry {
@@ -24,7 +24,7 @@ public final class MoreEntry {
 
     private MoreEntry() {}
 
-    /** The row's title: the "Noam's Patches" string the patch adds. */
+    /** The row's title: the "Quwi's Patches" string the patch adds. */
     public static int titleRes() {
         int id = Utils.resourceId("morphe_settings_title", "string");
         return id != 0 ? id : android.R.string.untitled;
@@ -71,7 +71,7 @@ public final class MoreEntry {
                 return result;
             }
         } catch (Throwable throwable) {
-            Utils.logError("Could not add the Noam's Patches row", throwable);
+            Utils.logError("Could not add the Quwi's Patches row", throwable);
         }
         return items;
     }
@@ -98,7 +98,7 @@ public final class MoreEntry {
                 try {
                     return constructor.newInstance(args);
                 } catch (Throwable throwable) {
-                    Utils.logError("Could not build the Noam's Patches row", throwable);
+                    Utils.logError("Could not build the Quwi's Patches row", throwable);
                 }
             } else {
                 masked = constructor;
@@ -120,7 +120,7 @@ public final class MoreEntry {
         try {
             return masked.newInstance(args);
         } catch (Throwable throwable) {
-            Utils.logError("Could not build the Noam's Patches row", throwable);
+            Utils.logError("Could not build the Quwi's Patches row", throwable);
             return null;
         }
     }

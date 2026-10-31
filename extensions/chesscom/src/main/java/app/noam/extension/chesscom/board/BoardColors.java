@@ -84,13 +84,17 @@ public final class BoardColors {
         return background;
     }
 
-    /** Coordinates written on dark squares take the light colour... */
+    /**
+     * The darker coordinate colour. chess.com draws it on the light squares, so it takes the
+     * dark squares' colour; returning the light one, as this used to, made the labels the same
+     * colour as the square under them and they disappeared.
+     */
     public static int darkSquareCoordinates(int original) {
-        return enabled() ? light() : original;
+        return enabled() ? dark() : original;
     }
 
-    /** ...and those on light squares the dark one. */
+    /** The lighter coordinate colour, drawn on the dark squares: the light squares' colour. */
     public static int lightSquareCoordinates(int original) {
-        return enabled() ? dark() : original;
+        return enabled() ? light() : original;
     }
 }

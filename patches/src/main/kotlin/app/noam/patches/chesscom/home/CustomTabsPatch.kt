@@ -29,7 +29,7 @@ internal object NavigationBarStateToStringFingerprint : Fingerprint(
 val customTabsPatch = bytecodePatch(
     name = "Customize bottom bar",
     description = "Choose the tabs between Home and More (Puzzles, Learn, Watch, Bots, Train) and " +
-        "their order, in Noam's Patches → Bottom bar.",
+        "their order, in Quwi's Patches → Bottom bar.",
 ) {
     compatibleWith(Constants.COMPATIBILITY)
 

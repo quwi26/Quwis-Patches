@@ -1,10 +1,10 @@
 {
   "NOTE": "Do NOT manually edit this file. It is generated with ./gradlew generatePatchesList for every release. Manually editing this file can break third party tools that use this file.",
-  "version": "1.6.21",
+  "version": "1.7.0",
   "patches": [
     {
       "name": "AMOLED black",
-      "description": "Pure black backgrounds instead of chess.com's dark grey, in the newer and the older screens. Switch it in Noam's Patches (then restart the app).",
+      "description": "Pure black backgrounds instead of chess.com's dark grey, in the newer and the older screens. Switch it in Quwi's Patches (then restart the app).",
       "default": true,
       "category": null,
       "dependencies": [
@@ -40,7 +40,7 @@
     },
     {
       "name": "Accent color",
-      "description": "Your own colour in place of chess.com's green, chosen in Noam's Patches → Accent color: buttons, highlights, icons and text of the app.",
+      "description": "Your own colour in place of chess.com's green, chosen in Quwi's Patches → Accent color: buttons, highlights, icons and text of the app.",
       "default": true,
       "category": null,
       "dependencies": [
@@ -76,7 +76,7 @@
     },
     {
       "name": "Arcade animations",
-      "description": "Adds the chess.com website's Arcade piece animations to every board: light trails, bursts when a piece is picked up, dropped or captured, a flash on check, outlined last-move squares and animated move hints. Switch it in Noam's Patches.",
+      "description": "Adds the chess.com website's Arcade piece animations to every board: light trails, bursts when a piece is picked up, dropped or captured, a flash on check, outlined last-move squares and animated move hints. Switch it in Quwi's Patches.",
       "default": true,
       "category": null,
       "dependencies": [
@@ -149,7 +149,7 @@
     },
     {
       "name": "Board colors",
-      "description": "Choose the board's square colours: your own, or one of chess.com's colour themes, on every board of the app. In Noam's Patches → Board colors.",
+      "description": "Choose the board's square colours: your own, or one of chess.com's colour themes, on every board of the app. In Quwi's Patches → Board colors.",
       "default": true,
       "category": null,
       "dependencies": [
@@ -255,7 +255,7 @@
     },
     {
       "name": "Customize bottom bar",
-      "description": "Choose the tabs between Home and More (Puzzles, Learn, Watch, Bots, Train) and their order, in Noam's Patches → Bottom bar.",
+      "description": "Choose the tabs between Home and More (Puzzles, Learn, Watch, Bots, Train) and their order, in Quwi's Patches → Bottom bar.",
       "default": true,
       "category": null,
       "dependencies": [
@@ -508,7 +508,7 @@
     },
     {
       "name": "No rating prompts",
-      "description": "The app doesn't ask you to rate it on Google Play. Switch it in Noam's Patches.",
+      "description": "The app doesn't ask you to rate it on Google Play. Switch it in Quwi's Patches.",
       "default": true,
       "category": null,
       "dependencies": [
@@ -543,8 +543,8 @@
       "options": []
     },
     {
-      "name": "Noam's Patches settings",
-      "description": "Adds a Noam's Patches row at the top of the More tab, where the other patches of this bundle are switched on and off. Patches you did not select do not show up there.",
+      "name": "Quwi's Patches settings",
+      "description": "Adds the Quwi's Patches row at the top of the More tab, where the other patches of this bundle are switched on and off. Patches you did not select do not show up there.",
       "default": true,
       "category": null,
       "dependencies": [

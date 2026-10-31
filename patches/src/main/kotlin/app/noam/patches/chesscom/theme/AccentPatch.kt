@@ -26,7 +26,7 @@ private val GREENS = listOf(
 @Suppress("unused")
 val accentPatch = bytecodePatch(
     name = "Accent color",
-    description = "Your own colour in place of chess.com's green, chosen in Noam's Patches → " +
+    description = "Your own colour in place of chess.com's green, chosen in Quwi's Patches → " +
         "Accent color: buttons, highlights, icons and text of the app.",
 ) {
     compatibleWith(Constants.COMPATIBILITY)

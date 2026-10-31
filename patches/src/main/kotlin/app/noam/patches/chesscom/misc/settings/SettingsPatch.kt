@@ -23,8 +23,8 @@ private const val MORE_ENTRY = "${Constants.EXTENSION_PACKAGE}/settings/MoreEntr
 
 @Suppress("unused")
 val settingsPatch = bytecodePatch(
-    name = "Noam's Patches settings",
-    description = "Adds a Noam's Patches row at the top of the More tab, where the other patches " +
+    name = "Quwi's Patches settings",
+    description = "Adds the Quwi's Patches row at the top of the More tab, where the other patches " +
         "of this bundle are switched on and off. Patches you did not select do not show up there.",
 ) {
     compatibleWith(Constants.COMPATIBILITY)
@@ -90,7 +90,7 @@ val settingsPatch = bytecodePatch(
             """,
         )
 
-        // Its tap opens Noam's Patches; the app handles every other row.
+        // Its tap opens Quwi's Patches; the app handles every other row.
         // 4.10.18 handles taps in MoreViewModel; 4.10.23 moved them into a Compose lambda.
         val legacyViewModel = mutableClassDefByOrNull(MORE_VIEW_MODEL)
         val clickMethod = if (legacyViewModel != null) {

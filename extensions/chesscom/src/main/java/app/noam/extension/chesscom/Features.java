@@ -6,7 +6,7 @@ import android.content.SharedPreferences;
 import java.util.ArrayList;
 import java.util.List;
 
-/** A feature shows in Noam's Patches only when its patch was applied, which makes its marker below return true. */
+/** A feature shows in Quwi's Patches only when its patch was applied, which makes its marker below return true. */
 public final class Features {
     public static final String LIMIT_TOASTS = "limit_toasts";
     public static final String SHORT_TIME_CONTROLS = "short_time_controls";

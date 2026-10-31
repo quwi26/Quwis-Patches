@@ -1,3 +1,13 @@
+# [1.7.0](https://github.com/quwi26/Quwis-Patches/compare/v1.6.21...v1.7.0) (2026-10-31)
+
+### New Features
+
+* **Chess.com:** the in-app screen is now called Quwi's Patches, and the About line names Great and Brilliant moves
+
+### Bug Fixes
+
+* **Chess.com:** board coordinates are visible again: Board colors swapped the dark and light coordinate colours, so in a review the letters and numbers matched the squares under them (Noam's issue 28)
+
 # [1.6.21](https://github.com/quwi26/Quwis-Patches/compare/v1.6.20...v1.6.21) (2026-10-31)
 
 ### Improvements

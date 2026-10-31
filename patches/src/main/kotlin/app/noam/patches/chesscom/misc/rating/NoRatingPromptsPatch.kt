@@ -14,7 +14,7 @@ private const val RATING_PROMPTS = "${Constants.EXTENSION_PACKAGE}/misc/RatingPr
 @Suppress("unused")
 val noRatingPromptsPatch = bytecodePatch(
     name = "No rating prompts",
-    description = "The app doesn't ask you to rate it on Google Play. Switch it in Noam's Patches.",
+    description = "The app doesn't ask you to rate it on Google Play. Switch it in Quwi's Patches.",
 ) {
     compatibleWith(Constants.COMPATIBILITY)
 

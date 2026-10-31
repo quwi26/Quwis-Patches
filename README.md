@@ -11,7 +11,8 @@
   <a href="LICENSE"><img alt="GPL-3.0" src="https://img.shields.io/badge/license-GPL--3.0-lightgrey"></a>
 </p>
 
-Add this source to [Morphe](https://morphe.software) Manager once:
+Add this source to [Morphe](https://morphe.software) Manager once -
+[Add to Morphe](https://morphe.software/add-source?github=quwi26/Quwis-Patches) - or paste the URL:
 
 ```
 https://raw.githubusercontent.com/quwi26/Quwis-Patches/main/patches-bundle.json
@@ -21,6 +22,14 @@ https://raw.githubusercontent.com/quwi26/Quwis-Patches/main/patches-bundle.json
 
 Three patches, all for chess.com:
 
+- **Great and Brilliant moves analysis** - marks chess.com's “!” and “!!” in a review by Local Stockfish or by
+  Stockfish on your computer. Great is the engine's own best move when it was also the only one that kept the
+  game good (PrathxmOp's `greatFind` rule, on the second-best line's expected points); Brilliant is a best or
+  nearly best move that offers material for good (the sacrifice is read by static exchange on the position
+  after the move - in the engine's line an ordinary trade is briefly down a piece too, which used to mark
+  quiet moves). Great needs two lines from the engine, so it has a switch in the settings; Lichess's own
+  reviews stay as Lichess sends them. The settings list the brilliant moves the saved reviews found -
+  chess.com counts its own Insights on its servers, and only for Diamond.
 - **Unlimited Game Review** - the base. Game Review asks who reviews the game: chess.com, Lichess's servers
   (with your Lichess account) or, with Stockfish analysis, Stockfish on your phone, offline and without the
   daily limit. The phone and Lichess judge moves the Lichess way (?! ? ??, accuracy and centipawn loss) in
@@ -31,14 +40,6 @@ Three patches, all for chess.com:
   computer over the local network, with the same Stockfish 19 and the same Lichess-style marks. A review that
   took a minute on the phone takes seconds. It has its own depth (Fast 100k, Standard 300k, Deep 1M, Maximum
   5M nodes a move) and thread count, and a benchmark in the settings.
-- **Great and Brilliant moves analysis** - marks chess.com's “!” and “!!” in a review by Local Stockfish or by
-  Stockfish on your computer. Great is the engine's own best move when it was also the only one that kept the
-  game good (PrathxmOp's `greatFind` rule, on the second-best line's expected points); Brilliant is a best or
-  nearly best move that offers material for good (the sacrifice is read by static exchange on the position
-  after the move - in the engine's line an ordinary trade is briefly down a piece too, which used to mark
-  quiet moves). Great needs two lines from the engine, so it has a switch in the settings; Lichess's own
-  reviews stay as Lichess sends them. The settings list the brilliant moves the saved reviews found -
-  chess.com counts its own Insights on its servers, and only for Diamond.
 
 The two add-ons work only with **Unlimited Game Review from this bundle**: select it too. Two Unlimited Game
 Review patches, one from this bundle and one from Noam's or hyzor's, cannot be applied to the same app - they
@@ -53,7 +54,7 @@ Everything else is Noam's work, unchanged: chess.com 4.10.18 and 4.10.23 with ar
 AMOLED black, the website's Arcade animations, custom Home and bottom bar, time controls under a minute,
 offline Stockfish analysis on the phone, Lichess reviews and offline Lichess puzzles, every bot unlocked,
 no daily Play Coach limit, Premium content, no ads or rating prompts — all switched on and off under
-**More → Noam's Patches**.
+**More → Quwi's Patches**.
 
 ## Stockfish on your computer
 
@@ -67,7 +68,7 @@ server: auth ok
 ```
 
 Patch your app with **Unlimited Game Review** and **Game Review on your computer** from this bundle, then in the app:
-**More → Noam's Patches → Game Review → Stockfish on your computer**, and fill in
+**More → Quwi's Patches → Game Review → Stockfish on your computer**, and fill in
 
 - **Computer address** — `192.168.1.10:7892` (the computer's address on the same Wi-Fi);
 - **Token** — the one sf-bridge prints when it starts (`token.txt` next to it);
@@ -96,7 +97,9 @@ phone talks to your computer on that network only.
 ## Credits
 
 All patches are [Noam's](https://github.com/ImNoammm/Noams-Morphe-Patches) (GPL-3.0), which itself builds on
-PrathxmOp's work; the computer reviewer was added in this fork. The chess.com 4.10.23 support follows
+PrathxmOp's work; the computer reviewer was added in this fork. Without Noam's Morphe Patches this project
+would not exist: the whole patch tree and extension are his work, and this fork only adds the Game Review
+features on top. The chess.com 4.10.23 support follows
 [hyzor's port](https://github.com/hyzor/hyzor-morphe-patches) (GPL-3.0) of the same patches. If you want the
 patches for other apps too, use Noam's own source.
 

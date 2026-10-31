@@ -38,7 +38,7 @@ private val ROLES = mapOf(
 val amoledPatch = bytecodePatch(
     name = "AMOLED black",
     description = "Pure black backgrounds instead of chess.com's dark grey, in the newer and the " +
-        "older screens. Switch it in Noam's Patches (then restart the app).",
+        "older screens. Switch it in Quwi's Patches (then restart the app).",
 ) {
     compatibleWith(Constants.COMPATIBILITY)
 

@@ -106,7 +106,7 @@ final class LocalAnalysisFlow {
 
         if (Utils.context() == null) return;
 
-        // How hard to look: the depth picked for this reviewer in Noam's Patches. The phone and the
+        // How hard to look: the depth picked for this reviewer in Quwi's Patches. The phone and the
         // computer have their own, because a budget the phone can just afford is cheap for a computer.
         GameReview.Mode reviewer = GameReview.mode();
         String depth = GameReview.reviewDepth(reviewer);

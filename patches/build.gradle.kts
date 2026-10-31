@@ -3,7 +3,7 @@ group = "app.noam"
 patches {
     about {
         name = "Quwi's Chess Patches"
-        description = "A fork of Noam's Morphe Patches for chess.com, with Game Review on the Stockfish of your own computer."
+        description = "A fork of Noam's Morphe Patches for chess.com: Game Review on the Stockfish of your own computer, plus Great (!) and Brilliant (!!) moves."
         source = "git@github.com:quwi26/Quwis-Patches.git"
         author = "ImNoammm, quwi26"
         contact = "na"
