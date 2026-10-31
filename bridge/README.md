@@ -63,13 +63,13 @@ node bench-tcp.mjs
 ```
 
 ```
-Startup (once per review): 0.57 s
+Startup (once per review): 0.55 s
 threads 12, hash 384 MB
 
-100k nodes a move: 0.09 s
-300k nodes a move: 0.14 s
-1M   nodes a move: 0.32 s
-5M   nodes a move: 1.49 s
+100k nodes a move: 0.08 s
+300k nodes a move: 0.12 s
+1M   nodes a move: 0.28 s
+5M   nodes a move: 1.18 s
 ```
 
 (i5-12450H, 12 threads, 384 MB of hash.) Start-up is paid once per review, not once per move, so a
