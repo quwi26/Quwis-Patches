@@ -1,3 +1,10 @@
+# [1.6.21](https://github.com/quwi26/Quwis-Patches/compare/v1.6.20...v1.6.21) (2026-10-31)
+
+### Improvements
+
+* **Chess.com:** the bundle is now Quwi's Chess Patches and lives at github.com/quwi26/Quwis-Patches; it is still a fork of Noam's Morphe Patches, GPL-3.0, with the same three Game Review patches
+* **Chess.com:** the wrong Brilliant mark report link works again - Issues are enabled in the repository
+
 # [1.6.20](https://github.com/quwi26/Noams-Morphe-Patches-StockfishPlus/compare/v1.6.19...v1.6.20) (2026-10-31)
 
 ### Improvements

@@ -68,7 +68,7 @@ public final class MorpheSettingsActivity extends Activity {
     private static final String TITLE = "Noam's Patches";
     /** Where a wrong Brilliant mark is reported: the game, the move, and what chess.com says. */
     private static final String REPORT_BRILLIANT =
-        "https://github.com/quwi26/Noams-Morphe-Patches-StockfishPlus/issues/new"
+        "https://github.com/quwi26/Quwis-Patches/issues/new"
             + "?title=Wrong%20Brilliant%20mark&body=Game%3A%20%0AMove%3A%20%0AWhat%20chess.com%20says%3A%20%0A";
     private static final int TEXT = 0xFFFFFFFF;
     private static final int TEXT_SECONDARY = 0xFFB4B2B0;

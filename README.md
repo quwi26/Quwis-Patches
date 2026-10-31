@@ -1,4 +1,4 @@
-<h1 align="center">Noam's Morphe Patches Stockfish+</h1>
+<h1 align="center">Quwi's Chess Patches</h1>
 
 <p align="center">
   A fork of <a href="https://github.com/ImNoammm/Noams-Morphe-Patches">Noam's Morphe Patches</a> for chess.com only,
@@ -6,7 +6,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/quwi26/Noams-Morphe-Patches-StockfishPlus/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/quwi26/Noams-Morphe-Patches-StockfishPlus?label=release"></a>
+  <a href="https://github.com/quwi26/Quwis-Patches/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/quwi26/Quwis-Patches?label=release"></a>
   <img alt="Morphe patches" src="https://img.shields.io/badge/Morphe-patches-3DDC84?logo=android&logoColor=white">
   <a href="LICENSE"><img alt="GPL-3.0" src="https://img.shields.io/badge/license-GPL--3.0-lightgrey"></a>
 </p>
@@ -14,7 +14,7 @@
 Add this source to [Morphe](https://morphe.software) Manager once:
 
 ```
-https://raw.githubusercontent.com/quwi26/Noams-Morphe-Patches-StockfishPlus/main/patches-bundle.json
+https://raw.githubusercontent.com/quwi26/Quwis-Patches/main/patches-bundle.json
 ```
 
 ## What this fork adds

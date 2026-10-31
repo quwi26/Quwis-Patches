@@ -2,12 +2,12 @@ group = "app.noam"
 
 patches {
     about {
-        name = "Noam's Morphe Patches Stockfish+"
-        description = "Noam's Morphe patches, plus Game Review on the Stockfish of your own computer."
-        source = "git@github.com:quwi26/Noams-Morphe-Patches-StockfishPlus.git"
+        name = "Quwi's Chess Patches"
+        description = "A fork of Noam's Morphe Patches for chess.com, with Game Review on the Stockfish of your own computer."
+        source = "git@github.com:quwi26/Quwis-Patches.git"
         author = "ImNoammm, quwi26"
         contact = "na"
-        website = "https://github.com/quwi26/Noams-Morphe-Patches-StockfishPlus"
+        website = "https://github.com/quwi26/Quwis-Patches"
         license = "GNU General Public License v3.0"
     }
 }

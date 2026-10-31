@@ -2,7 +2,7 @@
 
 Lets the patched chess.com on your phone run Game Review on **the Stockfish of your own computer**
 instead of the phone's, over your own Wi-Fi. It is what the *Stockfish on your computer* reviewer in
-[Noam's Morphe Patches Stockfish+](../README.md) talks to.
+[Quwi's Chess Patches](../README.md) talks to.
 
 Nothing leaves your network: the bridge only waits for the phone, it opens no connections of its own
 and sends nothing anywhere. There are no accounts, no telemetry, no dependencies to install.
