@@ -282,6 +282,10 @@ public final class BoardUtil {
      * not already like that before the move. Following the engine's line instead cannot tell a
      * sacrifice from an ordinary exchange: in a trade the mover is briefly down a piece too.
      *
+     * A capture nets out what it took (a rook taking a rook and being taken back is a trade), and a
+     * move that gives check can only offer the piece that gives it: the opponent has to answer the
+     * check, not collect something else on the board.
+     *
      * @param before     board before the played move (not modified)
      * @param moverWhite side that played the move
      * @param played     the played move, in UCI
@@ -290,10 +294,27 @@ public final class BoardUtil {
         if (before == null || played == null || played.length() < 4) return false;
         boolean[] was = enPrise(before, moverWhite);
         char[] after = before.clone();
-        apply(after, played);
+        char captured = apply(after, played);
+        int gained = captured == '.' ? 0 : pieceValue(captured);
+        int to = square(played, 2);
+        if (to < 0) return false;
+        if (givesCheck(after, moverWhite)) {
+            // Only the checking piece can be taken as the answer to the check.
+            return pieceValue(after[to]) - gained >= 2 && see(after, to, !moverWhite) >= 2;
+        }
         boolean[] now = enPrise(after, moverWhite);
         for (int square = 0; square < 64; square++) {
-            if (now[square] && !was[square]) return true;
+            if (!now[square] || was[square]) continue;
+            if (pieceValue(after[square]) - gained >= 2) return true;
+        }
+        return false;
+    }
+
+    /** Does the mover's move leave the opponent's king attacked? */
+    private static boolean givesCheck(char[] b, boolean moverWhite) {
+        char king = moverWhite ? 'k' : 'K';
+        for (int square = 0; square < 64; square++) {
+            if (b[square] == king) return attacked(b, square, moverWhite);
         }
         return false;
     }
