@@ -154,8 +154,6 @@ public final class BoardUtil {
         return captured;
     }
 
-    // The material checks below are PrathxmOp's (ReviewMath's Brilliant rule), ported as-is.
-
     /** Piece value in pawns, kings and empty squares zero. */
     public static int pieceValue(char c) {
         switch (Character.toLowerCase(c)) {
@@ -168,24 +166,6 @@ public final class BoardUtil {
         }
     }
 
-    /** Material of one side (pawn = 1). */
-    public static int material(char[] b, boolean white) {
-        int s = 0;
-        for (char c : b) {
-            if (c != '.' && Character.isUpperCase(c) == white) s += pieceValue(c);
-        }
-        return s;
-    }
-
-    /** Non-pawn material of one side. */
-    public static int nonPawnMaterial(char[] b, boolean white) {
-        int s = 0;
-        for (char c : b) {
-            if (c != '.' && c != 'p' && c != 'P' && Character.isUpperCase(c) == white) s += pieceValue(c);
-        }
-        return s;
-    }
-
     /** Does the move land on the square where the opponent just captured? */
     public static boolean isRecapture(String prevMove, boolean prevWasCapture, String move) {
         if (!prevWasCapture || prevMove == null || move == null) return false;
@@ -193,36 +173,128 @@ public final class BoardUtil {
         return prevMove.regionMatches(2, move, 2, 2);
     }
 
+    // Does a piece at `from` attack the square `to`? Sliders need a clear path.
+    private static boolean attacks(char[] b, int from, int to) {
+        char p = b[from];
+        if (p == '.' || from == to) return false;
+        int fr = from / 8, ff = from % 8, tr = to / 8, tf = to % 8;
+        int dr = tr - fr, df = tf - ff;
+        boolean white = Character.isUpperCase(p);
+        switch (Character.toLowerCase(p)) {
+            case 'p':
+                return df != 0 && dr == (white ? -1 : 1);
+            case 'n':
+                return (Math.abs(dr) == 2 && Math.abs(df) == 1) || (Math.abs(dr) == 1 && Math.abs(df) == 2);
+            case 'k':
+                return Math.max(Math.abs(dr), Math.abs(df)) == 1;
+            case 'b':
+                return Math.abs(dr) == Math.abs(df) && clear(b, from, to);
+            case 'r':
+                return (dr == 0 || df == 0) && clear(b, from, to);
+            case 'q':
+                return (dr == 0 || df == 0 || Math.abs(dr) == Math.abs(df)) && clear(b, from, to);
+            default:
+                return false;
+        }
+    }
+
+    private static boolean clear(char[] b, int from, int to) {
+        int fr = from / 8, ff = from % 8, tr = to / 8, tf = to % 8;
+        int dr = Integer.signum(tr - fr), df = Integer.signum(tf - ff);
+        int r = fr + dr, f = ff + df;
+        while (r != tr || f != tf) {
+            if (b[r * 8 + f] != '.') return false;
+            r += dr;
+            f += df;
+        }
+        return true;
+    }
+
+    /** Does the given side attack this square? */
+    public static boolean attacked(char[] b, int square, boolean byWhite) {
+        if (b == null || square < 0 || square >= 64) return false;
+        for (int from = 0; from < 64; from++) {
+            char p = b[from];
+            if (p == '.' || Character.isUpperCase(p) != byWhite) continue;
+            if (attacks(b, from, square)) return true;
+        }
+        return false;
+    }
+
+    /** The cheapest piece of the given side that can legally take on the square, or -1. */
+    private static int cheapestAttacker(char[] b, int square, boolean byWhite) {
+        int best = -1, bestValue = Integer.MAX_VALUE;
+        for (int from = 0; from < 64; from++) {
+            char p = b[from];
+            if (p == '.' || Character.isUpperCase(p) != byWhite) continue;
+            if (!attacks(b, from, square)) continue;
+            // A king cannot take a defended piece.
+            if (Character.toLowerCase(p) == 'k' && attacked(b, square, !byWhite)) continue;
+            int value = pieceValue(p);
+            if (value < bestValue) {
+                bestValue = value;
+                best = from;
+            }
+        }
+        return best;
+    }
+
     /**
-     * A genuine sacrifice, as PrathxmOp detects it by following Stockfish's line after the played
-     * move: after the last opponent move in the window the mover is at least two points down on
-     * material compared with before, and has given up non-pawn material. Ordinary trades (material
-     * comes back) are therefore ignored.
+     * Static exchange evaluation: what the given side wins by starting captures on the square,
+     * both sides taking with their cheapest piece and either side free to stop. 0 or more.
+     */
+    public static int see(char[] b, int square, boolean byWhite) {
+        return see(b, square, byWhite, 0);
+    }
+
+    private static int see(char[] b, int square, boolean byWhite, int depth) {
+        if (depth > 16) return 0;
+        char victim = b[square];
+        if (victim == '.') return 0;
+        int attacker = cheapestAttacker(b, square, byWhite);
+        if (attacker < 0) return 0;
+        char[] next = b.clone();
+        char p = next[attacker];
+        next[attacker] = '.';
+        next[square] = p;
+        int gain = pieceValue(victim) - see(next, square, !byWhite, depth + 1);
+        return Math.max(0, gain);
+    }
+
+    /**
+     * The mover's non-pawn pieces that the opponent can win by capturing them, SEE 2 or more.
+     * A piece already like that before the move is not a sacrifice: it was not offered now.
+     */
+    private static boolean[] enPrise(char[] b, boolean ownerWhite) {
+        boolean[] out = new boolean[64];
+        for (int square = 0; square < 64; square++) {
+            char p = b[square];
+            if (p == '.' || p == 'p' || p == 'P') continue;
+            if (Character.isUpperCase(p) != ownerWhite) continue;
+            if (see(b, square, !ownerWhite) >= 2) out[square] = true;
+        }
+        return out;
+    }
+
+    /**
+     * Whether the played move offers material: after it there is a non-pawn piece of the mover's
+     * that the opponent wins material by taking (static exchange, at least two pawns) and that was
+     * not already like that before the move. Following the engine's line instead cannot tell a
+     * sacrifice from an ordinary exchange: in a trade the mover is briefly down a piece too.
      *
      * @param before     board before the played move (not modified)
      * @param moverWhite side that played the move
      * @param played     the played move, in UCI
-     * @param replyPv    the engine's line from the position after the played move
-     * @param window     how many plies of it to follow
      */
-    public static boolean isSacrifice(char[] before, boolean moverWhite, String played,
-                                      java.util.List<String> replyPv, int window) {
-        if (before == null || played == null || replyPv == null || replyPv.isEmpty()) return false;
-        char[] b = before.clone();
-        int diff0 = material(b, moverWhite) - material(b, !moverWhite);
-        int pieces0 = nonPawnMaterial(b, moverWhite);
-
-        apply(b, played);
-
-        boolean endDown = false;
-        int plies = Math.min(window, replyPv.size());
-        for (int i = 0; i < plies; i++) {
-            apply(b, replyPv.get(i));
-            if ((i & 1) == 0) { // after an opponent move
-                int diff = material(b, moverWhite) - material(b, !moverWhite);
-                endDown = diff <= diff0 - 2 && nonPawnMaterial(b, moverWhite) < pieces0;
-            }
+    public static boolean isSacrifice(char[] before, boolean moverWhite, String played) {
+        if (before == null || played == null || played.length() < 4) return false;
+        boolean[] was = enPrise(before, moverWhite);
+        char[] after = before.clone();
+        apply(after, played);
+        boolean[] now = enPrise(after, moverWhite);
+        for (int square = 0; square < 64; square++) {
+            if (now[square] && !was[square]) return true;
         }
-        return endDown;
+        return false;
     }
 }

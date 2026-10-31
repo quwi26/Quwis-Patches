@@ -85,7 +85,7 @@ final class SavedReviews {
      * A small sidecar next to the review: who played, when, and the brilliant moves it found. The
      * settings screen reads these instead of the whole review of every game.
      */
-    private static void saveMeta(Context context, String key, ReviewData data) {
+    static void saveMeta(Context context, String key, ReviewData data) {
         File file = file(context, key + ".meta");
         if (file == null) return;
         File temporary = new File(file.getPath() + ".tmp");

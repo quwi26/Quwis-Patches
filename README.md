@@ -30,9 +30,10 @@ https://raw.githubusercontent.com/quwi26/Noams-Morphe-Patches-StockfishPlus/main
 - **Great moves**, chess.com's “!”: the engine's own best move when it was also the only one that kept the
   game good (PrathxmOp's `greatFind` rule, on the second-best line's expected points). It needs two lines
   from the engine, so it has a switch in the settings; Lichess's own reviews are left as Lichess sends them.
-- **Brilliant moves**, chess.com's “!!”: the engine's best move when it also gives up material for good
-  (PrathxmOp's rule, read from the engine's own line after the move, so an ordinary trade is not one).
-  It costs the engine nothing extra. The settings list the brilliant moves the reviews saved on this phone
+- **Brilliant moves**, chess.com's “!!”: a best or nearly best move that offers material for good
+  (PrathxmOp's rule, with the sacrifice read by static exchange on the position after the move — in the
+  engine's line an ordinary trade is briefly down a piece too, which used to mark quiet moves). It costs
+  the engine nothing extra. The settings list the brilliant moves the reviews saved on this phone
   found — chess.com counts its own Insights on its servers, and only for Diamond.
 - The patches for other apps (Block Blast, Gboard, Geocaching) are **not** in this bundle.
 
