@@ -1,3 +1,14 @@
+# [1.9.2](https://github.com/quwi26/Quwis-Patches/compare/v1.9.1...v1.9.2) (2026-11-01)
+
+### Bug Fixes
+
+* **Chess.com:** Lichess puzzles no longer crash on opening. The empty path stats were returned as a plain object, which the app's verifier rejects; they are cast back to their own type now
+* **Arrows in reviews:** Arrows and Clear now sit in Game Review's own bottom bar, as two more of its buttons, instead of a floating chip over the board
+
+### Features
+
+* **Chess.com:** a new optional patch, Crash details, shows a crash on a screen of its own with the stack trace and a Copy button, so a report can include what went wrong
+
 # [1.9.1](https://github.com/quwi26/Quwis-Patches/compare/v1.9.0...v1.9.1) (2026-11-01)
 
 ### Bug Fixes

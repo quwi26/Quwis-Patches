@@ -20,7 +20,7 @@ https://raw.githubusercontent.com/quwi26/Quwis-Patches/main/patches-bundle.json
 
 ## What this fork adds
 
-Four patches, all for chess.com:
+Five patches, all for chess.com:
 
 - **Great and Brilliant moves analysis** - marks chess.com's “!” and “!!” in a review by Local Stockfish or by
   Stockfish on your computer. Great is the engine's own best move when it was also the only one that kept the
@@ -40,8 +40,10 @@ Four patches, all for chess.com:
   computer over the local network, with the same Stockfish 19 and the same Lichess-style marks. A review that
   took a minute on the phone takes seconds. It has its own depth (Fast 100k, Standard 300k, Deep 1M, Maximum
   5M nodes a move) and thread count, and a benchmark in the settings.
-- **Arrows in reviews** - Arrows and Clear in Game Review and on the Analysis boards, so arrows and marked
-  squares can be drawn while analysing a game. Noam's **Arrows in games** stays separate.
+- **Arrows in reviews** - Arrows and Clear in Game Review's own bottom bar and on the Analysis boards, so arrows
+  and marked squares can be drawn while analysing a game. Noam's **Arrows in games** stays separate.
+- **Crash details** - if the app crashes, a screen of its own shows what went wrong, with the details ready to
+  copy into a report. Turn it off for chess.com's usual crash dialog.
 
 The two add-ons work only with **Unlimited Game Review from this bundle**: select it too. Two Unlimited Game
 Review patches, one from this bundle and one from Noam's or hyzor's, cannot be applied to the same app - they

@@ -1,6 +1,6 @@
 {
   "NOTE": "Do NOT manually edit this file. It is generated with ./gradlew generatePatchesList for every release. Manually editing this file can break third party tools that use this file.",
-  "version": "1.9.1",
+  "version": "1.9.2",
   "patches": [
     {
       "name": "AMOLED black",
@@ -228,6 +228,43 @@
       "default": false,
       "category": null,
       "dependencies": [],
+      "compatiblePackages": [
+        {
+          "packageName": "com.chess",
+          "name": "Chess.com",
+          "description": null,
+          "apkFileType": null,
+          "appIconColor": null,
+          "signatures": null,
+          "targets": [
+            {
+              "version": "4.10.23-googleplay",
+              "versionCodes": null,
+              "isExperimental": false,
+              "minSdk": null,
+              "description": null
+            },
+            {
+              "version": "4.10.18-googleplay",
+              "versionCodes": null,
+              "isExperimental": false,
+              "minSdk": null,
+              "description": null
+            }
+          ]
+        }
+      ],
+      "options": []
+    },
+    {
+      "name": "Crash details",
+      "description": "When the app crashes, shows what went wrong on a screen of its own, with the details ready to copy into a report.",
+      "default": true,
+      "category": null,
+      "dependencies": [
+        "BytecodePatch",
+        "ResourcePatch"
+      ],
       "compatiblePackages": [
         {
           "packageName": "com.chess",

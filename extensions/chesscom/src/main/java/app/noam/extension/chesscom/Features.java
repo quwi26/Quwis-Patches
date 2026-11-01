@@ -190,6 +190,7 @@ public final class Features {
     public static boolean gameReviewPatched() { return false; }
     public static boolean computerReviewPatched() { return false; }
     public static boolean greatMovesPatched() { return false; }
+    public static boolean crashPatched() { return false; }
 
     public static List<Feature> patched() {
         List<Feature> list = new ArrayList<>();

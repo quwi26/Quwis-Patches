@@ -1,12 +1,21 @@
 package app.noam.patches.chesscom.arrows
 
 import app.morphe.patcher.extensions.InstructionExtensions.addInstructions
+import app.morphe.patcher.extensions.InstructionExtensions.getInstruction
+import app.morphe.patcher.extensions.InstructionExtensions.replaceInstructions
 import app.morphe.patcher.patch.PatchException
 import app.morphe.patcher.patch.bytecodePatch
 import app.morphe.patcher.patch.resourcePatch
+import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod
 import app.noam.patches.chesscom.misc.settings.settingsPatch
 import app.noam.patches.chesscom.shared.Constants
 import app.noam.patches.chesscom.shared.markFeaturePatched
+import app.noam.patches.chesscom.shared.returnString
+import com.android.tools.smali.dexlib2.Opcode
+import com.android.tools.smali.dexlib2.iface.instruction.FiveRegisterInstruction
+import com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction
+import com.android.tools.smali.dexlib2.iface.instruction.RegisterRangeInstruction
+import com.android.tools.smali.dexlib2.iface.reference.MethodReference
 
 private const val ARROWS_CHIP = "${Constants.EXTENSION_PACKAGE}/arrows/ArrowsChip;"
 private const val BUTTON_CLASS = "app.noam.extension.chesscom.arrows.ArrowsButton"
@@ -82,15 +91,83 @@ val arrowsReviewsPatch = bytecodePatch(
     execute {
         markFeaturePatched("arrowsReviewsPatched")
 
-        // Game Review is Compose, so its chip floats over the board instead of sitting in a bar.
-        val review = mutableClassDefByOrNull(REVIEW_ACTIVITY)
-            ?: throw PatchException("The Game Review screen was not found")
-        val onCreate = review.methods.singleOrNull {
-            it.name == "onCreate" && it.parameterTypes.map { type -> type.toString() } == listOf("Landroid/os/Bundle;")
-        } ?: throw PatchException("Game Review's onCreate was not found")
-        onCreate.addInstructions(
-            0,
-            "invoke-static/range { p0 .. p0 }, $ARROWS_CHIP->attachReviews(Landroid/app/Activity;)V",
+        // Game Review's own bottom bar draws a list of actions, so Arrows and Clear go in as two
+        // more of them instead of floating over the board.
+        val actionConstructor = listOf(
+            "Ljava/lang/String;", "Ljava/lang/Integer;", "Lkotlin/jvm/functions/Function0;",
+            "Lkotlin/jvm/functions/Function1;", "Z", "Z", "I",
         )
+        class ActionsCall(
+            val type: String,
+            val name: String,
+            val parameters: String,
+            val index: Int,
+            val register: Int,
+            val barType: String,
+        )
+        val calls = mutableListOf<ActionsCall>()
+        classDefForEach { classDef ->
+            if (!classDef.type.contains("/gamereview/")) return@classDefForEach
+            classDef.methods.forEach { method ->
+                method.implementation?.instructions?.toList()?.forEachIndexed { index, instruction ->
+                    if (instruction.opcode != Opcode.INVOKE_STATIC &&
+                        instruction.opcode != Opcode.INVOKE_STATIC_RANGE) return@forEachIndexed
+                    val reference = (instruction as? ReferenceInstruction)?.reference as? MethodReference
+                        ?: return@forEachIndexed
+                    val types = reference.parameterTypes.map(CharSequence::toString)
+                    if (types.size != 9 || types[2] != "Landroidx/compose/ui/b;" ||
+                        types[4] != "Ljava/lang/Integer;" || types[5] != "Z" ||
+                        types[7] != "I" || types[8] != "I") return@forEachIndexed
+                    val register = when (instruction) {
+                        is RegisterRangeInstruction -> instruction.startRegister
+                        is FiveRegisterInstruction -> instruction.registerC
+                        else -> return@forEachIndexed
+                    }
+                    calls += ActionsCall(
+                        classDef.type, method.name, method.parameterTypes.joinToString(""), index, register, types[0],
+                    )
+                }
+            }
+        }
+        // The action class sits beside the bar's state class: it is the one with the bar's action constructor.
+        val barPackage = calls.firstOrNull()?.barType?.substringBeforeLast('/')?.plus("/")
+        val actionType = barPackage?.let { prefix ->
+            mutableClassDefByOrNull { classDef ->
+                classDef.type.startsWith(prefix) && classDef.methods.any { method ->
+                    method.name == "<init>" &&
+                        method.parameterTypes.map(CharSequence::toString) == actionConstructor
+                }
+            }
+        }
+
+        if (calls.isNotEmpty() && actionType != null) {
+            mutableClassDefBy(ARROWS_CHIP).methods.first { it.name == "actionType" }
+                .returnString(actionType.type)
+            mutableClassDefBy(ARROWS_CHIP).methods.first { it.name == "reviewsInBar" }
+                .replaceInstructions(0, "const/4 v0, 0x1\nreturn v0")
+            calls.groupBy { Triple(it.type, it.name, it.parameters) }.forEach { (key, group) ->
+                val method = mutableClassDefBy(key.first).methods.first {
+                    it.name == key.second && it.parameterTypes.joinToString("") == key.third
+                }
+                group.sortedByDescending { it.index }.forEach { call ->
+                    method.addInstructions(
+                        call.index,
+                        "invoke-static/range { v${call.register} .. v${call.register} }, " +
+                            "$ARROWS_CHIP->addActions(Ljava/lang/Object;)V",
+                    )
+                }
+            }
+        } else {
+            // The review screen is Compose, so its chip floats over the board instead of sitting in a bar.
+            val review = mutableClassDefByOrNull(REVIEW_ACTIVITY)
+                ?: throw PatchException("The Game Review screen was not found")
+            val onCreate = review.methods.singleOrNull {
+                it.name == "onCreate" && it.parameterTypes.map { type -> type.toString() } == listOf("Landroid/os/Bundle;")
+            } ?: throw PatchException("Game Review's onCreate was not found")
+            onCreate.addInstructions(
+                0,
+                "invoke-static/range { p0 .. p0 }, $ARROWS_CHIP->attachReviews(Landroid/app/Activity;)V",
+            )
+        }
     }
 }

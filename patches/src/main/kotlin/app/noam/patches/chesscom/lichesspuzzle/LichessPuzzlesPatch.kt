@@ -587,6 +587,7 @@ val lichessPuzzlesPatch = bytecodePatch(
                 invoke-direct { v0 }, ${pathStats.type}-><init>()V
                 invoke-static { v0 }, $PUZZLES->withRating(Ljava/lang/Object;)Ljava/lang/Object;
                 move-result-object v0
+                check-cast v0, ${pathStats.type}
                 return-object v0
             """,
             ExternalLabel("morphe_stats", withStats.getInstruction(0)),
