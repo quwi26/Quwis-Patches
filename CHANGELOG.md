@@ -1,3 +1,9 @@
+# [1.9.1](https://github.com/quwi26/Quwis-Patches/compare/v1.9.0...v1.9.1) (2026-11-01)
+
+### Bug Fixes
+
+* **Chess.com:** Lichess puzzles show the rating on 4.10.23 again. The Classic layout's path stats are empty in guest mode, so the rating chip and the user rating read zero; they now carry the Lichess rating, and the review state's own rating stays in step during a session
+
 # [1.9.0](https://github.com/quwi26/Quwis-Patches/compare/v1.8.0...v1.9.0) (2026-11-01)
 
 ### Features

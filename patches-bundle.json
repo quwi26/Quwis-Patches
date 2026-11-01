@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-11-01T16:00:00",
-  "description": "Quwi's Chess Patches 1.9.0: a separate Arrows in reviews patch adds Arrows and Clear to Game Review and the Analysis boards, with Arrows in games left as it was.",
-  "download_url": "https://github.com/quwi26/Quwis-Patches/releases/download/v1.9.0/patches-1.9.0.mpp",
+  "created_at": "2026-11-01T17:00:00",
+  "description": "Quwi's Chess Patches 1.9.1: Lichess puzzles show the rating on 4.10.23 again, plus Arrows in reviews as its own patch for Game Review and the Analysis boards.",
+  "download_url": "https://github.com/quwi26/Quwis-Patches/releases/download/v1.9.1/patches-1.9.1.mpp",
   "signature_download_url": "",
-  "version": "1.9.0"
+  "version": "1.9.1"
 }

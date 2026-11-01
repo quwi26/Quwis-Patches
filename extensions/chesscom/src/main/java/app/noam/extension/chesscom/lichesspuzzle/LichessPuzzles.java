@@ -94,6 +94,20 @@ public final class LichessPuzzles {
     private static String puzzleDbField() { return ""; }
     private static String puzzleDbClear() { return ""; }
     private static String guestRepositoryClass() { return ""; }
+    /** The path stats' userRating field, set by the patch. */
+    private static String userRatingField() { return ""; }
+
+    /** Gives the empty Classic-layout path stats the Lichess rating; the app reads it from the field. */
+    public static Object withRating(Object stats) {
+        try {
+            Field field = stats.getClass().getDeclaredField(userRatingField());
+            field.setAccessible(true);
+            field.setInt(stats, rating());
+        } catch (Throwable throwable) {
+            Utils.logError("Lichess puzzle rating field", throwable);
+        }
+        return stats;
+    }
 
     public static boolean enabled() {
         return Features.lichessPuzzlesPatched() && Features.isEnabled(Features.LICHESS_PUZZLES);
@@ -584,6 +598,11 @@ public final class LichessPuzzles {
     public static String ratingText() {
         Glicko glicko = glicko();
         return Math.round(glicko.rating) + (glicko.deviation > PROVISIONAL ? "?" : "");
+    }
+
+    /** The rating boxed the way the review state keeps it. */
+    public static Integer ratingBox() {
+        return rating();
     }
 
     public static int solvedCount() {
