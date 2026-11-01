@@ -60,9 +60,13 @@ public final class ArrowsChip {
                 if (value instanceof List) list = (List<Object>) value;
             }
             if (list == null) throw new IllegalStateException("No actions in " + actions.getClass().getName());
-            if (hasAction(list, ArrowsBar.arrowsLabel())) return;
+            if (list.isEmpty()) return;
 
             Class<?> type = Class.forName(actionType());
+            // Some states (the condensed paywall's bar) wrap each action in another class; leave those alone.
+            if (!type.isInstance(list.get(0))) return;
+            if (hasAction(list, ArrowsBar.arrowsLabel())) return;
+
             Constructor<?> constructor = type.getConstructor(
                 String.class, Integer.class, Function0.class, Function1.class,
                 boolean.class, boolean.class, int.class);

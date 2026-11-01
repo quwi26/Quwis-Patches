@@ -1,3 +1,11 @@
+# [1.9.4](https://github.com/quwi26/Quwis-Patches/compare/v1.9.3...v1.9.4) (2026-11-01)
+
+### Bug Fixes
+
+* **Arrows in games:** on 4.10.23 the bot game's bottom bar is a Compose row of the app's own buttons, so Arrows and Clear join it there and the floating chip is gone
+* **Arrows in reviews:** 4.10.23's new Analysis screen draws its own Compose bar too; Arrows and Clear are added to it, next to its buttons
+* **Arrows in reviews:** Game Review's bar no longer crashes when it shows the condensed paywall. That state wraps each action in another class, so the Arrows and Clear actions are only added to the plain list
+
 # [1.9.3](https://github.com/quwi26/Quwis-Patches/compare/v1.9.2...v1.9.3) (2026-11-01)
 
 ### Bug Fixes

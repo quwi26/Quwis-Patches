@@ -9,6 +9,8 @@ import app.morphe.patcher.patch.resourcePatch
 import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod
 import app.noam.patches.chesscom.misc.settings.settingsPatch
 import app.noam.patches.chesscom.shared.Constants
+import app.noam.patches.chesscom.shared.addArrowsBarButtons
+import app.noam.patches.chesscom.shared.composeBarButton
 import app.noam.patches.chesscom.shared.markFeaturePatched
 import app.noam.patches.chesscom.shared.returnString
 import app.noam.patches.chesscom.shared.toBinaryName
@@ -21,6 +23,7 @@ import com.android.tools.smali.dexlib2.iface.reference.MethodReference
 private const val ARROWS_CHIP = "${Constants.EXTENSION_PACKAGE}/arrows/ArrowsChip;"
 private const val BUTTON_CLASS = "app.noam.extension.chesscom.arrows.ArrowsButton"
 private const val REVIEW_ACTIVITY = "Lcom/chess/gamereview/v2/GameReviewActivity;"
+private const val ANALYSIS_PACKAGE = "Lcom/chess/features/analysis/"
 
 /** Analysis bars and the game's two buttons Arrows goes between. */
 private val REVIEW_BARS = mapOf(
@@ -157,6 +160,23 @@ val arrowsReviewsPatch = bytecodePatch(
                             "$ARROWS_CHIP->addActions(Ljava/lang/Object;)V",
                     )
                 }
+            }
+
+            // 4.10.23's Analysis screen draws its own Compose bar; Arrows and Clear join its buttons.
+            var analysisType: String? = null
+            var analysisMethod: String? = null
+            classDefForEach { classDef ->
+                if (analysisType != null || !classDef.type.startsWith(ANALYSIS_PACKAGE)) return@classDefForEach
+                val method = classDef.methods.firstOrNull { it.composeBarButton() != null } ?: return@classDefForEach
+                analysisType = classDef.type
+                analysisMethod = method.name + "(" + method.parameterTypes.joinToString("") + ")" + method.returnType
+            }
+            val type = analysisType
+            val key = analysisMethod
+            if (type != null && key != null) {
+                mutableClassDefBy(type).methods.first {
+                    it.name + "(" + it.parameterTypes.joinToString("") + ")" + it.returnType == key
+                }.addArrowsBarButtons("reviewsShow")
             }
         } else {
             // The review screen is Compose, so its chip floats over the board instead of sitting in a bar.
