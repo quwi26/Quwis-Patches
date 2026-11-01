@@ -20,7 +20,7 @@ https://raw.githubusercontent.com/quwi26/Quwis-Patches/main/patches-bundle.json
 
 ## What this fork adds
 
-Three patches, all for chess.com:
+Four patches, all for chess.com:
 
 - **Great and Brilliant moves analysis** - marks chess.com's “!” and “!!” in a review by Local Stockfish or by
   Stockfish on your computer. Great is the engine's own best move when it was also the only one that kept the
@@ -40,6 +40,8 @@ Three patches, all for chess.com:
   computer over the local network, with the same Stockfish 19 and the same Lichess-style marks. A review that
   took a minute on the phone takes seconds. It has its own depth (Fast 100k, Standard 300k, Deep 1M, Maximum
   5M nodes a move) and thread count, and a benchmark in the settings.
+- **Arrows in reviews** - Arrows and Clear in Game Review and on the Analysis boards, so arrows and marked
+  squares can be drawn while analysing a game. Noam's **Arrows in games** stays separate.
 
 The two add-ons work only with **Unlimited Game Review from this bundle**: select it too. Two Unlimited Game
 Review patches, one from this bundle and one from Noam's or hyzor's, cannot be applied to the same app - they
@@ -50,8 +52,8 @@ hyzor's patch is.
 
 The patches for other apps (Block Blast, Gboard, Geocaching) are **not** in this bundle.
 
-Everything else is Noam's work, unchanged: chess.com 4.10.18 and 4.10.23 with arrows in games and on the
-Analysis board, board and accent colours,
+Everything else is Noam's work, unchanged: chess.com 4.10.18 and 4.10.23 with arrows in games and in
+reviews, board and accent colours,
 AMOLED black, the website's Arcade animations, custom Home and bottom bar, time controls under a minute,
 offline Stockfish analysis on the phone, Lichess reviews and offline Lichess puzzles, every bot unlocked,
 no daily Play Coach limit, Premium content, no ads or rating prompts — all switched on and off under

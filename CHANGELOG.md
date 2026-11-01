@@ -1,3 +1,10 @@
+# [1.9.0](https://github.com/quwi26/Quwis-Patches/compare/v1.8.0...v1.9.0) (2026-11-01)
+
+### Features
+
+* **Chess.com:** a separate Arrows in reviews patch adds Arrows and Clear to Game Review, where a small chip over the board switches drawing on, and to the Analysis boards, where they sit in the bottom bar
+* **Chess.com:** Arrows in games is back to the game bars only; the Analysis board belongs to Arrows in reviews now, and the two features can be switched on and off independently
+
 # [1.8.0](https://github.com/quwi26/Quwis-Patches/compare/v1.7.2...v1.8.0) (2026-11-01)
 
 ### Features

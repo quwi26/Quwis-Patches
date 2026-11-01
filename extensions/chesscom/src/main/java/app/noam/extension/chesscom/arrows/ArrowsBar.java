@@ -36,7 +36,7 @@ public final class ArrowsBar {
     private ArrowsBar() {}
 
     public static boolean show() {
-        return Arrows.enabled();
+        return Arrows.gamesEnabled();
     }
 
     public static boolean needsState() {

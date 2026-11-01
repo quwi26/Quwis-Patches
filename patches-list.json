@@ -1,6 +1,6 @@
 {
   "NOTE": "Do NOT manually edit this file. It is generated with ./gradlew generatePatchesList for every release. Manually editing this file can break third party tools that use this file.",
-  "version": "1.8.0",
+  "version": "1.9.0",
   "patches": [
     {
       "name": "AMOLED black",
@@ -112,12 +112,51 @@
     },
     {
       "name": "Arrows in games",
-      "description": "Adds Arrows and Clear buttons to the game bars (live, daily, archived, pass and play, bots, coach) and the Analysis board. While Arrows is on, dragging on the board draws an arrow and tapping marks a square, as on the website, and pieces don't move.",
+      "description": "Adds Arrows and Clear buttons to the game bars (live, daily, archived, pass and play, bots, coach). While Arrows is on, dragging on the board draws an arrow and tapping marks a square, as on the website, and pieces don't move.",
       "default": true,
       "category": null,
       "dependencies": [
         "BytecodePatch",
-        "ResourcePatch"
+        "ResourcePatch",
+        "BytecodePatch"
+      ],
+      "compatiblePackages": [
+        {
+          "packageName": "com.chess",
+          "name": "Chess.com",
+          "description": null,
+          "apkFileType": null,
+          "appIconColor": null,
+          "signatures": null,
+          "targets": [
+            {
+              "version": "4.10.23-googleplay",
+              "versionCodes": null,
+              "isExperimental": false,
+              "minSdk": null,
+              "description": null
+            },
+            {
+              "version": "4.10.18-googleplay",
+              "versionCodes": null,
+              "isExperimental": false,
+              "minSdk": null,
+              "description": null
+            }
+          ]
+        }
+      ],
+      "options": []
+    },
+    {
+      "name": "Arrows in reviews",
+      "description": "Adds Arrows and Clear to Game Review and the Analysis boards. While Arrows is on, dragging on the board draws an arrow and tapping marks a square, as on the website, and pieces don't move. Clear removes them.",
+      "default": true,
+      "category": null,
+      "dependencies": [
+        "BytecodePatch",
+        "ResourcePatch",
+        "BytecodePatch"
       ],
       "compatiblePackages": [
         {

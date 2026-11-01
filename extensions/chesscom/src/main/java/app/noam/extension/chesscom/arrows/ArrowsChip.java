@@ -24,7 +24,16 @@ public final class ArrowsChip {
     private ArrowsChip() {}
 
     public static void attach(Activity activity) {
-        if (activity == null || !Arrows.enabled()) return;
+        attach(activity, Arrows.gamesEnabled());
+    }
+
+    /** The Game Review screen, whose Compose UI has no bottom bar we can add buttons to. */
+    public static void attachReviews(Activity activity) {
+        attach(activity, Arrows.reviewsEnabled());
+    }
+
+    private static void attach(Activity activity, boolean enabled) {
+        if (activity == null || !enabled) return;
         try {
             View decor = activity.getWindow().getDecorView();
             if (!(decor instanceof ViewGroup)) return;
