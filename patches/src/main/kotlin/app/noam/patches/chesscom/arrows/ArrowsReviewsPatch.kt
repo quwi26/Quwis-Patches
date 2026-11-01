@@ -11,6 +11,7 @@ import app.noam.patches.chesscom.misc.settings.settingsPatch
 import app.noam.patches.chesscom.shared.Constants
 import app.noam.patches.chesscom.shared.markFeaturePatched
 import app.noam.patches.chesscom.shared.returnString
+import app.noam.patches.chesscom.shared.toBinaryName
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.instruction.FiveRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction
@@ -142,7 +143,7 @@ val arrowsReviewsPatch = bytecodePatch(
 
         if (calls.isNotEmpty() && actionType != null) {
             mutableClassDefBy(ARROWS_CHIP).methods.first { it.name == "actionType" }
-                .returnString(actionType.type)
+                .returnString(actionType.type.toBinaryName())
             mutableClassDefBy(ARROWS_CHIP).methods.first { it.name == "reviewsInBar" }
                 .replaceInstructions(0, "const/4 v0, 0x1\nreturn v0")
             calls.groupBy { Triple(it.type, it.name, it.parameters) }.forEach { (key, group) ->

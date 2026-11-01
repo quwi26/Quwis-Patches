@@ -42,8 +42,8 @@ Five patches, all for chess.com:
   5M nodes a move) and thread count, and a benchmark in the settings.
 - **Arrows in reviews** - Arrows and Clear in Game Review's own bottom bar and on the Analysis boards, so arrows
   and marked squares can be drawn while analysing a game. Noam's **Arrows in games** stays separate.
-- **Crash details** - if the app crashes, a screen of its own shows what went wrong, with the details ready to
-  copy into a report. Turn it off for chess.com's usual crash dialog.
+- **Global Crash Handler** - if the app crashes, a screen of its own shows what went wrong, with the details
+  ready to copy into a report. Turn it off for chess.com's usual crash dialog.
 
 The two add-ons work only with **Unlimited Game Review from this bundle**: select it too. Two Unlimited Game
 Review patches, one from this bundle and one from Noam's or hyzor's, cannot be applied to the same app - they
@@ -105,8 +105,10 @@ All patches are [Noam's](https://github.com/ImNoammm/Noams-Morphe-Patches) (GPL-
 PrathxmOp's work; the computer reviewer was added in this fork. Without Noam's Morphe Patches this project
 would not exist: the whole patch tree and extension are his work, and this fork only adds the Game Review
 features on top. The chess.com 4.10.23 support follows
-[hyzor's port](https://github.com/hyzor/hyzor-morphe-patches) (GPL-3.0) of the same patches. If you want the
-patches for other apps too, use Noam's own source.
+[hyzor's port](https://github.com/hyzor/hyzor-morphe-patches) (GPL-3.0) of the same patches. The crash screen
+is [PrathxmOp's crash handler](https://github.com/PrathxmOp/Prathxm-Patches) (GPL-3.0), renamed so Morphe sees
+it as the same patch when both bundles are added. If you want the patches for other apps too, use Noam's own
+source.
 
 ## Building
 

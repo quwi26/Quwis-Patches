@@ -42,9 +42,8 @@ private val crashHandlerResourcePatch = resourcePatch(
  */
 @Suppress("unused")
 val crashHandlerPatch = bytecodePatch(
-    name = "Crash details",
-    description = "When the app crashes, shows what went wrong on a screen of its own, with the " +
-        "details ready to copy into a report.",
+    name = "Global Crash Handler",
+    description = "Catches uncaught exceptions and displays a custom crash screen with details to report issues.",
 ) {
     compatibleWith(Constants.COMPATIBILITY)
 

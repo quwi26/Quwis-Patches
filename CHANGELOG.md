@@ -1,3 +1,10 @@
+# [1.9.3](https://github.com/quwi26/Quwis-Patches/compare/v1.9.2...v1.9.3) (2026-11-01)
+
+### Bug Fixes
+
+* **Chess.com:** opening Settings on 4.10.23 no longer crashes. Hide Premium-only content filtered the settings rows into a plain List and stored it in an ArrayList field, which the verifier rejects; the copy is cast to the field's type now
+* **Arrows in reviews:** the buttons in Game Review's bottom bar are found again. The action class was looked up by its smali name instead of its Java name, so the lookup failed and the bar stayed empty
+
 # [1.9.2](https://github.com/quwi26/Quwis-Patches/compare/v1.9.1...v1.9.2) (2026-11-01)
 
 ### Bug Fixes
