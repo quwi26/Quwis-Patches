@@ -50,7 +50,8 @@ hyzor's patch is.
 
 The patches for other apps (Block Blast, Gboard, Geocaching) are **not** in this bundle.
 
-Everything else is Noam's work, unchanged: chess.com 4.10.18 and 4.10.23 with arrows in games, board and accent colours,
+Everything else is Noam's work, unchanged: chess.com 4.10.18 and 4.10.23 with arrows in games and on the
+Analysis board, board and accent colours,
 AMOLED black, the website's Arcade animations, custom Home and bottom bar, time controls under a minute,
 offline Stockfish analysis on the phone, Lichess reviews and offline Lichess puzzles, every bot unlocked,
 no daily Play Coach limit, Premium content, no ads or rating prompts — all switched on and off under

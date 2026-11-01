@@ -82,8 +82,8 @@ public final class Features {
             "Your own light and dark square colours on every board, or one of chess.com's colour themes.",
             PAGE_BOARD_COLORS, Features::boardColorsPatched),
         new Feature(ARROWS, "Board", "glyph_arrow_line_diagonal_top_right", "Arrows in games",
-            "An Arrows button in games: while it is on, dragging on the board draws an arrow and "
-                + "tapping marks a square, instead of moving pieces. Clear removes them.",
+            "An Arrows button in games and on the Analysis board: while it is on, dragging on the board "
+                + "draws an arrow and tapping marks a square, instead of moving pieces. Clear removes them.",
             null, Features::arrowsPatched),
         new Feature(AMOLED, "Look", "glyph_circle_fill_contrast", "AMOLED black",
             "Pure black backgrounds instead of chess.com's dark grey. Restart the app after switching it.",

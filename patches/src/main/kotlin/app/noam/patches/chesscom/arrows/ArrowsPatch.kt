@@ -39,12 +39,15 @@ private const val COMPOSER = "Landroidx/compose/runtime/d;"
 private const val PARCELABLE_STATE = "Landroidx/compose/runtime/ParcelableSnapshotMutableState;"
 private val JUMPS = setOf(Opcode.GOTO, Opcode.GOTO_16, Opcode.GOTO_32)
 
-/** Game control bars and the two buttons Arrows goes between. */
+/** Game and analysis control bars and the two buttons Arrows goes between. */
 private val CONTROL_BARS = mapOf(
     "live_game_control_view" to ("chatControlView" to "analyzeControlViewContainer"),
     "daily_game_control_view" to ("chatControlView" to "analyzeControlViewContainer"),
     "archived_live_game_control_view" to ("optionsControlView" to "analyzeControlViewContainer"),
     "pass_and_play_control_view" to ("pauseControlView" to "analysisControlView"),
+    // The Analysis board and the engineless analysis board use the game samples' bottom bars.
+    "view_standalone_analysis_controls" to ("optionsBtn" to "explorerBtn"),
+    "view_analysis_self_engineless_controls" to ("resetView" to "backControlView"),
 )
 
 /** chess.com's bottom bar button of the Compose screens. */
@@ -129,8 +132,8 @@ private val arrowsResourcePatch = resourcePatch(
 val arrowsPatch = bytecodePatch(
     name = "Arrows in games",
     description = "Adds Arrows and Clear buttons to the game bars (live, daily, archived, pass and " +
-        "play, bots, coach). While Arrows is on, dragging on the board draws an arrow and tapping marks a " +
-        "square, as on the website, and pieces don't move.",
+        "play, bots, coach) and the Analysis board. While Arrows is on, dragging on the board draws an arrow " +
+        "and tapping marks a square, as on the website, and pieces don't move.",
 ) {
     compatibleWith(Constants.COMPATIBILITY)
 

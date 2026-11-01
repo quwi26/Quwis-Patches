@@ -1,3 +1,9 @@
+# [1.8.0](https://github.com/quwi26/Quwis-Patches/compare/v1.7.2...v1.8.0) (2026-11-01)
+
+### Features
+
+* **Chess.com:** Arrows in games now also adds Arrows and Clear to the Analysis board's bottom bar, so arrows and marked squares can be drawn while analysing a game, not only during play
+
 # [1.7.2](https://github.com/quwi26/Quwis-Patches/compare/v1.7.1...v1.7.2) (2026-11-01)
 
 ### Bug Fixes
