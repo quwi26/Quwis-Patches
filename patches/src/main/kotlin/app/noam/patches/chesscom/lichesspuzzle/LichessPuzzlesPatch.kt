@@ -628,6 +628,26 @@ val lichessPuzzlesPatch = bytecodePatch(
             ExternalLabel("morphe_rating_stats", ratingStats.getInstruction(0)),
         )
         }
+        // The next button: chess.com would fetch a rated puzzle from its server and hit the free
+        // daily limit; during a session the extension reopens the Lichess flow instead.
+        val onNext = mutableClassDefBy(VIEW_MODEL).methods.singleOrNull { method ->
+            method.parameterTypes.map(CharSequence::toString) == listOf("J") && method.returnType == "V" &&
+                method.implementation?.instructions?.any { instruction ->
+                    ((instruction as? ReferenceInstruction)?.reference as? TypeReference)?.type
+                        ?.contains("onNextClicked\$2") == true
+                } == true
+        } ?: throw PatchException("The puzzle next button was not found")
+        onNext.addInstructionsWithLabels(
+            0,
+            """
+                invoke-static { }, $PUZZLES->onNext()Z
+                move-result v0
+                if-eqz v0, :morphe_next
+                return-void
+            """,
+            ExternalLabel("morphe_next", onNext.getInstruction(0)),
+        )
+
         // The Puzzles tab's menu is PathRootMenuState(expanded, big button text, button above it,
         // buttons, ...). The button above is empty unless there is a next lesson. Ours takes the big
         // button and Solve Puzzles goes above it, or first in the menu's list when Next Lesson has the spot.

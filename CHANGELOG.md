@@ -1,3 +1,11 @@
+# [1.7.2](https://github.com/quwi26/Quwis-Patches/compare/v1.7.1...v1.7.2) (2026-11-01)
+
+### Bug Fixes
+
+* **Chess.com:** Lichess puzzles are scored on 4.10.23 again; the score constructor's error type changed, so the local scoring fell back to chess.com's API and every wrong move or finish showed its dead-end error
+* **Chess.com:** the solved Lichess puzzle screen has its XP, stats and bonuses (empty, as guest puzzles have none), instead of reading nulls
+* **Chess.com:** Next opens the next Lichess puzzle during a session instead of asking chess.com for a rated one and hitting the free daily limit; chess.com's own puzzles keep their Next
+
 # [1.7.1](https://github.com/quwi26/Quwis-Patches/compare/v1.7.0...v1.7.1) (2026-10-31)
 
 ### Bug Fixes
