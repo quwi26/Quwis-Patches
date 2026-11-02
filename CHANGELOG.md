@@ -1,3 +1,9 @@
+# [1.9.5](https://github.com/quwi26/Quwis-Patches/compare/v1.9.4...v1.9.5) (2026-11-02)
+
+### Bug Fixes
+
+* **Patching:** the patch set no longer runs out of memory on phones with little RAM. Two scans, Customize bottom bar and Lichess puzzles, made every class they visited mutable, and every mutable class is rewritten into a new DEX file; they now read the app's classes unchanged and make mutable only the few that get a hook. Checks that only test whether a class exists no longer make it mutable either
+
 # [1.9.4](https://github.com/quwi26/Quwis-Patches/compare/v1.9.3...v1.9.4) (2026-11-01)
 
 ### Bug Fixes
