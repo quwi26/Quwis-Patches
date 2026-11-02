@@ -9,9 +9,7 @@ import app.morphe.patcher.patch.resourcePatch
 import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod
 import app.noam.patches.chesscom.misc.settings.settingsPatch
 import app.noam.patches.chesscom.shared.Constants
-import app.noam.patches.chesscom.shared.addArrowsBarButtons
 import app.noam.patches.chesscom.shared.addArrowsState
-import app.noam.patches.chesscom.shared.composeBarButton
 import app.noam.patches.chesscom.shared.markFeaturePatched
 import app.noam.patches.chesscom.shared.mutableStateFactory
 import app.noam.patches.chesscom.shared.returnString
@@ -23,62 +21,15 @@ import com.android.tools.smali.dexlib2.iface.instruction.RegisterRangeInstructio
 import com.android.tools.smali.dexlib2.iface.reference.MethodReference
 
 private const val ARROWS_CHIP = "${Constants.EXTENSION_PACKAGE}/arrows/ArrowsChip;"
-private const val BUTTON_CLASS = "app.noam.extension.chesscom.arrows.ArrowsButton"
 private const val REVIEW_ACTIVITY = "Lcom/chess/gamereview/v2/GameReviewActivity;"
-private const val ANALYSIS_PACKAGE = "Lcom/chess/features/analysis/"
-
-/** Analysis bars and the game's two buttons Arrows goes between. */
-private val REVIEW_BARS = mapOf(
-    "view_standalone_analysis_controls" to ("optionsBtn" to "explorerBtn"),
-    "view_analysis_self_engineless_controls" to ("resetView" to "backControlView"),
-)
 
 private val arrowsReviewsResourcePatch = resourcePatch(
-    description = "Adds the Arrows and Clear buttons to the review and analysis boards.",
+    description = "Adds the Arrows and Clear labels to the review bar.",
 ) {
     execute {
         document("res/values/strings.xml").use { document ->
             document.addString("morphe_arrows", "Arrows")
             document.addString("morphe_clear_arrows", "Clear")
-        }
-
-        REVIEW_BARS.forEach { (layout, neighbours) ->
-            val bar = runCatching { document("res/layout/$layout.xml") }.getOrNull() ?: return@forEach
-            bar.use { document ->
-                val (beforeId, afterId) = neighbours
-                val before = document.elementWithId(beforeId)
-                val after = document.elementWithId(afterId)
-
-                // ... before, Arrows, Clear, after ... (the bar is a packed chain).
-                fun button(id: String, tag: String, icon: String, text: String, start: String, end: String) =
-                    document.createElement(BUTTON_CLASS).apply {
-                        setAttribute("android:id", "@+id/$id")
-                        setAttribute("android:tag", tag)
-                        setAttribute("android:layout_width", "0dp")
-                        setAttribute("android:layout_height", "wrap_content")
-                        setAttribute("android:contentDescription", "@string/$text")
-                        setAttribute("app:icon", "@drawable/$icon")
-                        setAttribute("app:text", "@string/$text")
-                        setAttribute("app:layout_constraintTop_toTopOf", "parent")
-                        setAttribute("app:layout_constraintBottom_toBottomOf", "parent")
-                        setAttribute("app:layout_constraintStart_toEndOf", start)
-                        setAttribute("app:layout_constraintEnd_toStartOf", end)
-                        setAttribute("app:layout_constraintWidth_max", "@dimen/bottom_button_max_width")
-                    }
-
-                val draw = button(
-                    "morpheArrowsControlView", "reviews_draw", "glyph_arrow_line_diagonal_top_right", "morphe_arrows",
-                    "@+id/$beforeId", "@+id/morpheClearArrowsControlView",
-                )
-                val clear = button(
-                    "morpheClearArrowsControlView", "reviews_clear", "glyph_board_simple_badge_cross", "morphe_clear_arrows",
-                    "@+id/morpheArrowsControlView", "@+id/$afterId",
-                )
-                before.setAttribute("app:layout_constraintEnd_toStartOf", "@+id/morpheArrowsControlView")
-                after.setAttribute("app:layout_constraintStart_toEndOf", "@+id/morpheClearArrowsControlView")
-                after.parentNode.insertBefore(draw, after)
-                after.parentNode.insertBefore(clear, after)
-            }
         }
     }
 }
@@ -86,7 +37,7 @@ private val arrowsReviewsResourcePatch = resourcePatch(
 @Suppress("unused")
 val arrowsReviewsPatch = bytecodePatch(
     name = "Arrows in reviews",
-    description = "Adds Arrows and Clear to Game Review and the Analysis boards. While Arrows is on, " +
+    description = "Adds Arrows and Clear to Game Review's bottom bar. While Arrows is on, " +
         "dragging on the board draws an arrow and tapping marks a square, as on the website, and pieces " +
         "don't move. Clear joins Arrows while drawing and folds away when it is switched off, so the " +
         "bar keeps its space.",
@@ -177,23 +128,6 @@ val arrowsReviewsPatch = bytecodePatch(
                         throw PatchException("The arrows state failed in ${key.first}->${key.second}: $throwable")
                     }
                 }
-            }
-
-            // 4.10.23's Analysis screen draws its own Compose bar; Arrows and Clear join its buttons.
-            var analysisType: String? = null
-            var analysisMethod: String? = null
-            classDefForEach { classDef ->
-                if (analysisType != null || !classDef.type.startsWith(ANALYSIS_PACKAGE)) return@classDefForEach
-                val method = classDef.methods.firstOrNull { it.composeBarButton() != null } ?: return@classDefForEach
-                analysisType = classDef.type
-                analysisMethod = method.name + "(" + method.parameterTypes.joinToString("") + ")" + method.returnType
-            }
-            val type = analysisType
-            val key = analysisMethod
-            if (type != null && key != null) {
-                mutableClassDefBy(type).methods.first {
-                    it.name + "(" + it.parameterTypes.joinToString("") + ")" + it.returnType == key
-                }.addArrowsBarButtons("reviewsShow", collapseClear = stateFactory != null, stateFactory = stateFactory)
             }
         } else {
             // The review screen is Compose, so its chip floats over the board instead of sitting in a bar.

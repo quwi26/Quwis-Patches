@@ -1,3 +1,11 @@
+# [1.9.14](https://github.com/quwi26/Quwis-Patches/compare/v1.9.13...v1.9.14) (2026-11-03)
+
+### Bug Fixes
+
+* **Arrows in reviews:** the Analysis screen is left alone again. Its bottom bar is built from a branch per state, so the two buttons could not be placed in it; Game Review keeps its own Arrows and Clear
+* **Arrows in games:** bot games get the floating Arrows and Clear chip back. The patch stopped adding the chip after trying the bot bar, and the bot bar's buttons were only drawn in one game state
+* **Stockfish analysis:** the patch log now says when the 80 MB engine is already downloaded and when a download starts, so missing progress lines are no longer puzzling
+
 # [1.9.13](https://github.com/quwi26/Quwis-Patches/compare/v1.9.12...v1.9.13) (2026-11-03)
 
 ### Bug Fixes

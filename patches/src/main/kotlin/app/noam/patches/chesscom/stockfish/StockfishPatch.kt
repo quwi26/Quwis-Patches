@@ -41,9 +41,14 @@ private val stockfishResourcePatch = resourcePatch(
         "Stockfish's GitHub while patching.",
 ) {
     execute {
-        // A copy downloaded before is used again when it still checks out.
+        // A copy downloaded before is used again when it still checks out. The patcher's log then
+        // has no progress lines, so say that the download is not happening at all.
         val engine = File(System.getProperty("java.io.tmpdir"), "morphe-stockfish-19-${STOCKFISH_SHA256.take(16)}")
-        if (!engine.isFile || sha256(engine) != STOCKFISH_SHA256) download(engine)
+        if (engine.isFile && sha256(engine) == STOCKFISH_SHA256) {
+            logger.info("Stockfish 19 is already downloaded; no download is needed")
+        } else {
+            download(engine)
+        }
         // Android extracts native libraries into the one folder an app may run programs from.
         val target = get("lib/arm64-v8a/libstockfish.so")
         target.parentFile.mkdirs()
@@ -62,6 +67,7 @@ private val logger = Logger.getLogger("Stockfish analysis")
 /** Downloads Stockfish, trying again after a failure; a retry continues the archive where it stopped. */
 private fun download(engine: File) {
     val archive = File(engine.parentFile, engine.name + ".tar.gz.part")
+    logger.info("Downloading Stockfish 19 (about 80 MB, once)")
     for (attempt in 0..RETRY_PAUSES_MS.size) {
         try {
             downloadOnce(archive, engine)
