@@ -1,3 +1,9 @@
+# [1.9.12](https://github.com/quwi26/Quwis-Patches/compare/v1.9.8...v1.9.12) (2026-11-03)
+
+### Bug Fixes
+
+* **Patching:** the bundle is built with Morphe patcher 2.1.0, the version Morphe 2.3.0 ships, so patching no longer warns that it was built for the older patcher 1.14.1. The patches themselves are unchanged
+
 # [1.9.8](https://github.com/quwi26/Quwis-Patches/compare/v1.9.5...v1.9.8) (2026-11-02)
 
 ### Bug Fixes
