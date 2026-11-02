@@ -10,8 +10,10 @@ import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod
 import app.noam.patches.chesscom.misc.settings.settingsPatch
 import app.noam.patches.chesscom.shared.Constants
 import app.noam.patches.chesscom.shared.addArrowsBarButtons
+import app.noam.patches.chesscom.shared.addArrowsState
 import app.noam.patches.chesscom.shared.composeBarButton
 import app.noam.patches.chesscom.shared.markFeaturePatched
+import app.noam.patches.chesscom.shared.mutableStateFactory
 import app.noam.patches.chesscom.shared.returnString
 import app.noam.patches.chesscom.shared.toBinaryName
 import com.android.tools.smali.dexlib2.Opcode
@@ -86,7 +88,8 @@ val arrowsReviewsPatch = bytecodePatch(
     name = "Arrows in reviews",
     description = "Adds Arrows and Clear to Game Review and the Analysis boards. While Arrows is on, " +
         "dragging on the board draws an arrow and tapping marks a square, as on the website, and pieces " +
-        "don't move. Clear removes them.",
+        "don't move. Clear joins Arrows while drawing and folds away when it is switched off, so the " +
+        "bar keeps its space.",
 ) {
     compatibleWith(Constants.COMPATIBILITY)
 
@@ -145,20 +148,34 @@ val arrowsReviewsPatch = bytecodePatch(
         }
 
         if (calls.isNotEmpty() && actionType != null) {
+            // A state of ours for the review bars: they read it, so Clear can appear and fold away
+            // when drawing starts and stops. Some versions keep Compose's state classes out of
+            // reach; then the bars keep both buttons instead of failing.
+            val stateFactory = runCatching { mutableStateFactory() }.getOrNull()
+
             mutableClassDefBy(ARROWS_CHIP).methods.first { it.name == "actionType" }
                 .returnString(actionType.type.toBinaryName())
             mutableClassDefBy(ARROWS_CHIP).methods.first { it.name == "reviewsInBar" }
                 .replaceInstructions(0, "const/4 v0, 0x1\nreturn v0")
+            val stateMethods = mutableSetOf<String>()
             calls.groupBy { Triple(it.type, it.name, it.parameters) }.forEach { (key, group) ->
-                val method = mutableClassDefBy(key.first).methods.first {
-                    it.name == key.second && it.parameterTypes.joinToString("") == key.third
-                }
+                val method = mutableClassDefBy(key.first).methods.firstOrNull {
+                    it.name == key.second && it.parameterTypes.joinToString("") == key.third &&
+                        it.implementation != null
+                } ?: throw PatchException("The review bar method was not found in ${key.first}")
                 group.sortedByDescending { it.index }.forEach { call ->
                     method.addInstructions(
                         call.index,
                         "invoke-static/range { v${call.register} .. v${call.register} }, " +
                             "$ARROWS_CHIP->addActions(Ljava/lang/Object;)V",
                     )
+                }
+                if (stateFactory != null && stateMethods.add(key.first + "->" + key.second + key.third)) {
+                    try {
+                        method.addArrowsState(stateFactory)
+                    } catch (throwable: Throwable) {
+                        throw PatchException("The arrows state failed in ${key.first}->${key.second}: $throwable")
+                    }
                 }
             }
 
@@ -176,7 +193,7 @@ val arrowsReviewsPatch = bytecodePatch(
             if (type != null && key != null) {
                 mutableClassDefBy(type).methods.first {
                     it.name + "(" + it.parameterTypes.joinToString("") + ")" + it.returnType == key
-                }.addArrowsBarButtons("reviewsShow")
+                }.addArrowsBarButtons("reviewsShow", collapseClear = stateFactory != null, stateFactory = stateFactory)
             }
         } else {
             // The review screen is Compose, so its chip floats over the board instead of sitting in a bar.

@@ -15,6 +15,7 @@ import android.widget.TextView;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import app.noam.extension.chesscom.Utils;
@@ -47,7 +48,8 @@ public final class ArrowsChip {
 
     /**
      * Adds Arrows and Clear to the action list the review's own bottom bar draws, so they look like
-     * the app's buttons. The patch sets the action class name in actionType().
+     * the app's buttons. Clear only joins the list while drawing is on, so the bar saves its space
+     * the rest of the time. The patch sets the action class name in actionType().
      */
     @SuppressWarnings("unchecked")
     public static void addActions(Object actions) {
@@ -70,30 +72,53 @@ public final class ArrowsChip {
                 field.set(actions, list);
             }
             if (list.isEmpty()) return;
-            if (hasAction(list, ArrowsBar.arrowsLabel())) return;
+            // Reading our state here makes the bar redraw this list when drawing starts or stops.
+            boolean drawing = ArrowsBar.reviewsDrawing();
+            if (drawing) {
+                if (hasAction(list, ArrowsBar.clearLabel())) return;
+            } else {
+                if (!removeAction(list, ArrowsBar.clearLabel())) return;
+            }
 
             Class<?> type = Class.forName(actionType());
-            Object arrows = action(type, ArrowsBar.arrowsLabel(), ArrowsBar.arrowsIcon(), ArrowsBar.onArrows());
-            Object clear = action(type, ArrowsBar.clearLabel(), ArrowsBar.clearIcon(), ArrowsBar.onClear());
             // 4.10.23 wraps every action of this bar in a one-field class before the bar draws
             // it; ours have to be wrapped the same way or the bar's cast fails.
             Object first = list.get(0);
-            if (type.isInstance(first)) {
-                list.add(arrows);
-                list.add(clear);
-                return;
-            }
+            boolean direct = type.isInstance(first);
             Constructor<?> wrapper = null;
-            for (Constructor<?> candidate : first.getClass().getConstructors()) {
-                Class<?>[] parameters = candidate.getParameterTypes();
-                if (parameters.length == 1 && parameters[0].isAssignableFrom(type)) wrapper = candidate;
+            if (!direct) {
+                for (Constructor<?> candidate : first.getClass().getConstructors()) {
+                    Class<?>[] parameters = candidate.getParameterTypes();
+                    if (parameters.length == 1 && parameters[0].isAssignableFrom(type)) wrapper = candidate;
+                }
+                if (wrapper == null) return;
             }
-            if (wrapper == null) return;
-            list.add(wrapper.newInstance(arrows));
-            list.add(wrapper.newInstance(clear));
+            if (!hasAction(list, ArrowsBar.arrowsLabel())) {
+                add(list, action(type, ArrowsBar.arrowsLabel(), ArrowsBar.arrowsIcon(), ArrowsBar.onArrows()),
+                    direct, wrapper);
+            }
+            if (drawing) {
+                add(list, action(type, ArrowsBar.clearLabel(), ArrowsBar.clearIcon(), ArrowsBar.onClear()),
+                    direct, wrapper);
+            }
         } catch (Throwable throwable) {
             Utils.logError("Arrows review bar", throwable);
         }
+    }
+
+    private static void add(List<Object> list, Object action, boolean direct, Constructor<?> wrapper) throws Exception {
+        list.add(direct ? action : wrapper.newInstance(action));
+    }
+
+    /** Removes the action with this label; true when one was there. */
+    private static boolean removeAction(List<Object> actions, String label) {
+        for (Iterator<Object> iterator = actions.iterator(); iterator.hasNext(); ) {
+            if (label.equals(labelOf(iterator.next()))) {
+                iterator.remove();
+                return true;
+            }
+        }
+        return false;
     }
 
     private static Object action(Class<?> type, String label, int icon, Function0<?> onClick) throws Exception {

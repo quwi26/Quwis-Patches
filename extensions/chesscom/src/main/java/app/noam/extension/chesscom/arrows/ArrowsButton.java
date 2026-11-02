@@ -17,6 +17,7 @@ import app.noam.extension.chesscom.theme.Accent;
 public final class ArrowsButton extends FrameLayout {
     private static final String BOTTOM_BUTTON = "com.chess.internal.views.BottomButton";
 
+    private final boolean reviews;
     private final boolean clear;
     private View button;
     private Method setColor, setColorStateList;
@@ -26,12 +27,8 @@ public final class ArrowsButton extends FrameLayout {
         // Read the tag from the attributes too: the view reads it itself only after layout starts.
         String tag = attrs == null ? null : attrs.getAttributeValue("http://schemas.android.com/apk/res/android", "tag");
         if (tag == null) tag = getTag() == null ? "" : getTag().toString();
-        boolean reviews = tag.startsWith("reviews_");
+        reviews = tag.startsWith("reviews_");
         clear = tag.endsWith("clear");
-        if (reviews ? !Arrows.reviewsEnabled() : !Arrows.gamesEnabled()) {
-            setVisibility(GONE);
-            return;
-        }
         try {
             Class<?> type = Class.forName(BOTTOM_BUTTON);
             button = (View) type.getConstructor(Context.class, AttributeSet.class).newInstance(context, attrs);
@@ -51,6 +48,11 @@ public final class ArrowsButton extends FrameLayout {
             else Arrows.toggleDrawing(this);
         });
         Arrows.register(this);
+        refresh();
+        if (getVisibility() != VISIBLE) {
+            Utils.log("Arrow button hidden: " + tag + ", reviews on " + Arrows.reviewsEnabled() +
+                ", games on " + Arrows.gamesEnabled());
+        }
     }
 
     @Override
@@ -59,13 +61,21 @@ public final class ArrowsButton extends FrameLayout {
         refresh();
     }
 
-    /** The draw button takes the app's accent colour while drawing; Clear is dimmed when there is nothing to clear. */
+    /**
+     * Review bars save space: Clear only appears while drawing is on, and folds away with it.
+     * Game bars keep both buttons. The draw button takes the accent colour while drawing.
+     */
     void refresh() {
         if (button == null) return;
+        boolean enabled = Arrows.featureEnabled(reviews);
         if (clear) {
-            button.setAlpha(Arrows.hasMarks(this) ? 1f : 0.5f);
+            boolean shown = enabled && (!reviews || Arrows.drawing(this));
+            setVisibility(shown ? VISIBLE : GONE);
+            if (shown) button.setAlpha(Arrows.hasMarks(this) ? 1f : 0.5f);
             return;
         }
+        setVisibility(enabled ? VISIBLE : GONE);
+        if (!enabled) return;
         try {
             if (Arrows.drawing(this)) {
                 setColor.invoke(button, Accent.current());

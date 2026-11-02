@@ -83,6 +83,11 @@ public final class Arrows {
         return Features.arrowsReviewsPatched() && Features.isEnabled(Features.ARROWS_REVIEWS);
     }
 
+    /** The switch a bar's button follows: reviews for the review bars, games for the game bars. */
+    static boolean featureEnabled(boolean reviews) {
+        return reviews ? reviewsEnabled() : gamesEnabled();
+    }
+
     /** Either feature: the board needs its marks layers even when only one of them is on. */
     public static boolean enabled() {
         return gamesEnabled() || reviewsEnabled();

@@ -1,3 +1,10 @@
+# [1.9.10](https://github.com/quwi26/Quwis-Patches/compare/v1.9.9...v1.9.10) (2026-11-02)
+
+### Bug Fixes
+
+* **Arrows in reviews:** the Analysis bar's buttons no longer disappear when the screen is built before the switch is read. The draw button follows the reviews switch each time the bar is shown, and a button that stays hidden is written to the log
+* **Arrows in reviews:** Clear now appears next to Arrows only while drawing is on, and folds away when Arrows is pressed again. Game Review and the Analysis bars save the space; game bars keep both buttons as before
+
 # [1.9.9](https://github.com/quwi26/Quwis-Patches/compare/v1.9.7...v1.9.9) (2026-11-02)
 
 ### Bug Fixes
