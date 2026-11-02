@@ -73,12 +73,10 @@ public final class ArrowsChip {
             }
             if (list.isEmpty()) return;
             // Reading our state here makes the bar redraw this list when drawing starts or stops.
+            // The list is rebuilt from the app's own actions, so Clear is usually not there yet:
+            // removing it must not stop Arrows from being added.
             boolean drawing = ArrowsBar.reviewsDrawing();
-            if (drawing) {
-                if (hasAction(list, ArrowsBar.clearLabel())) return;
-            } else {
-                if (!removeAction(list, ArrowsBar.clearLabel())) return;
-            }
+            if (!drawing) removeAction(list, ArrowsBar.clearLabel());
 
             Class<?> type = Class.forName(actionType());
             // 4.10.23 wraps every action of this bar in a one-field class before the bar draws
@@ -97,7 +95,7 @@ public final class ArrowsChip {
                 add(list, action(type, ArrowsBar.arrowsLabel(), ArrowsBar.arrowsIcon(), ArrowsBar.onArrows()),
                     direct, wrapper);
             }
-            if (drawing) {
+            if (drawing && !hasAction(list, ArrowsBar.clearLabel())) {
                 add(list, action(type, ArrowsBar.clearLabel(), ArrowsBar.clearIcon(), ArrowsBar.onClear()),
                     direct, wrapper);
             }
