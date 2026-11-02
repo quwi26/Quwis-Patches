@@ -1,3 +1,9 @@
+# [1.9.15](https://github.com/quwi26/Quwis-Patches/compare/v1.9.14...v1.9.15) (2026-11-03)
+
+### Bug Fixes
+
+* **Arrows in games:** bot games no longer show the floating Arrows and Clear panel; it covered the board and is being replaced with proper bar buttons later. Live, daily, archived, pass and play, and coach games keep their buttons
+
 # [1.9.14](https://github.com/quwi26/Quwis-Patches/compare/v1.9.13...v1.9.14) (2026-11-03)
 
 ### Bug Fixes

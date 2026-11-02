@@ -20,7 +20,6 @@ import org.w3c.dom.Document
 import org.w3c.dom.Element
 
 private const val ARROWS_BAR = "${Constants.EXTENSION_PACKAGE}/arrows/ArrowsBar;"
-private const val ARROWS_CHIP = "${Constants.EXTENSION_PACKAGE}/arrows/ArrowsChip;"
 
 private const val BUTTON_CLASS = "app.noam.extension.chesscom.arrows.ArrowsButton"
 /** Compose game screens whose bottom bar gets Arrows and Clear: bots, guided coach games. */
@@ -122,9 +121,8 @@ private val arrowsResourcePatch = resourcePatch(
 val arrowsPatch = bytecodePatch(
     name = "Arrows in games",
     description = "Adds Arrows and Clear buttons to the game bars (live, daily, archived, pass and " +
-        "play, coach), and a floating Arrows and Clear panel over the board in bot games. While Arrows " +
-        "is on, dragging on the board draws an arrow and tapping marks a square, as on the website, and " +
-        "pieces don't move.",
+        "play, coach). While Arrows is on, dragging on the board draws an arrow and tapping marks a " +
+        "square, as on the website, and pieces don't move.",
 ) {
     compatibleWith(Constants.COMPATIBILITY)
 
@@ -134,26 +132,8 @@ val arrowsPatch = bytecodePatch(
         markFeaturePatched("arrowsPatched")
 
         // 4.10.23's bot bar is one Compose method with a separate branch for every game state, so
-        // two extra buttons cannot be added at a single point. A small chip over the board does
-        // the same job, and the older boards below still get their bar buttons.
-        if (BottomButtonFingerprint.matchOrNull() == null) {
-            val chipActivity = "Lcom/chess/features/versusbots/game/BotGameActivityV2;"
-            run {
-                val type = mutableClassDefByOrNull(chipActivity) ?: return@run
-                val resume = type.methods.firstOrNull { it.name == "onResume" && it.parameterTypes.isEmpty() }
-                if (resume != null) {
-                    resume.addInstructions(0, "invoke-static/range { p0 .. p0 }, $ARROWS_CHIP->attach(Landroid/app/Activity;)V")
-                } else {
-                    type.methods.firstOrNull { it.name == "onCreate" }?.apply {
-                        instructions.withIndex().filter { it.value.opcode == Opcode.RETURN_VOID }.map { it.index }
-                            .sortedDescending()
-                            .forEach { index ->
-                                addInstructions(index, "invoke-static/range { p0 .. p0 }, $ARROWS_CHIP->attach(Landroid/app/Activity;)V")
-                            }
-                    }
-                }
-            }
-        }
+        // two extra buttons cannot be added at a single point. Bot games get no Arrows buttons for
+        // now; the older boards below still get their bar buttons.
 
         // The older boards: Arrows and Clear go into their Compose bar buttons.
         BottomButtonFingerprint.matchOrNull()?.let { match ->

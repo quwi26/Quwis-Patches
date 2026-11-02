@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-11-03T01:30:00",
-  "description": "Quwi's Chess Patches 1.9.14: Analysis is left alone again, bot games get the floating Arrows and Clear chip back, and the Stockfish log says when the engine is already downloaded. Includes everything from 1.9.13, including the patcher 2.1.0 hotfix from 1.9.12.",
-  "download_url": "https://github.com/quwi26/Quwis-Patches/releases/download/v1.9.14/patches-1.9.14.mpp",
+  "created_at": "2026-11-03T02:30:00",
+  "description": "Quwi's Chess Patches 1.9.15: bot games no longer show the floating Arrows and Clear panel, which covered the board; proper bar buttons will come later. Everything from 1.9.14 is unchanged.",
+  "download_url": "https://github.com/quwi26/Quwis-Patches/releases/download/v1.9.15/patches-1.9.15.mpp",
   "signature_download_url": "",
-  "version": "1.9.14"
+  "version": "1.9.15"
 }
