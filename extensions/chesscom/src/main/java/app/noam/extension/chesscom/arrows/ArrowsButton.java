@@ -6,6 +6,8 @@ import android.view.View;
 import android.widget.FrameLayout;
 
 import java.lang.reflect.Method;
+import java.util.HashSet;
+import java.util.Set;
 
 import app.noam.extension.chesscom.Utils;
 import app.noam.extension.chesscom.theme.Accent;
@@ -21,6 +23,8 @@ public final class ArrowsButton extends FrameLayout {
     private final boolean clear;
     private View button;
     private Method setColor, setColorStateList;
+    /** Tags already written to the log, so each bar button reports once per process. */
+    private static final Set<String> LOGGED = new HashSet<>();
 
     public ArrowsButton(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -49,9 +53,9 @@ public final class ArrowsButton extends FrameLayout {
         });
         Arrows.register(this);
         refresh();
-        if (getVisibility() != VISIBLE) {
-            Utils.log("Arrow button hidden: " + tag + ", reviews on " + Arrows.reviewsEnabled() +
-                ", games on " + Arrows.gamesEnabled());
+        if (LOGGED.add(tag)) {
+            Utils.log("Arrow button " + tag + ": reviews on " + Arrows.reviewsEnabled() +
+                ", games on " + Arrows.gamesEnabled() + ", visible " + (getVisibility() == VISIBLE));
         }
     }
 

@@ -1,3 +1,15 @@
+# [1.9.13](https://github.com/quwi26/Quwis-Patches/compare/v1.9.12...v1.9.13) (2026-11-03)
+
+### Bug Fixes
+
+* **Arrows in reviews:** Game Review's bar is rebuilt from the app's own actions every time it is drawn, so Clear is usually not in the list yet. Removing it then stopped Arrows from being added, and the bar came up without either button. Arrows is added whether or not Clear was there, and Clear still folds away while drawing is off
+
+# [1.9.12](https://github.com/quwi26/Quwis-Patches/compare/v1.9.8...v1.9.12) (2026-11-03)
+
+### Bug Fixes
+
+* **Patching:** the bundle is built with Morphe patcher 2.1.0, the version Morphe 2.3.0 ships, so patching no longer warns that it was built for the older patcher 1.14.1. The patches themselves are unchanged
+
 # [1.9.11](https://github.com/quwi26/Quwis-Patches/compare/v1.9.10...v1.9.11) (2026-11-02)
 
 ### Bug Fixes
@@ -12,6 +24,12 @@
 * **Arrows in reviews:** Clear now appears next to Arrows only while drawing is on, and folds away when Arrows is pressed again. Game Review and the Analysis bars save the space; game bars keep both buttons as before
 
 # [1.9.9](https://github.com/quwi26/Quwis-Patches/compare/v1.9.7...v1.9.9) (2026-11-02)
+
+### Bug Fixes
+
+* **Stockfish analysis:** the 80 MB engine download no longer starts over after a timeout. It is kept in a partial file and continued with a Range request, and the patch log shows the progress every 10%, so a slow connection can finish in several tries
+
+# [1.9.8](https://github.com/quwi26/Quwis-Patches/compare/v1.9.5...v1.9.8) (2026-11-02)
 
 ### Bug Fixes
 

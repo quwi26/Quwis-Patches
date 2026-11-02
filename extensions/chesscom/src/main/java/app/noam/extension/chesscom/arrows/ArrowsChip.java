@@ -28,6 +28,7 @@ import kotlin.jvm.functions.Function1;
  */
 public final class ArrowsChip {
     private static final String TAG = "morphe_arrows_chip";
+    private static boolean logged, loggedOff;
 
     private ArrowsChip() {}
 
@@ -53,7 +54,13 @@ public final class ArrowsChip {
      */
     @SuppressWarnings("unchecked")
     public static void addActions(Object actions) {
-        if (!Arrows.reviewsEnabled()) return;
+        if (!Arrows.reviewsEnabled()) {
+            if (!loggedOff) {
+                loggedOff = true;
+                Utils.log("Arrows review bar: reviews are off");
+            }
+            return;
+        }
         try {
             Field field = null;
             for (Field candidate : actions.getClass().getDeclaredFields()) {
@@ -76,6 +83,10 @@ public final class ArrowsChip {
             // The list is rebuilt from the app's own actions, so Clear is usually not there yet:
             // removing it must not stop Arrows from being added.
             boolean drawing = ArrowsBar.reviewsDrawing();
+            if (!logged) {
+                logged = true;
+                Utils.log("Arrows review bar: actions " + list.size() + ", drawing " + drawing);
+            }
             if (!drawing) removeAction(list, ArrowsBar.clearLabel());
 
             Class<?> type = Class.forName(actionType());

@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-11-02T20:45:00",
-  "description": "Experimental 1.9.11: fixes the empty bundle in 1.9.10 (it was packaged without the patch code). In Analysis and Game Review, Clear appears next to Arrows only while drawing and folds away when Arrows is switched off. Includes the resumable Stockfish download from 1.9.9.",
-  "download_url": "https://github.com/quwi26/Quwis-Patches/releases/download/v1.9.11/patches-1.9.11.mpp",
+  "created_at": "2026-11-03T00:40:00",
+  "description": "Experimental 1.9.13: Arrows comes back to Game Review's bar. The bar is rebuilt from the app's own actions on every draw, so Clear is normally not in the list yet; removing it used to stop Arrows from being added too. Includes the patcher 2.1.0 hotfix from 1.9.12.",
+  "download_url": "https://github.com/quwi26/Quwis-Patches/releases/download/v1.9.13/patches-1.9.13.mpp",
   "signature_download_url": "",
-  "version": "1.9.11"
+  "version": "1.9.13"
 }
