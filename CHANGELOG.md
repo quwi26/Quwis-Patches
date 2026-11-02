@@ -1,3 +1,9 @@
+# [1.9.11](https://github.com/quwi26/Quwis-Patches/compare/v1.9.10...v1.9.11) (2026-11-02)
+
+### Bug Fixes
+
+* **Bundle:** 1.9.10 was packaged without the compiled patch code, so Morphe showed no patches in it. The bundle ships it again; everything from 1.9.10 is unchanged
+
 # [1.9.10](https://github.com/quwi26/Quwis-Patches/compare/v1.9.9...v1.9.10) (2026-11-02)
 
 ### Bug Fixes
