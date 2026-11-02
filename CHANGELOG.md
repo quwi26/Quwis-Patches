@@ -1,3 +1,9 @@
+# [1.9.8](https://github.com/quwi26/Quwis-Patches/compare/v1.9.5...v1.9.8) (2026-11-02)
+
+### Bug Fixes
+
+* **Stockfish analysis:** the 80 MB engine download no longer starts over after a timeout. It is kept in a partial file and continued with a Range request, and the patch log shows the progress every 10%, so a slow connection can finish in several tries
+
 # [1.9.5](https://github.com/quwi26/Quwis-Patches/compare/v1.9.4...v1.9.5) (2026-11-02)
 
 ### Bug Fixes
