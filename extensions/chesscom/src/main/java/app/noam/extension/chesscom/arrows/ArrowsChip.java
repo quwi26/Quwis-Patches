@@ -14,6 +14,7 @@ import android.widget.TextView;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.List;
 
 import app.noam.extension.chesscom.Utils;
@@ -52,33 +53,54 @@ public final class ArrowsChip {
     public static void addActions(Object actions) {
         if (!Arrows.reviewsEnabled()) return;
         try {
-            List<Object> list = null;
-            for (Field field : actions.getClass().getDeclaredFields()) {
-                if (!List.class.isAssignableFrom(field.getType())) continue;
-                field.setAccessible(true);
-                Object value = field.get(actions);
-                if (value instanceof List) list = (List<Object>) value;
+            Field field = null;
+            for (Field candidate : actions.getClass().getDeclaredFields()) {
+                if (List.class.isAssignableFrom(candidate.getType())) field = candidate;
             }
-            if (list == null) throw new IllegalStateException("No actions in " + actions.getClass().getName());
+            if (field == null) throw new IllegalStateException("No actions in " + actions.getClass().getName());
+            field.setAccessible(true);
+            Object value = field.get(actions);
+            if (!(value instanceof List)) return;
+            // A single-action state keeps a Collections.singletonList here, which cannot grow.
+            List<Object> list;
+            if (value instanceof ArrayList) {
+                list = (List<Object>) value;
+            } else {
+                list = new ArrayList<>((List<Object>) value);
+                field.set(actions, list);
+            }
             if (list.isEmpty()) return;
-
-            Class<?> type = Class.forName(actionType());
-            // Some states (the condensed paywall's bar) wrap each action in another class; leave those alone.
-            if (!type.isInstance(list.get(0))) return;
             if (hasAction(list, ArrowsBar.arrowsLabel())) return;
 
-            Constructor<?> constructor = type.getConstructor(
-                String.class, Integer.class, Function0.class, Function1.class,
-                boolean.class, boolean.class, int.class);
-            list.add(constructor.newInstance(
-                ArrowsBar.arrowsLabel(), Integer.valueOf(ArrowsBar.arrowsIcon()),
-                ArrowsBar.onArrows(), null, true, false, 0x78));
-            list.add(constructor.newInstance(
-                ArrowsBar.clearLabel(), Integer.valueOf(ArrowsBar.clearIcon()),
-                ArrowsBar.onClear(), null, true, false, 0x78));
+            Class<?> type = Class.forName(actionType());
+            Object arrows = action(type, ArrowsBar.arrowsLabel(), ArrowsBar.arrowsIcon(), ArrowsBar.onArrows());
+            Object clear = action(type, ArrowsBar.clearLabel(), ArrowsBar.clearIcon(), ArrowsBar.onClear());
+            // 4.10.23 wraps every action of this bar in a one-field class before the bar draws
+            // it; ours have to be wrapped the same way or the bar's cast fails.
+            Object first = list.get(0);
+            if (type.isInstance(first)) {
+                list.add(arrows);
+                list.add(clear);
+                return;
+            }
+            Constructor<?> wrapper = null;
+            for (Constructor<?> candidate : first.getClass().getConstructors()) {
+                Class<?>[] parameters = candidate.getParameterTypes();
+                if (parameters.length == 1 && parameters[0].isAssignableFrom(type)) wrapper = candidate;
+            }
+            if (wrapper == null) return;
+            list.add(wrapper.newInstance(arrows));
+            list.add(wrapper.newInstance(clear));
         } catch (Throwable throwable) {
             Utils.logError("Arrows review bar", throwable);
         }
+    }
+
+    private static Object action(Class<?> type, String label, int icon, Function0<?> onClick) throws Exception {
+        Constructor<?> constructor = type.getConstructor(
+            String.class, Integer.class, Function0.class, Function1.class,
+            boolean.class, boolean.class, int.class);
+        return constructor.newInstance(label, Integer.valueOf(icon), onClick, null, true, false, 0x78);
     }
 
     /** The bar action class, set by the patch. */
@@ -86,8 +108,28 @@ public final class ArrowsChip {
         return "";
     }
 
-    /** The label of a bar action (its only String field). */
+    /** The label of a bar action: its only String field, or the one of the action it wraps. */
     private static String labelOf(Object action) {
+        String label = stringField(action);
+        if (label != null) return label;
+        for (Field field : action.getClass().getDeclaredFields()) {
+            if (field.getType().isPrimitive() || field.getType() == String.class) continue;
+            try {
+                field.setAccessible(true);
+                Object value = field.get(action);
+                if (value != null) {
+                    label = stringField(value);
+                    if (label != null) return label;
+                }
+            } catch (Throwable ignored) {
+                // Not readable; keep looking.
+            }
+        }
+        return null;
+    }
+
+    /** A class's only String field. */
+    private static String stringField(Object action) {
         for (Field field : action.getClass().getDeclaredFields()) {
             if (field.getType() != String.class) continue;
             try {

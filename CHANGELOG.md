@@ -1,3 +1,10 @@
+# [1.9.6](https://github.com/quwi26/Quwis-Patches/compare/v1.9.5...v1.9.6) (2026-11-02)
+
+### Bug Fixes
+
+* **Arrows in reviews:** Game Review's bottom bar wraps each of its actions in a small holder class before drawing them, so the Arrows and Clear actions added as plain actions were skipped and the floating buttons were switched off at the same time, leaving none. They are now wrapped the same way, and the buttons appear next to Show, Best, Skills or Retry, and Share
+* **Arrows in reviews:** a single-action review bar keeps a fixed-size list, which cannot take the two new actions; it is replaced with a growable one first
+
 # [1.9.5](https://github.com/quwi26/Quwis-Patches/compare/v1.9.4...v1.9.5) (2026-11-02)
 
 ### Bug Fixes
