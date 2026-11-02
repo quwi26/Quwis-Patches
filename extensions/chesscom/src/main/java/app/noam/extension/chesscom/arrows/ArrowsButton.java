@@ -23,7 +23,9 @@ public final class ArrowsButton extends FrameLayout {
 
     public ArrowsButton(Context context, AttributeSet attrs) {
         super(context, attrs);
-        String tag = getTag() == null ? "" : getTag().toString();
+        // Read the tag from the attributes too: the view reads it itself only after layout starts.
+        String tag = attrs == null ? null : attrs.getAttributeValue("http://schemas.android.com/apk/res/android", "tag");
+        if (tag == null) tag = getTag() == null ? "" : getTag().toString();
         boolean reviews = tag.startsWith("reviews_");
         clear = tag.endsWith("clear");
         if (reviews ? !Arrows.reviewsEnabled() : !Arrows.gamesEnabled()) {

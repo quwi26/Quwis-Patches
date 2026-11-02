@@ -1,3 +1,11 @@
+# [1.9.7](https://github.com/quwi26/Quwis-Patches/compare/v1.9.6...v1.9.7) (2026-11-02)
+
+### Bug Fixes
+
+* **Arrows in reviews:** pressing Arrows in Game Review answered "open a board first" because that screen's board was built without the marks layers. The button now finds the board already on screen and adds the layers before it starts drawing
+* **Arrows:** 4.10.23 renamed the newer board's piece layer, so the arrows layers were not added to it; the patch now passes that version's own class name to the extension
+* **Arrows in reviews:** the Analysis bar's buttons read their tag from the layout attributes when they are created, so they follow the reviews switch instead of being hidden when the tag is read late
+
 # [1.9.6](https://github.com/quwi26/Quwis-Patches/compare/v1.9.5...v1.9.6) (2026-11-02)
 
 ### Bug Fixes
