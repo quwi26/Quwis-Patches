@@ -1,3 +1,9 @@
+# [1.9.16](https://github.com/quwi26/Quwis-Patches/compare/v1.9.15...v1.9.16) (2026-11-03)
+
+### Bug Fixes
+
+* **Notification prompt:** on some EMUI devices the system returns its own wrapper around the adaptive launcher icon. The app dropped it and asked Compose to read the `<adaptive-icon>` XML, which Compose cannot do, and the notification prompt crashed. The prompt now keeps the drawable the system returned and converts it to a bitmap as before
+
 # [1.9.15](https://github.com/quwi26/Quwis-Patches/compare/v1.9.14...v1.9.15) (2026-11-03)
 
 ### Bug Fixes
