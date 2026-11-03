@@ -1,3 +1,11 @@
+# [1.9.18](https://github.com/quwi26/Quwis-Patches/compare/v1.9.17...v1.9.18) (2026-11-03)
+
+### Bug Fixes
+
+* **Customize bottom bar:** Puzzles no longer stays pinned right after Play: every tab between Home and More, Puzzles included, follows the saved order. Turning every middle tab off now leaves just Home and More instead of bringing the app's defaults back
+* **Customize Home screen:** on 4.10.23 hiding and reordering the tiles was silently ignored, because the section was rebuilt through a constructor that version no longer has. It is now rebuilt through the app's own copy helper, so the tiles change again. The redesign's Recommended Match row reuses the Challenges section, so "Suggested opponents" and "Challenges" are now told apart by the section title and keep working independently
+* **Quwi's Patches settings:** Home changes now show the restart bar, since the Home content is cached until the app restarts, instead of claiming they appear when you go back
+
 # [1.9.17](https://github.com/quwi26/Quwis-Patches/compare/v1.9.16...v1.9.17) (2026-11-03)
 
 ### Bug Fixes
