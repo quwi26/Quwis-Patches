@@ -1,3 +1,15 @@
+# [1.9.21](https://github.com/quwi26/Quwis-Patches/compare/v1.9.20...v1.9.21) (2026-11-03)
+
+### Features
+
+* **Find the computer on the network:** a patch of its own, next to Game Review on your computer. It adds a "Find on the network" row to the bridge settings that sweeps the phone's own Wi-Fi on the bridge's port and fills in the address sf-bridge answers on, so the address is never read off ipconfig and does not go stale when the router hands out a different one. Only a host that greets the way sf-bridge does is offered; mobile data and VPN interfaces are skipped, and when several bridges answer they are listed with their core counts to choose from
+* **Saved addresses:** an address a review connected through is kept, newest first, and a review tries the set address and then the saved ones, so the computer is found again after the router moves it. The settings list them, with a note that an address the network hands out by lease is not worth keeping
+* **Find the computer automatically:** a switch, on by default, that lets a review sweep the Wi-Fi once when neither the set address nor a saved one answers, and search where it found the bridge
+
+### Documentation
+
+* **sf-bridge:** the firewall command now allows the port on public networks too (`profile=any remoteip=localsubnet`). Windows ignores a private-only rule on a café, office or co-working network, and the phone then cannot connect at all
+
 # [1.9.20](https://github.com/quwi26/Quwis-Patches/compare/v1.9.19...v1.9.20) (2026-11-03)
 
 ### Bug Fixes
