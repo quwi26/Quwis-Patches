@@ -271,6 +271,8 @@ public final class HomeLayout {
         switch (name) {
             case "QuickGameOnlineFeatureTileItem":
             case "QuickPlay":
+            // 4.10.18's older Home still prints its tiles as "...Tile".
+            case "QuickGameTile":
                 return "quick_game";
             case "ClassicPuzzlesFeatureTileItem":
             case "PathPuzzlesFeatureTileItem":
@@ -278,21 +280,26 @@ public final class HomeLayout {
             case "GuestPuzzlesFeatureTileItem":
             case "PuzzlePlay":
             case "PuzzlePath":
+            case "PuzzleTile":
                 return "puzzles";
             case "DailyPuzzleFeatureTileItem":
             case "DailyPuzzle":
+            case "DailyPuzzleTile":
                 return "daily_puzzle";
             case "QuickBotGameFeatureTileItem":
             case "UnfinishedBotGameFeatureTileItem":
             case "Bot":
             case "LocalBot":
+            case "VsBotTile":
                 return "bots";
             case "QuickCoachGameFeatureTileItem":
             case "UnfinishedCoachGameFeatureTileItem":
             case "Coach":
+            case "VsCoachTile":
                 return "coach";
             case "LessonsFeatureTileItem":
             case "Learn":
+            case "NextLessonTile":
                 return "lessons";
             case "Courses":
                 return "courses";

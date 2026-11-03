@@ -1,3 +1,9 @@
+# [1.9.20](https://github.com/quwi26/Quwis-Patches/compare/v1.9.19...v1.9.20) (2026-11-03)
+
+### Bug Fixes
+
+* **Customize Home screen:** on 4.10.18 the older Home prints its tiles as `QuickGameTile`, `PuzzleTile`, `DailyPuzzleTile`, `VsBotTile`, `VsCoachTile` and `NextLessonTile`, which the tile filter did not recognise, so hiding Play Online, Puzzles, Daily Puzzle, Play Bots, Play Coach or Lessons did nothing there. They now answer to the same switches as on 4.10.23. Hiding every middle bottom-bar tab and the Puzzles tile from 1.9.18 is unchanged
+
 # [1.9.19](https://github.com/quwi26/Quwis-Patches/compare/v1.9.18...v1.9.19) (2026-11-03)
 
 ### Bug Fixes
