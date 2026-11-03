@@ -1,3 +1,9 @@
+# [1.9.17](https://github.com/quwi26/Quwis-Patches/compare/v1.9.16...v1.9.17) (2026-11-03)
+
+### Bug Fixes
+
+* **Game Review:** on 4.10.23 a castling move was handed to the app as king-takes-rook (`e1h1`), which the app's replayer no longer accepts, so the review crashed with a bare `NullPointerException`. Moves are now named by the app's own converter, and castling is normalised when that converter is absent. A game whose moves still cannot be read now stops with the review's error screen instead of crashing
+
 # [1.9.16](https://github.com/quwi26/Quwis-Patches/compare/v1.9.15...v1.9.16) (2026-11-03)
 
 ### Bug Fixes
