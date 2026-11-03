@@ -1,3 +1,9 @@
+# [1.9.19](https://github.com/quwi26/Quwis-Patches/compare/v1.9.18...v1.9.19) (2026-11-03)
+
+### Bug Fixes
+
+* **Stockfish analysis:** the 80 MB Stockfish download was cached in the system's temp folder, which cleaners, updates and Android's own cache handling empty, so every re-patch downloaded it again. The cache now lives in the user's home folder on a computer and in the patcher's app data on a phone. A copy left in temp is moved there once, and an existing copy is checked against its SHA-256 before it is reused
+
 # [1.9.18](https://github.com/quwi26/Quwis-Patches/compare/v1.9.17...v1.9.18) (2026-11-03)
 
 ### Bug Fixes
