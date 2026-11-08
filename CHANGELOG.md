@@ -1,3 +1,9 @@
+# [1.9.24](https://github.com/quwi26/Quwis-Patches/compare/v1.9.23...v1.9.24) (2026-11-08)
+
+### Bug Fixes
+
+* **Customize bottom bar:** the Train tab now opens Train instead of Watch. chess.com sends that route to Watch for accounts outside its own experiment, so a tap keeps the route the tab was given. Bots and Train can also be moved above the tabs that are already on before they are switched on: the settings page keeps the order of every tab, not only of the ones already shown
+
 # [1.9.23](https://github.com/quwi26/Quwis-Patches/compare/v1.9.22...v1.9.23) (2026-11-08)
 
 ### Features
