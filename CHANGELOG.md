@@ -1,3 +1,9 @@
+# [1.9.23](https://github.com/quwi26/Quwis-Patches/compare/v1.9.22...v1.9.23) (2026-11-08)
+
+### Features
+
+* **Clone Chess.com:** the clone installs as com.chess.quwi by default instead of com.chess.noam, so it no longer carries Noam's name. The last part of the package name is now a patch option, so the clone can be given a name of your own. The rest is unchanged: it still installs next to the real Chess.com app, and leaving the patch off keeps updating your current install
+
 # [1.9.22](https://github.com/quwi26/Quwis-Patches/compare/v1.9.21...v1.9.22) (2026-11-04)
 
 ### Bug Fixes
