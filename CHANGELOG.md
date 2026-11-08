@@ -1,3 +1,11 @@
+# [1.9.25](https://github.com/quwi26/Quwis-Patches/compare/v1.9.24...v1.9.25) (2026-11-08)
+
+### Bug Fixes
+
+* **Lichess Puzzles:** the session now follows the puzzle screen through Next, and backing out to the hub right after Next ends it, so a later chess.com puzzle is never taken for a Lichess one. On 4.10.23 chess.com's own guest puzzles are cleared before the first Lichess batch, so the screen no longer starts with a chess.com puzzle and its rating
+* **Lichess Puzzles:** the Classic layout's rating box and graph show the Lichess rating and a local rating history on 4.10.23, and Reset rating clears that history too. The in-game settings dialog hides the rows that do nothing in a session: Collect Puzzle Points, Always Show Rating, Show Puzzle Goals, Difficulty and Show Chat Hints
+* **Accent color:** the Puzzles tab's path background keeps chess.com's green pair instead of following the accent with only half of its checkerboard
+
 # [1.9.24](https://github.com/quwi26/Quwis-Patches/compare/v1.9.23...v1.9.24) (2026-11-08)
 
 ### Bug Fixes
