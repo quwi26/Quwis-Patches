@@ -9,7 +9,8 @@ body:
         Ideas are welcome, big or small ;3
 
         The bundle is for analysing games that are already over: Game Review, the analysis boards and finished
-        games. That is the only thing it is meant to do, so a request outside that will just be a "no, sorry".
+        games. That is the only thing the engine here is meant to do, so a request outside that will just be a
+        "no, sorry".
 
   - type: textarea
     id: what
