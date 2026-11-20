@@ -1,0 +1,53 @@
+name: Patch request
+description: A patch you would like to see, or a change to one of the existing patches.
+title: "[Request]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Ideas are welcome. This bundle is for analysing games that are already over, so requests for engine help
+        in a live game, or for the bundled patches to work in other apps, will be closed.
+
+  - type: checkboxes
+    id: before
+    attributes:
+      label: Before posting
+      options:
+        - label: I searched the existing issues and discussions and this is not there yet.
+          required: true
+        - label: This is about finished games, reviews and the app's own screens, not about engine help in a live game.
+          required: true
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What you would like
+      description: What the patch should do, in one or two sentences.
+    validations:
+      required: true
+
+  - type: textarea
+    id: why
+    attributes:
+      label: Why it helps
+      description: What is awkward or missing today, and what the patch would change for you.
+    validations:
+      required: true
+
+  - type: input
+    id: where
+    attributes:
+      label: Which screen or patch it touches
+      description: For example the review screen, the settings page, or one of the existing patches.
+      placeholder: Unlimited Game Review - the review screen
+    validations:
+      required: false
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Anything you tried instead
+      description: Another app or patch that already does it, or a workaround. Screenshots are fine.
+    validations:
+      required: false

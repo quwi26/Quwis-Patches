@@ -1,0 +1,91 @@
+name: Bug report
+description: A patch, the settings or a review does not do what the README says it does.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. Two things are not bugs and need no issue:
+
+        - **Sign in with Google, Facebook or Apple** never works in a patched app. Add an email and a password to the account and log in with them, as described in the README.
+        - A new bundle in Morphe does not change an app that is already installed. Patch and install the APK again after updating the bundle.
+
+  - type: checkboxes
+    id: before
+    attributes:
+      label: Before posting
+      options:
+        - label: I read the README, including "Signing in after patching".
+          required: true
+        - label: I searched the existing issues and this is not reported yet.
+          required: true
+        - label: I patched and installed a fresh APK after updating the bundle, not only the bundle in Morphe.
+          required: true
+        - label: This is about finished games and reviews, not about engine help in a live game.
+          required: true
+
+  - type: dropdown
+    id: chess-version
+    attributes:
+      label: chess.com version
+      options:
+        - 4.10.28
+        - 4.10.27
+        - Other (written below)
+    validations:
+      required: true
+
+  - type: input
+    id: manager-version
+    attributes:
+      label: Morphe Manager version
+      description: Shown in Morphe under Settings, About.
+      placeholder: 2.3.0
+    validations:
+      required: true
+
+  - type: textarea
+    id: patches
+    attributes:
+      label: Patches selected
+      description: The list Morphe showed before patching, or at least the patches that matter here.
+      placeholder: |
+        Unlimited Game Review
+        Game Review on your computer
+        Great and Brilliant moves analysis
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: What you did
+      description: The shortest way to get there, starting from opening the app.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected, and what happened instead
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or screenshots
+      description: A screenshot of the screen, or a logcat excerpt around the moment it goes wrong. Optional, but it usually saves a round of questions.
+      render: text
+    validations:
+      required: false
+
+  - type: input
+    id: device
+    attributes:
+      label: Device, Android version and ROM
+      description: For example Pixel 7, Android 15, stock ROM. A custom ROM or a system-wide MicroG matters here.
+      placeholder: Redmi Note 12, Android 14, MIUI 14
+    validations:
+      required: true

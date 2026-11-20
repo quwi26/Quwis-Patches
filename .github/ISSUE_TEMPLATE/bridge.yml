@@ -1,0 +1,83 @@
+name: Game Review on your computer does not connect
+description: The app cannot reach sf-bridge, or a review on the computer fails or is slow.
+title: "[Bridge]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Most of these come down to the network or the firewall, so the fields below are the ones that matter.
+        `bridge/README.md` has the firewall rule, the port and the token.
+
+  - type: checkboxes
+    id: before
+    attributes:
+      label: Before posting
+      options:
+        - label: I read the "Stockfish on your computer" section of the README and `bridge/README.md`.
+          required: true
+        - label: The phone and the computer are on the same Wi-Fi network, not on mobile data and not on a guest network.
+          required: true
+        - label: I searched the existing issues and this is not reported yet.
+          required: true
+        - label: This is about reviewing finished games, not about engine help in a live game.
+          required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: The computer's system
+      options:
+        - Windows 11
+        - Windows 10
+        - macOS
+        - Linux
+    validations:
+      required: true
+
+  - type: input
+    id: versions
+    attributes:
+      label: Node.js and Stockfish versions
+      description: The output of `node --version`, and the Stockfish build you put next to `server.js`.
+      placeholder: v22.11.0, Stockfish 17.1
+    validations:
+      required: true
+
+  - type: textarea
+    id: result
+    attributes:
+      label: What "Test the connection" answers
+      description: The exact message, or "no answer at all" if the button spins and stops.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: network
+    attributes:
+      label: The network you are on
+      description: A work, school or public Wi-Fi usually isolates the devices from each other, and then nothing can be found.
+      options:
+        - Home Wi-Fi
+        - Work, school or public Wi-Fi
+        - Phone hotspot
+        - VPN on one or both devices
+    validations:
+      required: true
+
+  - type: textarea
+    id: log
+    attributes:
+      label: The last lines of sf-bridge.log
+      description: The log sits next to `server.js`. Remove the token and any address you do not want to publish.
+      render: text
+    validations:
+      required: false
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else
+      description: Which depth and thread count, whether "Find on the network" fills the address in, and how a review behaves once it starts.
+    validations:
+      required: false
