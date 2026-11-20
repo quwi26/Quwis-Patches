@@ -1,3 +1,10 @@
+# [1.10.2](https://github.com/quwi26/Quwis-Patches/compare/v1.10.1...v1.10.2) (2026-11-20)
+
+### Bug Fixes
+
+* **Game Review:** the arrows and eval layers no longer look up the board's getters on every frame. They keep the method handles and the board's square size, so a review's board redraws with less work while its moves are browsed
+* **Game Review:** a layer with nothing to draw is skipped before it measures the board
+
 # [1.10.1](https://github.com/quwi26/Quwis-Patches/compare/v1.10.0...v1.10.1) (2026-11-20)
 
 ### Bug Fixes
