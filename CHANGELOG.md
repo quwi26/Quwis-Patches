@@ -1,3 +1,9 @@
+# [1.10.4](https://github.com/quwi26/Quwis-Patches/compare/v1.10.3...v1.10.4) (2026-11-20)
+
+### Bug Fixes
+
+* **Game Review:** browsing a review no longer starts a Stockfish search on every move. A chess.com or phone review already carries its best moves and its eval bar, so the live search only competed with the screen's animations. Lichess reviews keep it for the moves Lichess did not mark
+
 # [1.10.3](https://github.com/quwi26/Quwis-Patches/compare/v1.10.2...v1.10.3) (2026-11-20)
 
 ### Bug Fixes
