@@ -1,3 +1,10 @@
+# [1.10.1](https://github.com/quwi26/Quwis-Patches/compare/v1.10.0...v1.10.1) (2026-11-20)
+
+### Bug Fixes
+
+* **Chess.com 4.10.28:** the More screen's Try Premium banner is hidden again, now that it comes from the Go Premium banner provider
+* **Lichess Puzzles:** Solve Puzzles goes back above the Lichess button on chess.com 4.10.28, whose menu buttons take one more argument
+
 # [1.10.0](https://github.com/quwi26/Quwis-Patches/compare/v1.9.31...v1.10.0) (2026-11-20)
 
 ### New Features

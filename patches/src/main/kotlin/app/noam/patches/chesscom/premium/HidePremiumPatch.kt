@@ -27,6 +27,10 @@ import com.android.tools.smali.dexlib2.iface.reference.TypeReference
 
 private const val PREMIUM = "${Constants.EXTENSION_PACKAGE}/premium/Premium;"
 
+/** The Kotlin flowOf implementation 4.10.28 keeps under its inline name. */
+private const val FLOW_OF =
+    "Lkotlinx/coroutines/flow/FlowKt__BuildersKt\$flowOf\$\$inlined\$unsafeFlow\$1;"
+
 context(context: BytecodePatchContext)
 private fun findMethodOrNull(predicate: (ClassDef, Method) -> Boolean): Pair<ClassDef, Method>? {
     val found = mutableListOf<Pair<ClassDef, Method>>()
@@ -187,6 +191,32 @@ val hidePremiumPatch = bytecodePatch(
                         return-void
                     """,
                     ExternalLabel("morphe_banner", method.getInstruction(0)),
+                )
+            }
+
+        // 4.10.28 draws the More screen's Try Premium banner from HomeBannerProvider's
+        // getMoreBannerFlow, and the fixed composable above is gone. Emit a single null banner
+        // instead, which is what a Premium member's app shows.
+        mutableClassDefByOrNull("Lcom/chess/gopremium/home/HomeBannerProvider;")?.methods
+            ?.singleOrNull { method ->
+                method.name == "b" && method.returnType == "Lcom/google/android/rc2;" &&
+                    method.parameterTypes.isEmpty()
+            }
+            ?.apply {
+                addInstructionsWithLabels(
+                    0,
+                    """
+                        invoke-static { }, $PREMIUM->hideBanner()Z
+                        move-result v0
+                        if-eqz v0, :morphe_more_banner
+                        const/4 v0, 0x0
+                        filled-new-array { v0 }, [Ljava/lang/Object;
+                        move-result-object v0
+                        new-instance v1, $FLOW_OF
+                        invoke-direct { v1, v0 }, $FLOW_OF-><init>([Ljava/lang/Object;)V
+                        return-object v1
+                    """,
+                    ExternalLabel("morphe_more_banner", getInstruction(0)),
                 )
             }
 
