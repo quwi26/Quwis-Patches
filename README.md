@@ -20,7 +20,7 @@ https://raw.githubusercontent.com/quwi26/Quwis-Patches/main/patches-bundle.json
 
 ## What this fork adds
 
-Five patches, all for chess.com:
+Six patches, all for chess.com:
 
 - **Great and Brilliant moves analysis** - marks chess.com's “!” and “!!” in a review by Local Stockfish or by
   Stockfish on your computer. Great is the engine's own best move when it was also the only one that kept the
@@ -44,6 +44,11 @@ Five patches, all for chess.com:
   and marked squares can be drawn while analysing a game. Noam's **Arrows in games** stays separate.
 - **Global Crash Handler** - if the app crashes, a screen of its own shows what went wrong, with the details
   ready to copy into a report. Turn it off for chess.com's usual crash dialog.
+- **Discord Rich Presence** - shows what you are doing on chess.com in Discord: a game, a review, a puzzle
+  or just browsing, plus how long you have been on. The account is connected once on Discord's own page
+  in the browser, so no password is typed into chess.com and no computer is involved. Discord shows the
+  activity under this bundle's own Discord application name, not chess.com, and while the phone is
+  connected the status picked in the settings stays on every device. Switch it off under Quwi's Patches.
 
 The two add-ons work only with **Unlimited Game Review from this bundle**: select it too. Two Unlimited Game
 Review patches, one from this bundle and one from Noam's or hyzor's, cannot be applied to the same app - they

@@ -339,6 +339,43 @@
       "options": []
     },
     {
+      "name": "Discord Rich Presence",
+      "description": "Shows what you are doing on chess.com in Discord, from this phone alone: a game, a review or a puzzle, and how long you have been on. The account is connected once in Discord's own browser page, so no password and no computer are involved. Discord shows the activity under this bundle's Discord application name and keeps the status picked in the settings while the phone is connected. Runs by default and can be switched off in Quwi's Patches.",
+      "default": true,
+      "category": null,
+      "dependencies": [
+        "BytecodePatch",
+        "ResourcePatch"
+      ],
+      "compatiblePackages": [
+        {
+          "packageName": "com.chess",
+          "name": "Chess.com",
+          "description": null,
+          "apkFileType": null,
+          "appIconColor": "#69923E",
+          "signatures": null,
+          "targets": [
+            {
+              "version": "4.10.28-googleplay",
+              "versionCodes": null,
+              "isExperimental": false,
+              "minSdk": null,
+              "description": null
+            },
+            {
+              "version": "4.10.27-googleplay",
+              "versionCodes": null,
+              "isExperimental": false,
+              "minSdk": null,
+              "description": null
+            }
+          ]
+        }
+      ],
+      "options": []
+    },
+    {
       "name": "Find the computer on the network",
       "description": "Adds Find on the network to its own settings page: it sweeps the phone's Wi-Fi and fills in the address sf-bridge answers on, keeps the addresses that worked, and lets a review find the computer by itself when the set address no longer answers. In a guest, office or co-working network the devices are often kept apart, and then nothing is found. Needs Game Review on your computer, from this bundle.",
       "default": true,
