@@ -2,7 +2,7 @@
 
 <p align="center">
   A fork of <a href="https://github.com/ImNoammm/Noams-Morphe-Patches">Noam's Morphe Patches</a> for chess.com only,<br>
-  with Game Review on your own computer, Great/Brilliant marks as separate patches, and Discord Rich Presence.
+  with Game Review on your own computer, Great/Brilliant marks, and Discord Rich Presence.
 </p>
 
 <p align="center">
