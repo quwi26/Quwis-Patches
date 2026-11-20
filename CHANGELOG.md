@@ -1,3 +1,10 @@
+# [1.10.0](https://github.com/quwi26/Quwis-Patches/compare/v1.9.31...v1.10.0) (2026-11-20)
+
+### New Features
+
+* **Chess.com:** chess.com 4.10.28 is supported as an experimental version, next to 4.10.27, 4.10.23 and 4.10.18. Turn on **Experimental app versions** for the source in Morphe to pick it
+* **Chess.com:** Hide Premium-only content and Lichess Puzzles follow 4.10.28's Go Premium package and its rewritten Puzzles hub
+
 # [1.9.31](https://github.com/quwi26/Quwis-Patches/compare/v1.9.30...v1.9.31) (2026-11-20)
 
 ### Bug Fixes

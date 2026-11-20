@@ -282,9 +282,12 @@ val hidePremiumPatch = bytecodePatch(
         mutableClassDefBy(HomeContentToStringFingerprint.originalClassDef).methods
             .filter { it.name == "<init>" }.maxByOrNull { it.parameterTypes.size }!!.apply {
                 // 4.10.27 replaced the paywall Offer parameter with the banner state model
-                // (internal/paywall/a$b); older builds keep the paywall Offer.
-                val banner = parameterTypes.indexOfFirst { it.toString() == "Lcom/chess/internal/paywall/a\$b;" }
+                // (internal/paywall/a$b), 4.10.28 moved it to the Go Premium package
+                // (gopremium/home/a$a); older builds keep the paywall Offer.
+                val banner = parameterTypes.indexOfFirst { it.toString() == "Lcom/chess/gopremium/home/a\$a;" }
                     .takeIf { it >= 0 }
+                    ?: parameterTypes.indexOfFirst { it.toString() == "Lcom/chess/internal/paywall/a\$b;" }
+                        .takeIf { it >= 0 }
                     ?: parameterTypes.indexOfFirst { it.toString() == "Lcom/chess/features/paywall/Offer;" }
                 if (banner < 0) throw PatchException("The Home sale banner was not found")
                 nullOffer(0, "p${banner + 1}", parameterTypes[banner].toString())
