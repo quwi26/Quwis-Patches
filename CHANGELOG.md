@@ -1,3 +1,9 @@
+# [1.11.0](https://github.com/quwi26/Quwis-Patches/compare/v1.10.5...v1.11.0) (2026-11-20)
+
+### Breaking Changes
+
+* **Chess.com:** chess.com 4.10.23 and 4.10.18 are no longer supported. The bundle targets 4.10.28 and 4.10.27 only, and Morphe no longer offers the older two
+
 # [1.10.5](https://github.com/quwi26/Quwis-Patches/compare/v1.10.4...v1.10.5) (2026-11-20)
 
 ### New Features

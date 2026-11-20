@@ -6,17 +6,11 @@ import app.morphe.patcher.patch.Compatibility
 internal object Constants {
     const val CHESSCOM_PACKAGE = "com.chess"
 
-    // The version the fingerprints were written against (versionCode 280075).
-    const val CHESSCOM_VERSION = "4.10.18-googleplay"
-
-    // Checked against the same fingerprints, with its own branches where 4.10.23 differs.
-    const val CHESSCOM_VERSION_41023 = "4.10.23-googleplay"
-
     // Checked against the same fingerprints, with its own branches where 4.10.27 moved a class.
     const val CHESSCOM_VERSION_41027 = "4.10.27-googleplay"
 
     // First build with the Go Premium rebrand and the rewritten Puzzles hub, with its own branches
-    // where those moved a class. Checked on a phone like the other versions.
+    // where those moved a class. Checked on a phone like 4.10.27.
     const val CHESSCOM_VERSION_41028 = "4.10.28-googleplay"
 
     val COMPATIBILITY = Compatibility(
@@ -26,8 +20,6 @@ internal object Constants {
         targets = listOf(
             AppTarget(version = CHESSCOM_VERSION_41028),
             AppTarget(version = CHESSCOM_VERSION_41027),
-            AppTarget(version = CHESSCOM_VERSION_41023),
-            AppTarget(version = CHESSCOM_VERSION),
         ),
     )
 
