@@ -47,6 +47,9 @@ import app.noam.extension.chesscom.Features;
 import app.noam.extension.chesscom.Utils;
 import app.noam.extension.chesscom.arcade.ArcadePreview;
 import app.noam.extension.chesscom.board.BoardColors;
+import app.noam.extension.chesscom.discord.DiscordAuth;
+import app.noam.extension.chesscom.discord.DiscordPresence;
+import app.noam.extension.chesscom.discord.DiscordSettings;
 import app.noam.extension.chesscom.gamereview.GameReview;
 import app.noam.extension.chesscom.home.HomeLayout;
 import app.noam.extension.chesscom.home.HomeTabs;
@@ -200,6 +203,7 @@ public final class MorpheSettingsActivity extends Activity {
         if (Features.PAGE_COMPUTER_REVIEW.equals(page)) return "Game Review on your computer";
         if (Features.PAGE_NETWORK_SCAN.equals(page)) return "Find the computer";
         if (Features.PAGE_GREAT_MOVES.equals(page)) return "Great and Brilliant moves";
+        if (Features.PAGE_DISCORD.equals(page)) return "Discord Rich Presence";
         if (Features.PAGE_WELCOME.equals(page)) return "Welcome";
         return TITLE;
     }
@@ -242,6 +246,7 @@ public final class MorpheSettingsActivity extends Activity {
         else if (Features.PAGE_COMPUTER_REVIEW.equals(page)) renderComputerReview();
         else if (Features.PAGE_NETWORK_SCAN.equals(page)) renderNetworkScan();
         else if (Features.PAGE_GREAT_MOVES.equals(page)) renderGreatMoves();
+        else if (Features.PAGE_DISCORD.equals(page)) renderDiscord();
         else if (Features.PAGE_WELCOME.equals(page)) renderWelcome();
         else renderMain();
     }
@@ -565,6 +570,76 @@ public final class MorpheSettingsActivity extends Activity {
             list.addView(caption(brilliants.games > 0
                 ? "Read from the reviews saved on this phone."
                 : "None yet: a reviewed game can show one here."));
+        }
+    }
+
+    /**
+     * Discord Rich Presence: the account, the switch, and the status the session asks for. The
+     * browser does the login; nothing here ever sees a password.
+     */
+    private void renderDiscord() {
+        if (!DiscordAuth.configured(this)) {
+            list.addView(header("Discord"));
+            list.addView(caption("This build has no Discord application, so an account cannot be "
+                + "connected yet. Nothing is sent anywhere while that is so."));
+            return;
+        }
+
+        boolean linked = DiscordAuth.linked();
+        list.addView(header("Account"));
+        LinearLayout account = card();
+        list.addView(account, cardParams());
+        if (linked) {
+            String name = DiscordPresence.userName();
+            account.addView(infoRow("Connected", name.isEmpty() ? "Discord account" : name));
+            account.addView(divider(16));
+            account.addView(actionRow("Disconnect", "Forgets the Discord link on this phone.", () -> {
+                DiscordAuth.signOut();
+                DiscordPresence.refresh();
+                render();
+            }));
+        } else {
+            account.addView(actionRow("Connect Discord",
+                "Discord opens in your browser; no password is typed here.", this::connectDiscord));
+            list.addView(caption("Friends see your activity while this phone is connected. Discord "
+                + "shows it under this bundle's own Discord application name, not chess.com."));
+            return;
+        }
+
+        list.addView(header("What friends see"));
+        LinearLayout rows = card();
+        list.addView(rows, cardParams());
+        rows.addView(switchRow("Show my chess.com activity",
+            "A game, a review, a puzzle: whatever is open on this phone.",
+            Features.isEnabled(Features.DISCORD), checked -> {
+                Features.setEnabled(Features.DISCORD, checked);
+                DiscordPresence.refresh();
+            }));
+        rows.addView(divider(16));
+        rows.addView(infoRow("Connection", DiscordPresence.state()));
+
+        list.addView(header("Status while connected"));
+        String[] names = {"Online", "Idle", "Do not disturb"};
+        String[] values = {DiscordSettings.ONLINE, DiscordSettings.IDLE, DiscordSettings.DND};
+        int selected = 0;
+        for (int i = 0; i < values.length; i++) {
+            if (values[i].equals(DiscordSettings.status())) selected = i;
+        }
+        list.addView(segments(names, selected, index -> {
+            DiscordSettings.setStatus(values[index]);
+            DiscordPresence.refresh();
+        }), cardParams());
+        list.addView(caption("While connected, Discord keeps this status on every device you use. "
+            + "Invisible is not offered: it would hide the activity too. The link can be removed in "
+            + "Discord under Settings - Authorized Apps."));
+    }
+
+    private void connectDiscord() {
+        try {
+            browse(DiscordAuth.begin(this));
+        } catch (Throwable failure) {
+            Utils.logError("Discord login could not start", failure);
+            Utils.toast("Could not open Discord's login.");
         }
     }
 
