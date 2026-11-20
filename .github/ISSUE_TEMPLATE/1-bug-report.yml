@@ -11,18 +11,6 @@ body:
         - **Sign in with Google, Facebook or Apple** never works in a patched app. Add an email and a password to the account and log in with them, as described in the README.
         - A new bundle in Morphe does not change an app that is already installed. The APK has to be patched and installed again after the update.
 
-  - type: checkboxes
-    id: before
-    attributes:
-      label: Before posting
-      options:
-        - label: I read the README, including "Signing in after patching".
-          required: true
-        - label: I checked the existing issues and did not find this one.
-          required: true
-        - label: I patched and installed a fresh APK after updating the bundle.
-          required: true
-
   - type: dropdown
     id: chess-version
     attributes:
