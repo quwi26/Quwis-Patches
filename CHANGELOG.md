@@ -1,3 +1,9 @@
+# [1.9.31](https://github.com/quwi26/Quwis-Patches/compare/v1.9.30...v1.9.31) (2026-11-20)
+
+### Bug Fixes
+
+* **Quwi's Patches:** Great and Brilliant moves analysis is a separate patch again, selected by default and with its own settings page. The other 1.9.30 changes stay: chess.com's icon colour, separate computer and network pages, and one-line descriptions
+
 # [1.9.30](https://github.com/quwi26/Quwis-Patches/compare/v1.9.29...v1.9.30) (2026-11-20)
 
 ### New Features

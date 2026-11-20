@@ -199,6 +199,7 @@ public final class MorpheSettingsActivity extends Activity {
         if (Features.PAGE_GAME_REVIEW.equals(page)) return "Game Review";
         if (Features.PAGE_COMPUTER_REVIEW.equals(page)) return "Game Review on your computer";
         if (Features.PAGE_NETWORK_SCAN.equals(page)) return "Find the computer";
+        if (Features.PAGE_GREAT_MOVES.equals(page)) return "Great and Brilliant moves";
         if (Features.PAGE_WELCOME.equals(page)) return "Welcome";
         return TITLE;
     }
@@ -240,6 +241,7 @@ public final class MorpheSettingsActivity extends Activity {
         else if (Features.PAGE_GAME_REVIEW.equals(page)) renderGameReview();
         else if (Features.PAGE_COMPUTER_REVIEW.equals(page)) renderComputerReview();
         else if (Features.PAGE_NETWORK_SCAN.equals(page)) renderNetworkScan();
+        else if (Features.PAGE_GREAT_MOVES.equals(page)) renderGreatMoves();
         else if (Features.PAGE_WELCOME.equals(page)) renderWelcome();
         else renderMain();
     }
@@ -491,16 +493,9 @@ public final class MorpheSettingsActivity extends Activity {
     private void renderGameReview() {
         lichessMethodChoice();
         // Local Stockfish needs the engine, which comes with the Stockfish analysis patch. Great and
-        // Brilliant marks are part of this patch.
+        // Brilliant marks have a patch and a page of their own.
         boolean stockfish = Features.stockfishPatched();
-        boolean computer = GameReview.computerReview();
-        boolean marks = GameReview.marksMoves();
         if (stockfish) reviewDepthChoice();
-        if (marks && (stockfish || computer)) {
-            list.addView(switchRow("Great moves", "chess.com's \"!\" for the only good move.",
-                GameReview.greatMoves(), GameReview::setGreatMoves));
-            list.addView(caption("Brilliant is marked either way; Great needs a second line."));
-        }
         if (stockfish) {
             list.addView(header("Local Stockfish engines"));
             list.addView(segments(new String[]{"Auto", "1", "2", "3", "4"}, GameReview.reviewEnginesSetting(),
@@ -518,6 +513,24 @@ public final class MorpheSettingsActivity extends Activity {
                 GameReview.deleteSavedReviews();
                 render();
             }));
+        }
+
+        list.addView(caption("Reviews are saved on this phone and open straight away next time."));
+    }
+
+    /** Great and Brilliant marks: the switch that asks for Great, and the brilliant moves reviews found. */
+    private void renderGreatMoves() {
+        boolean stockfish = Features.stockfishPatched();
+        boolean computer = GameReview.computerReview();
+        boolean marks = GameReview.marksMoves();
+
+        list.addView(header("Marks"));
+        if (stockfish || computer) {
+            list.addView(switchRow("Great moves", "chess.com's \"!\" for the only good move.",
+                GameReview.greatMoves(), GameReview::setGreatMoves));
+            list.addView(caption("Brilliant is marked either way; Great needs a second line."));
+        } else {
+            list.addView(caption("Needs Local Stockfish or Stockfish on your computer."));
         }
 
         if (marks) {
@@ -553,8 +566,6 @@ public final class MorpheSettingsActivity extends Activity {
                 ? "Read from the reviews saved on this phone."
                 : "None yet: a reviewed game can show one here."));
         }
-
-        list.addView(caption("Reviews are saved on this phone and open straight away next time."));
     }
 
     private void lichessMethodChoice() {
