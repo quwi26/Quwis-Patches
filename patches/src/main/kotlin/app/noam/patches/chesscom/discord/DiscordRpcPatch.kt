@@ -20,7 +20,7 @@ private const val CLIENT_ID_META_DATA = "morphe_discord_client_id"
  * "discord-<id>:/authorize/callback", and only such an application may ask for
  * sdk.social_layer_presence, the scope that lets an OAuth token set the activity.
  */
-private const val DISCORD_CLIENT_ID = ""
+private const val DISCORD_CLIENT_ID = "1573433416093794486"
 
 private val discordRedirectResourcePatch = resourcePatch(
     description = "Adds the screen Discord's browser login comes back to.",
