@@ -1,3 +1,9 @@
+# [1.10.3](https://github.com/quwi26/Quwis-Patches/compare/v1.10.2...v1.10.3) (2026-11-20)
+
+### Bug Fixes
+
+* **Clone Chess.com:** Morphe recognizes the install it builds as a clone again. The patch declares its package option under the key the manager reads, so the copy gets the Clone tag on the home screen, joins the Clones filter and shows the clone chip in its install info
+
 # [1.10.2](https://github.com/quwi26/Quwis-Patches/compare/v1.10.1...v1.10.2) (2026-11-20)
 
 ### Bug Fixes

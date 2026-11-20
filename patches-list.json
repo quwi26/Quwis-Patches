@@ -1,6 +1,6 @@
 {
   "NOTE": "Do NOT manually edit this file. It is generated with ./gradlew generatePatchesList for every release. Manually editing this file can break third party tools that use this file.",
-  "version": "1.10.2",
+  "version": "1.10.3",
   "patches": [
     {
       "name": "AMOLED black",
@@ -354,7 +354,7 @@
       ],
       "options": [
         {
-          "key": "cloneSuffix",
+          "key": "packageName",
           "title": "Package name suffix",
           "description": "The last part of the package name, after com.chess. Default: quwi.",
           "required": false,
