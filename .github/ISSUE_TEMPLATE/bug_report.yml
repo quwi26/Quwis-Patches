@@ -6,10 +6,10 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for the report. Two things are not bugs and need no issue:
+        Thanks for the report. Two things that are not bugs and need no issue:
 
         - **Sign in with Google, Facebook or Apple** never works in a patched app. Add an email and a password to the account and log in with them, as described in the README.
-        - A new bundle in Morphe does not change an app that is already installed. Patch and install the APK again after updating the bundle.
+        - A new bundle in Morphe does not change an app that is already installed. The APK has to be patched and installed again after the update.
 
   - type: checkboxes
     id: before
@@ -18,11 +18,9 @@ body:
       options:
         - label: I read the README, including "Signing in after patching".
           required: true
-        - label: I searched the existing issues and this is not reported yet.
+        - label: I checked the existing issues and did not find this one.
           required: true
-        - label: I patched and installed a fresh APK after updating the bundle, not only the bundle in Morphe.
-          required: true
-        - label: This is about finished games and reviews, not about engine help in a live game.
+        - label: I patched and installed a fresh APK after updating the bundle.
           required: true
 
   - type: dropdown
@@ -40,10 +38,10 @@ body:
     id: manager-version
     attributes:
       label: Morphe Manager version
-      description: Shown in Morphe under Settings, About.
+      description: Shown in Morphe under Settings, About. Optional.
       placeholder: 2.3.0
     validations:
-      required: true
+      required: false
 
   - type: textarea
     id: patches
@@ -84,8 +82,8 @@ body:
   - type: input
     id: device
     attributes:
-      label: Device, Android version and ROM
-      description: For example Pixel 7, Android 15, stock ROM. A custom ROM or a system-wide MicroG matters here.
-      placeholder: Redmi Note 12, Android 14, MIUI 14
+      label: Device
+      description: The model is enough - the Android version and the ROM are not needed.
+      placeholder: Pixel 7
     validations:
       required: true

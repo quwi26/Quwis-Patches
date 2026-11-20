@@ -6,7 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Most of these come down to the network or the firewall, so the fields below are the ones that matter.
+        Most of these come down to the network or the firewall, so the fields below are the ones that help.
         `bridge/README.md` has the firewall rule, the port and the token.
 
   - type: checkboxes
@@ -16,11 +16,9 @@ body:
       options:
         - label: I read the "Stockfish on your computer" section of the README and `bridge/README.md`.
           required: true
-        - label: The phone and the computer are on the same Wi-Fi network, not on mobile data and not on a guest network.
+        - label: The phone and the computer are on the same Wi-Fi network (not mobile data, not a guest network).
           required: true
-        - label: I searched the existing issues and this is not reported yet.
-          required: true
-        - label: This is about reviewing finished games, not about engine help in a live game.
+        - label: I checked the existing issues and did not find this one.
           required: true
 
   - type: dropdown
@@ -56,7 +54,7 @@ body:
     id: network
     attributes:
       label: The network you are on
-      description: A work, school or public Wi-Fi usually isolates the devices from each other, and then nothing can be found.
+      description: A work, school or public Wi-Fi often isolates the devices from each other, and then nothing can be found.
       options:
         - Home Wi-Fi
         - Work, school or public Wi-Fi
@@ -69,7 +67,7 @@ body:
     id: log
     attributes:
       label: The last lines of sf-bridge.log
-      description: The log sits next to `server.js`. Remove the token and any address you do not want to publish.
+      description: The log sits next to `server.js`. Optional. Remove the token and any address you do not want to publish.
       render: text
     validations:
       required: false
@@ -78,6 +76,6 @@ body:
     id: extra
     attributes:
       label: Anything else
-      description: Which depth and thread count, whether "Find on the network" fills the address in, and how a review behaves once it starts.
+      description: Which depth and thread count, whether "Find on the network" fills the address in, and how a review behaves once it starts. Optional.
     validations:
       required: false
