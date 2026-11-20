@@ -1,27 +1,21 @@
 name: Patch request
-description: A patch you would like to see, or a change to one of the existing patches.
+description: A patch you would like to see, or a change to one of the existing ones.
 title: "[Request]: "
 labels: ["enhancement"]
 body:
   - type: markdown
     attributes:
       value: |
-        Ideas are welcome. This bundle is for analysing games that are already over: Game Review, the analysis
-        boards and finished games.
+        Ideas are welcome, big or small ;3
 
-  - type: checkboxes
-    id: before
-    attributes:
-      label: Before posting
-      options:
-        - label: I checked the existing issues and discussions and did not find this one.
-          required: true
+        The bundle is for analysing games that are already over: Game Review, the analysis boards and finished
+        games. That is the only thing it is meant to do, so a request outside that will just be a "no, sorry".
 
   - type: textarea
     id: what
     attributes:
       label: What you would like
-      description: What the patch should do, in one or two sentences.
+      description: One or two sentences are enough.
     validations:
       required: true
 
@@ -31,7 +25,7 @@ body:
       label: Why it helps
       description: What is awkward or missing today, and what the patch would change for you.
     validations:
-      required: true
+      required: false
 
   - type: input
     id: where
