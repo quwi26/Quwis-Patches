@@ -1,3 +1,9 @@
+# [1.12.0](https://github.com/quwi26/Quwis-Patches/compare/v1.11.0...v1.12.0) (2026-11-20)
+
+### New Features
+
+* **Discord Rich Presence:** what you are doing on chess.com shows on your Discord profile: a game, a review, a puzzle or just browsing, with a timer. The account is connected once on Discord's own page in the browser, so no password is typed into chess.com and no computer is involved. Discord shows the activity under the bundle's own Discord application name and keeps the status picked in the settings while the phone is connected. It is switched on and off like any other feature in Quwi's Patches
+
 # [1.11.0](https://github.com/quwi26/Quwis-Patches/compare/v1.10.5...v1.11.0) (2026-11-20)
 
 ### Breaking Changes
