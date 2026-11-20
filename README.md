@@ -7,8 +7,15 @@
 
 <p align="center">
   <a href="https://github.com/quwi26/Quwis-Patches/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/quwi26/Quwis-Patches?label=release"></a>
+  <a href="https://github.com/quwi26/Quwis-Patches/releases"><img alt="Downloads" src="https://img.shields.io/github/downloads/quwi26/Quwis-Patches/total"></a>
+  <a href="https://github.com/quwi26/Quwis-Patches/stargazers"><img alt="Stars" src="https://img.shields.io/github/stars/quwi26/Quwis-Patches"></a>
+  <a href="https://github.com/quwi26/Quwis-Patches/commits/main"><img alt="Last commit" src="https://img.shields.io/github/last-commit/quwi26/Quwis-Patches"></a>
   <img alt="Morphe patches" src="https://img.shields.io/badge/Morphe-patches-3DDC84?logo=android&logoColor=white">
   <a href="LICENSE"><img alt="GPL-3.0" src="https://img.shields.io/badge/license-GPL--3.0-lightgrey"></a>
+</p>
+
+<p align="center">
+  If you found this project helpful, please consider giving it a ⭐ on GitHub!
 </p>
 
 Add this source to [Morphe](https://morphe.software) Manager once -
