@@ -1,6 +1,6 @@
 {
   "NOTE": "Do NOT manually edit this file. It is generated with ./gradlew generatePatchesList for every release. Manually editing this file can break third party tools that use this file.",
-  "version": "1.10.4",
+  "version": "1.10.5",
   "patches": [
     {
       "name": "AMOLED black",
@@ -22,7 +22,7 @@
             {
               "version": "4.10.28-googleplay",
               "versionCodes": null,
-              "isExperimental": true,
+              "isExperimental": false,
               "minSdk": null,
               "description": null
             },
@@ -72,7 +72,7 @@
             {
               "version": "4.10.28-googleplay",
               "versionCodes": null,
-              "isExperimental": true,
+              "isExperimental": false,
               "minSdk": null,
               "description": null
             },
@@ -122,7 +122,7 @@
             {
               "version": "4.10.28-googleplay",
               "versionCodes": null,
-              "isExperimental": true,
+              "isExperimental": false,
               "minSdk": null,
               "description": null
             },
@@ -174,7 +174,7 @@
             {
               "version": "4.10.28-googleplay",
               "versionCodes": null,
-              "isExperimental": true,
+              "isExperimental": false,
               "minSdk": null,
               "description": null
             },
@@ -226,7 +226,7 @@
             {
               "version": "4.10.28-googleplay",
               "versionCodes": null,
-              "isExperimental": true,
+              "isExperimental": false,
               "minSdk": null,
               "description": null
             },
@@ -276,7 +276,7 @@
             {
               "version": "4.10.28-googleplay",
               "versionCodes": null,
-              "isExperimental": true,
+              "isExperimental": false,
               "minSdk": null,
               "description": null
             },
@@ -324,7 +324,7 @@
             {
               "version": "4.10.28-googleplay",
               "versionCodes": null,
-              "isExperimental": true,
+              "isExperimental": false,
               "minSdk": null,
               "description": null
             },
@@ -384,7 +384,7 @@
             {
               "version": "4.10.28-googleplay",
               "versionCodes": null,
-              "isExperimental": true,
+              "isExperimental": false,
               "minSdk": null,
               "description": null
             },
@@ -434,7 +434,7 @@
             {
               "version": "4.10.28-googleplay",
               "versionCodes": null,
-              "isExperimental": true,
+              "isExperimental": false,
               "minSdk": null,
               "description": null
             },
@@ -484,7 +484,7 @@
             {
               "version": "4.10.28-googleplay",
               "versionCodes": null,
-              "isExperimental": true,
+              "isExperimental": false,
               "minSdk": null,
               "description": null
             },
@@ -534,7 +534,7 @@
             {
               "version": "4.10.28-googleplay",
               "versionCodes": null,
-              "isExperimental": true,
+              "isExperimental": false,
               "minSdk": null,
               "description": null
             },
@@ -585,7 +585,7 @@
             {
               "version": "4.10.28-googleplay",
               "versionCodes": null,
-              "isExperimental": true,
+              "isExperimental": false,
               "minSdk": null,
               "description": null
             },
@@ -635,7 +635,7 @@
             {
               "version": "4.10.28-googleplay",
               "versionCodes": null,
-              "isExperimental": true,
+              "isExperimental": false,
               "minSdk": null,
               "description": null
             },
@@ -685,7 +685,7 @@
             {
               "version": "4.10.28-googleplay",
               "versionCodes": null,
-              "isExperimental": true,
+              "isExperimental": false,
               "minSdk": null,
               "description": null
             },
@@ -736,7 +736,7 @@
             {
               "version": "4.10.28-googleplay",
               "versionCodes": null,
-              "isExperimental": true,
+              "isExperimental": false,
               "minSdk": null,
               "description": null
             },
@@ -786,7 +786,7 @@
             {
               "version": "4.10.28-googleplay",
               "versionCodes": null,
-              "isExperimental": true,
+              "isExperimental": false,
               "minSdk": null,
               "description": null
             },
@@ -836,7 +836,7 @@
             {
               "version": "4.10.28-googleplay",
               "versionCodes": null,
-              "isExperimental": true,
+              "isExperimental": false,
               "minSdk": null,
               "description": null
             },
@@ -886,7 +886,7 @@
             {
               "version": "4.10.28-googleplay",
               "versionCodes": null,
-              "isExperimental": true,
+              "isExperimental": false,
               "minSdk": null,
               "description": null
             },
@@ -938,7 +938,7 @@
             {
               "version": "4.10.28-googleplay",
               "versionCodes": null,
-              "isExperimental": true,
+              "isExperimental": false,
               "minSdk": null,
               "description": null
             },
@@ -989,7 +989,7 @@
             {
               "version": "4.10.28-googleplay",
               "versionCodes": null,
-              "isExperimental": true,
+              "isExperimental": false,
               "minSdk": null,
               "description": null
             },
@@ -1039,7 +1039,7 @@
             {
               "version": "4.10.28-googleplay",
               "versionCodes": null,
-              "isExperimental": true,
+              "isExperimental": false,
               "minSdk": null,
               "description": null
             },
@@ -1090,7 +1090,7 @@
             {
               "version": "4.10.28-googleplay",
               "versionCodes": null,
-              "isExperimental": true,
+              "isExperimental": false,
               "minSdk": null,
               "description": null
             },
@@ -1140,7 +1140,7 @@
             {
               "version": "4.10.28-googleplay",
               "versionCodes": null,
-              "isExperimental": true,
+              "isExperimental": false,
               "minSdk": null,
               "description": null
             },
@@ -1190,7 +1190,7 @@
             {
               "version": "4.10.28-googleplay",
               "versionCodes": null,
-              "isExperimental": true,
+              "isExperimental": false,
               "minSdk": null,
               "description": null
             },
@@ -1240,7 +1240,7 @@
             {
               "version": "4.10.28-googleplay",
               "versionCodes": null,
-              "isExperimental": true,
+              "isExperimental": false,
               "minSdk": null,
               "description": null
             },

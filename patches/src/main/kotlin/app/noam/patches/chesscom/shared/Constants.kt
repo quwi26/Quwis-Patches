@@ -15,8 +15,8 @@ internal object Constants {
     // Checked against the same fingerprints, with its own branches where 4.10.27 moved a class.
     const val CHESSCOM_VERSION_41027 = "4.10.27-googleplay"
 
-    // First build with the Go Premium rebrand and the rewritten Puzzles hub. Marked experimental
-    // until the patches have been checked on a phone: Morphe offers it in Expert mode only.
+    // First build with the Go Premium rebrand and the rewritten Puzzles hub, with its own branches
+    // where those moved a class. Checked on a phone like the other versions.
     const val CHESSCOM_VERSION_41028 = "4.10.28-googleplay"
 
     val COMPATIBILITY = Compatibility(
@@ -24,7 +24,7 @@ internal object Constants {
         name = "Chess.com",
         appIconColor = 0x69923E,
         targets = listOf(
-            AppTarget(version = CHESSCOM_VERSION_41028, isExperimental = true),
+            AppTarget(version = CHESSCOM_VERSION_41028),
             AppTarget(version = CHESSCOM_VERSION_41027),
             AppTarget(version = CHESSCOM_VERSION_41023),
             AppTarget(version = CHESSCOM_VERSION),
