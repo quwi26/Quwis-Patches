@@ -2,7 +2,7 @@
 
 <p align="center">
   A fork of <a href="https://github.com/ImNoammm/Noams-Morphe-Patches">Noam's Morphe Patches</a> for chess.com only,<br>
-  with Game Review on your own computer and Great/Brilliant marks as separate patches.
+  with Game Review on your own computer, Great/Brilliant marks as separate patches, and Discord Rich Presence.
 </p>
 
 <p align="center">
@@ -128,6 +128,24 @@ To get in, add a password to the account once and then use it in the app:
 
 If the account already has a password, the usual **Forgot password?** email works as well.
 
+## Discord Rich Presence
+
+**More → Quwi's Patches → Discord Rich Presence → Connect Discord** opens Discord's own page in the browser.
+After **Authorize**, the app comes back connected and friends see what you are doing on your profile:
+
+- the screen you are on - a game, a review, a puzzle, a lesson or just browsing - and how long you have been on;
+- the card reads **Playing Chess.com**, under this bundle's own Discord application;
+- while the phone is connected, the status picked in the settings (Online, Idle or Do Not Disturb) stays on every
+  device you use. **Invisible** is not offered, because it would hide the activity too.
+
+No password is typed into chess.com and no computer is involved: the page is Discord's own, and the app keeps the
+token Discord gives it. Only the line above is sent - not the moves, the opponent or the result, and no chess.com
+account is linked. The connection can be removed at any time with **Disconnect** in the same settings page, or in
+Discord under **Settings → Authorized Apps**.
+
+The phone needs a working route to Discord, the same as the Discord app itself. The activity disappears when
+chess.com is closed, because the session lives only while the app does.
+
 ## Stockfish on your computer
 
 The computer runs `sf-bridge`, which starts a Stockfish per connection and passes UCI through a plain TCP socket:
@@ -175,8 +193,9 @@ would not exist: the whole patch tree and extension are his work, and this fork 
 features on top. The chess.com 4.10.27 support follows
 [hyzor's port](https://github.com/hyzor/hyzor-morphe-patches) (GPL-3.0) of the same patches. The crash screen
 is [PrathxmOp's crash handler](https://github.com/PrathxmOp/Prathxm-Patches) (GPL-3.0), renamed so Morphe sees
-it as the same patch when both bundles are added. If you want the patches for other apps too, use Noam's own
-source.
+it as the same patch when both bundles are added. Discord Rich Presence follows the OAuth2 and gateway recipe of
+[ArchiveTune](https://github.com/rukamori/ArchiveTune) (GPL-3.0), rewritten for this extension. If you want the
+patches for other apps too, use Noam's own source.
 
 ## Building
 
