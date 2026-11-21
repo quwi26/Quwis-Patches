@@ -813,15 +813,14 @@ public final class MorpheSettingsActivity extends Activity {
 
     private void showFoundBridges(BridgeDiscovery.Result result, int port) {
         if (result.devices.isEmpty()) {
-            new AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
+            showDialog(new AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
                 .setTitle("No sf-bridge found")
                 .setMessage("Nothing answered on port " + port + " in the " + result.scanned
                     + " addresses of this network.\n\nThis phone and your computer have to be on the same "
                     + "Wi-Fi. Guest and office networks often keep devices from reaching each other at all, "
                     + "and Windows blocks the bridge on a network it calls public until the sf-bridge rule "
                     + "is allowed there too.")
-                .setPositiveButton("OK", null)
-                .show();
+                .setPositiveButton("OK", null));
             return;
         }
         if (result.devices.size() == 1) {
@@ -830,11 +829,10 @@ public final class MorpheSettingsActivity extends Activity {
         }
         final String[] labels = new String[result.devices.size()];
         for (int i = 0; i < labels.length; i++) labels[i] = result.devices.get(i).label();
-        new AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
+        showDialog(new AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
             .setTitle("sf-bridge on this network")
             .setItems(labels, (dialog, which) -> useBridge(result.devices.get(which)))
-            .setNegativeButton("Cancel", null)
-            .show();
+            .setNegativeButton("Cancel", null));
     }
 
     private void useBridge(BridgeDiscovery.Device device) {
@@ -851,9 +849,12 @@ public final class MorpheSettingsActivity extends Activity {
         Toast.makeText(this, "Asking the computer…", Toast.LENGTH_SHORT).show();
         new Thread(() -> {
             String problem = NetEngine.ping();
-            runOnUiThread(() -> Toast.makeText(this,
-                problem == null ? "The computer answered: its Stockfish is ready" : problem,
-                Toast.LENGTH_LONG).show());
+            runOnUiThread(() -> {
+                if (!alive()) return;
+                Toast.makeText(this,
+                    problem == null ? "The computer answered: its Stockfish is ready" : problem,
+                    Toast.LENGTH_LONG).show();
+            });
         }, "MorpheBridgeTest").start();
     }
 
@@ -871,12 +872,21 @@ public final class MorpheSettingsActivity extends Activity {
                 message = e.getMessage() == null ? e.toString() : e.getMessage();
             }
             String result = message;
-            runOnUiThread(() -> new AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
+            runOnUiThread(() -> showDialog(new AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
                 .setTitle("Computer Stockfish")
                 .setMessage(result)
-                .setPositiveButton("OK", null)
-                .show());
+                .setPositiveButton("OK", null)));
         }, "MorpheBridgeBenchmark").start();
+    }
+
+    /** Whether this screen is still there to show a result on: the worker may outlive it. */
+    private boolean alive() {
+        return !isFinishing() && !isDestroyed();
+    }
+
+    /** A dialog from a worker's result, dropped when the screen closed while the work ran. */
+    private void showDialog(AlertDialog.Builder builder) {
+        if (alive()) builder.show();
     }
 
     private static String benchmarkText(BridgeBenchmark.Report report) {

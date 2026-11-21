@@ -1,3 +1,9 @@
+# [1.12.1](https://github.com/quwi26/Quwis-Patches/compare/v1.12.0...v1.12.1) (2026-11-21)
+
+### Bug Fixes
+
+* **Game Review on your computer:** the benchmark result no longer crashes the app when the settings screen is closed while the computer is still being timed. The same guard covers the network scan's dialog and the results that arrive after the screen has gone
+
 # [1.12.0](https://github.com/quwi26/Quwis-Patches/compare/v1.11.0...v1.12.0) (2026-11-20)
 
 ### New Features
