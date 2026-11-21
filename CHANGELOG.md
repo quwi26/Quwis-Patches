@@ -1,3 +1,9 @@
+# [1.12.2](https://github.com/quwi26/Quwis-Patches/compare/v1.12.1...v1.12.2) (2026-11-21)
+
+### Bug Fixes
+
+* **Stockfish analysis:** the 80 MB engine download no longer fails on a phone whose own DNS can't find github.com. GitHub mirrors are tried when github.com or its download server doesn't answer, a new "Stockfish 19 archive" option takes an archive downloaded in a browser instead (both are checked against Stockfish's published SHA-256), and the error says what to check: Private DNS, an ad blocker's DNS or a VPN. A source that stalls is dropped after 30 seconds and the download continues from another one
+
 # [1.12.1](https://github.com/quwi26/Quwis-Patches/compare/v1.12.0...v1.12.1) (2026-11-21)
 
 ### Bug Fixes
