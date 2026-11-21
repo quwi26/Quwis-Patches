@@ -372,7 +372,8 @@ private fun failure(e: IOException?): String {
         "${RETRY_PAUSES_MS.size + 1} rounds)"
     val picked = "A browser often downloads the file even when the patcher can't, with Private DNS, an " +
         "ad blocker's DNS or a VPN in the way: open $STOCKFISH_URL there, save the .tar.gz, and pick it " +
-        "in the \"Stockfish 19 archive\" option of this patch."
+        "in \"Stockfish 19 archive\" (Simple mode: Settings > Patch options; Expert mode: the patch's " +
+        "own options when choosing patches)."
     val end = "Then patch again, or leave out Stockfish analysis."
     return when (val host = (e as? Unanswered)?.host) {
         null -> "$start: ${e?.let(::describe) ?: "no source answered"}. Check the internet connection. $end"
