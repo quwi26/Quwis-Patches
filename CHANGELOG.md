@@ -1,3 +1,13 @@
+# [1.12.3](https://github.com/quwi26/Quwis-Patches/compare/v1.12.2...v1.12.3) (2026-11-21)
+
+### Breaking Changes
+
+* **Morphe:** the bundle is built for Morphe Patcher 2.5.0 and needs Morphe Manager 2.7.0 or newer. An older manager asks to update before patching
+
+### Performance Improvements
+
+* **Patching:** only the resources a patch needs are decoded, so patching takes less time and memory
+
 # [1.12.2](https://github.com/quwi26/Quwis-Patches/compare/v1.12.1...v1.12.2) (2026-11-21)
 
 ### Bug Fixes

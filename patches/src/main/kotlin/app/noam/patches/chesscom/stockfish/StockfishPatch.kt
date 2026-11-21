@@ -5,7 +5,8 @@ import app.morphe.patcher.patch.Option
 import app.morphe.patcher.patch.PatchException
 import app.morphe.patcher.patch.bytecodePatch
 import app.morphe.patcher.patch.filePathOption
-import app.morphe.patcher.patch.resourcePatch
+import app.morphe.patcher.patch.patch
+import app.morphe.patcher.patch.resourceFile
 import app.noam.patches.chesscom.misc.settings.settingsPatch
 import app.noam.patches.chesscom.shared.Constants
 import app.noam.patches.chesscom.shared.markFeaturePatched
@@ -59,7 +60,7 @@ private const val STOCKFISH_FOLDER = "stockfish"
  */
 private var stockfishArchive: Option<String>? = null
 
-private val stockfishResourcePatch = resourcePatch(
+private val stockfishResourcePatch = patch(
     description = "Adds the official Stockfish 19 to the app's native libraries, downloaded (80 MB) from " +
         "Stockfish's GitHub while patching (mirrors are used when github.com doesn't answer), or taken from " +
         "an archive picked in this patch's option. The download is kept between patch runs.",
@@ -80,7 +81,7 @@ private val stockfishResourcePatch = resourcePatch(
             else -> File(directory, STOCKFISH_FILE).also { download(it) }
         }
         // Android extracts native libraries into the one folder an app may run programs from.
-        val target = get("lib/arm64-v8a/libstockfish.so")
+        val target = resourceFile("lib/arm64-v8a/libstockfish.so", false)
         target.parentFile.mkdirs()
         engine.copyTo(target, overwrite = true)
     }
