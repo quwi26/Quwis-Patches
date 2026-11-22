@@ -3,7 +3,6 @@ package app.noam.extension.chesscom.lichesspuzzle;
 import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
@@ -148,9 +147,7 @@ public final class LichessPuzzles {
             Context context = Utils.topActivity();
             if (context == null) context = app;
             if (context == null) return HANDLED;
-            Intent intent = new Intent(context, MorpheSettingsActivity.class)
-                .putExtra(MorpheSettingsActivity.EXTRA_PAGE, Features.PAGE_PUZZLES);
-            if (Utils.startScreen(context, intent)) {
+            if (MorpheSettingsActivity.show(context, Features.PAGE_PUZZLES)) {
                 Utils.toast("Download Lichess puzzles to play them offline");
             }
             return HANDLED;

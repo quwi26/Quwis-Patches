@@ -1,11 +1,9 @@
 package app.noam.extension.chesscom.settings;
 
 import android.app.Activity;
-import android.content.Intent;
 import android.content.SharedPreferences;
 
 import app.noam.extension.chesscom.Features;
-import app.noam.extension.chesscom.Utils;
 
 /** The welcome screens open once, the first time chess.com's Home shows after patching. */
 public final class Welcome {
@@ -19,8 +17,7 @@ public final class Welcome {
         SharedPreferences preferences = Features.preferences();
         if (preferences == null || preferences.getBoolean(SHOWN, false)) return;
         // Marked only once it really shows, so a screen that could not open yet comes back later.
-        if (Utils.startScreen(activity, new Intent(activity, MorpheSettingsActivity.class)
-            .putExtra(MorpheSettingsActivity.EXTRA_PAGE, Features.PAGE_WELCOME))) {
+        if (MorpheSettingsActivity.show(activity, Features.PAGE_WELCOME)) {
             preferences.edit().putBoolean(SHOWN, true).apply();
         }
     }
