@@ -1,3 +1,9 @@
+# [1.13.1](https://github.com/quwi26/Quwis-Patches/compare/v1.13.0...v1.13.1) (2026-11-22)
+
+### Bug Fixes
+
+* **Lichess puzzles:** replaying a puzzle with Retry no longer changes the rating, its graph or the counters again. As on Lichess, only a puzzle's first attempt counts
+
 # [1.13.0](https://github.com/quwi26/Quwis-Patches/compare/v1.12.3...v1.13.0) (2026-11-21)
 
 ### New Features
