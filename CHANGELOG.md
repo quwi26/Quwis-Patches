@@ -1,3 +1,9 @@
+# [1.14.0](https://github.com/quwi26/Quwis-Patches/compare/v1.13.4...v1.14.0) (2026-11-22)
+
+### New Features
+
+* **Quwi's Patches settings:** Quwi's Patches and the Lichess login open on a root mount too. Android keeps the stock app's manifest there, so the activity this bundle adds is never declared and the settings row used to close chess.com. The screens are a plain view tree now: the activity hosts them on a normally installed patched app, and a dialog hosts them where the activity cannot start. Pages open their own windows again, and Back goes a page back instead of closing. The app log, crash, Discord login and Lichess's review in the app's own browser are separate screens and still need a normal install, which the patch descriptions now say
+
 # [1.13.4](https://github.com/quwi26/Quwis-Patches/compare/v1.13.3...v1.13.4) (2026-11-22)
 
 ### Bug Fixes
