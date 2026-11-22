@@ -1,3 +1,9 @@
+# [1.13.2](https://github.com/quwi26/Quwis-Patches/compare/v1.13.1...v1.13.2) (2026-11-22)
+
+### Bug Fixes
+
+* **Stockfish analysis:** a phone whose Android is 32-bit now gets Stockfish's 32-bit ARM engine, so the local analysis boards and a Game Review on the phone start instead of saying "Stockfish could not start on this phone". The engine matches the phone's own ABI when patching on the phone; a new "32-bit engine" option covers patching on a computer for such a phone
+
 # [1.13.1](https://github.com/quwi26/Quwis-Patches/compare/v1.13.0...v1.13.1) (2026-11-22)
 
 ### Bug Fixes
