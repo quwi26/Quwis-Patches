@@ -196,17 +196,12 @@ public final class SettingsScreen extends ContextWrapper {
     }
 
     /**
-     * Back: a step back on the welcome screens, the main list from another page. False when the
-     * screen itself should close.
+     * Back: a step back on the welcome screens, otherwise the host closes the screen. A page is
+     * its own window on a normal install, so back from one closes it, as it always did.
      */
     boolean goBack() {
         if (Features.PAGE_WELCOME.equals(page) && welcomeStep > 0) {
             welcomeStep--;
-            render();
-            return true;
-        }
-        if (page != null) {
-            page = null;
             render();
             return true;
         }
@@ -278,8 +273,25 @@ public final class SettingsScreen extends ContextWrapper {
         else renderMain();
     }
 
-    /** Another page of this screen, shown in place. */
+    /** Another page of this screen: a new window on a normal install, the same screen in a dialog. */
+    interface Pages {
+        void open(String page);
+    }
+
+    private Pages pages;
+
+    void pages(Pages pages) {
+        this.pages = pages;
+    }
+
+    /** Another page: its own window when the host has one, in place when it does not. */
     private void open(String target) {
+        if (pages != null) pages.open(target);
+        else showPage(target);
+    }
+
+    /** Another page in this same window. */
+    void showPage(String target) {
         page = target;
         render();
     }

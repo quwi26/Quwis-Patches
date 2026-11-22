@@ -41,6 +41,9 @@ public final class MorpheSettingsActivity extends Activity {
         screen = new SettingsScreen(this);
         screen.window(getWindow());
         screen.onClose(this::finish);
+        // Every page is a window of its own here, as before the dialog existed.
+        screen.pages(page -> startActivity(new Intent(this, MorpheSettingsActivity.class)
+            .putExtra(EXTRA_PAGE, page)));
         int step = savedInstanceState == null ? 0 : savedInstanceState.getInt("welcome_step");
         setContentView(screen.create(getIntent().getStringExtra(EXTRA_PAGE), step));
         // Back goes a welcome screen or a page back; Android 13 and later asks the callback.
