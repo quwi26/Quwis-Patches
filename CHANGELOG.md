@@ -1,3 +1,9 @@
+# [1.13.4](https://github.com/quwi26/Quwis-Patches/compare/v1.13.3...v1.13.4) (2026-11-22)
+
+### Bug Fixes
+
+* **Stockfish analysis:** when the engine can't be downloaded, the message now lists every source with the error it gave, instead of only the last one, so a phone whose DNS blocks the names can be told apart from a mirror that answered with an error. One more GitHub mirror is tried, and the message names the source that failed rather than the download server it redirected to
+
 # [1.13.3](https://github.com/quwi26/Quwis-Patches/compare/v1.13.2...v1.13.3) (2026-11-22)
 
 ### Bug Fixes

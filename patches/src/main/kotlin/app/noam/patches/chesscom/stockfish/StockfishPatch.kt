@@ -20,6 +20,7 @@ import java.io.InputStream
 import java.net.HttpURLConnection
 import java.net.URI
 import java.net.URL
+import java.net.UnknownHostException
 import java.security.DigestOutputStream
 import java.security.MessageDigest
 import java.util.logging.Logger
@@ -88,6 +89,7 @@ private val BUILDS = listOf(ARM64, ARM32)
  */
 private val STOCKFISH_MIRRORS = listOf(
     "https://gh-proxy.com/",
+    "https://gh-proxy.org/",
     "https://ghproxy.net/",
     "https://ghfast.top/",
 )
@@ -280,7 +282,6 @@ private const val CONNECT_TIMEOUT_MS = 45_000
  * what it has and the next source continues from there, so no progress is lost.
  */
 private const val READ_TIMEOUT_MS = 30_000
-private const val GITHUB = "github.com"
 
 private val logger = Logger.getLogger("Stockfish analysis")
 
@@ -290,20 +291,22 @@ private fun downloadSources(build: Build): List<String> =
 
 /**
  * Downloads Stockfish, asking github.com and then every mirror; a round that fails everywhere waits
- * and starts again. A retry continues the archive where it stopped.
+ * and starts again. A retry continues the archive where it stopped. Each source's last error is kept
+ * for the message the manager shows, so a name the phone's DNS blocks can be told from a proxy that
+ * answered something else.
  */
 private fun download(engine: File, build: Build) {
     val archive = File(engine.parentFile, engine.name + ".tar.gz.part")
     val sources = downloadSources(build)
+    val failures = LinkedHashMap<String, IOException>()
     logger.info("Downloading ${build.name} (about 80 MB, once)")
-    var last: IOException? = null
     for (round in 0..RETRY_PAUSES_MS.size) {
         for (source in sources) {
             try {
                 downloadOnce(archive, engine, source, build)
                 return
             } catch (e: IOException) {
-                last = e
+                failures[host(source)] = e
                 logger.warning("${build.name} download from ${host(source)} failed (${describe(e)})")
             }
         }
@@ -313,7 +316,7 @@ private fun download(engine: File, build: Build) {
             Thread.sleep(pause)
         }
     }
-    throw PatchException(failure(last, build), last)
+    throw PatchException(failure(failures, build), failures.values.lastOrNull())
 }
 
 private fun host(url: String) = try {
@@ -409,8 +412,10 @@ private fun unpack(archive: File, engine: File, build: Build) {
 
 /**
  * The archive's connection, starting at [from] bytes. A mirror or GitHub may answer with a redirect
- * to its download server; it is followed here rather than by the connection, so a failure can say
- * which of the two didn't answer, and the Range request is sent to the download server it leads to.
+ * to its download server; it is followed here rather than by the connection, so the Range request is
+ * sent to the download server it leads to and a redirect to plain http is refused. A failure keeps
+ * the source's own name in the caller's list, so the message says which source failed, not the
+ * server it was redirected to.
  */
 private fun open(from: Long, source: String): Download {
     var url = URL(source)
@@ -424,7 +429,7 @@ private fun open(from: Long, source: String): Download {
             connection.responseCode
         } catch (e: IOException) {
             connection.disconnect()
-            throw Unanswered(url.host, e)
+            throw e
         }
         if (code == HttpURLConnection.HTTP_OK) return Download(connection, 0L)
         // The server took the Range request: it is sending the rest of the archive.
@@ -441,34 +446,37 @@ private fun open(from: Long, source: String): Download {
 /** A connection and where in the archive it starts: 0 when the server ignored the Range request. */
 private class Download(val connection: HttpURLConnection, val offset: Long)
 
-/** A server that couldn't be reached. */
-private class Unanswered(val host: String, cause: IOException) : IOException(cause.message, cause)
-
 /** "SocketTimeoutException: Connect timed out": an exception's message alone can be just a host. */
-private fun describe(e: IOException): String {
-    val cause = if (e is Unanswered) e.cause ?: e else e
-    return "${cause.javaClass.simpleName}: ${cause.message}"
-}
+private fun describe(e: IOException): String = "${e.javaClass.simpleName}: ${e.message}"
 
 /**
- * What the log and the manager show when no source answered. A phone whose DNS can't find github.com
- * still has a browser that can, so the message points at the archive option before it gives up.
+ * What the log and the manager show when no source answered: every source with the error it gave, so
+ * a name the phone's DNS doesn't find can be told from a proxy that answered with an error. A phone
+ * whose DNS blocks github.com still has a browser that can reach it, so the message points at the
+ * archive option before it gives up.
  */
-private fun failure(e: IOException?, build: Build): String {
+private fun failure(failures: Map<String, IOException>, build: Build): String {
     val start = "Couldn't download ${build.name} (github.com and ${STOCKFISH_MIRRORS.size} mirrors, " +
         "${RETRY_PAUSES_MS.size + 1} rounds)"
-    val picked = "A browser often downloads the file even when the patcher can't, with Private DNS, an " +
-        "ad blocker's DNS or a VPN in the way: open ${build.url} there, save the .tar.gz, and pick it " +
-        "in \"Stockfish 19 archive\" (Simple mode: Settings > Patch options; Expert mode: the patch's " +
-        "own options when choosing patches)."
-    val end = "Then patch again, or leave out Stockfish analysis."
-    return when (val host = (e as? Unanswered)?.host) {
-        null -> "$start: ${e?.let(::describe) ?: "no source answered"}. Check the internet connection. $end"
-        GITHUB -> "$start: github.com didn't answer (${describe(e)}), so the phone's DNS could not find " +
-            "it. $picked Turning on a VPN or turning Private DNS off may also help. $end"
-        else -> "$start: $host didn't answer (${describe(e)}). Something on this device or network is " +
-            "likely blocking that server, such as a VPN, a DNS or ad blocker or a firewall. $picked $end"
+    val each = failures.entries.joinToString("; ") { "${it.key}: ${describe(it.value)}" }
+    val unknown = failures.values.filterIsInstance<UnknownHostException>()
+    val why = when {
+        failures.isNotEmpty() && unknown.size == failures.size ->
+            "None of those names could be found in DNS, so something on this phone or network is " +
+                "filtering DNS: Private DNS, an ad blocker's DNS or a VPN."
+        unknown.isNotEmpty() ->
+            "Some of those names could not be found in DNS and the rest did not answer; something on " +
+                "this device or network is likely blocking them, such as a VPN, a DNS or ad blocker or a firewall."
+        else ->
+            "Something on this device or network is likely blocking those servers, such as a VPN, " +
+                "a DNS or ad blocker or a firewall."
     }
+    val details = if (each.isEmpty()) "" else " Each source said: $each."
+    val picked = "A browser often downloads the file even when the patcher can't: open ${build.url} " +
+        "there, save the .tar.gz, and pick it in \"Stockfish 19 archive\" (Simple mode: Settings > Patch " +
+        "options; Expert mode: the patch's own options when choosing patches)."
+    val end = "Then patch again, or leave out Stockfish analysis."
+    return "$start.$details $why $picked $end"
 }
 
 private const val BUFFER = 64 * 1024
