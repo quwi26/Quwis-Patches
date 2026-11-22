@@ -34,6 +34,10 @@
 3. Sign in with an email and a password, not with Google - see
    [Signing in after patching](#signing-in-after-patching).
 
+A **root mount** works too: Android keeps the stock app's manifest, so Quwi's Patches opens in a dialog there
+instead of a screen of its own. App logs, the crash screen and the Lichess pages are separate screens and
+need a normally installed patched app.
+
 ## What this fork adds
 
 Six patches, all for chess.com:

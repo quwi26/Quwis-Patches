@@ -108,7 +108,7 @@ public final class Utils {
             return true;
         } catch (Throwable throwable) {
             logError("Could not open " + intent.getComponent(), throwable);
-            toast("Couldn't open that screen. Restart the phone, then try again.");
+            toast("Root mount cannot open this screen. Install the patched app normally to use it.");
             return false;
         }
     }
