@@ -1,3 +1,9 @@
+# [1.13.3](https://github.com/quwi26/Quwis-Patches/compare/v1.13.2...v1.13.3) (2026-11-22)
+
+### Bug Fixes
+
+* **Quwi's Patches settings:** tapping the row before Android has picked up the patched app (a mounted install that has not been restarted yet) now says to restart the phone instead of closing chess.com. The welcome screens, Lichess puzzles and the Lichess review screens handle that case the same way
+
 # [1.13.2](https://github.com/quwi26/Quwis-Patches/compare/v1.13.1...v1.13.2) (2026-11-22)
 
 ### Bug Fixes

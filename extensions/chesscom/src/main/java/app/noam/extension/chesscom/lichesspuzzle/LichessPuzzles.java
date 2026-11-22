@@ -150,9 +150,9 @@ public final class LichessPuzzles {
             if (context == null) return HANDLED;
             Intent intent = new Intent(context, MorpheSettingsActivity.class)
                 .putExtra(MorpheSettingsActivity.EXTRA_PAGE, Features.PAGE_PUZZLES);
-            if (!(context instanceof Activity)) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            context.startActivity(intent);
-            Utils.toast("Download Lichess puzzles to play them offline");
+            if (Utils.startScreen(context, intent)) {
+                Utils.toast("Download Lichess puzzles to play them offline");
+            }
             return HANDLED;
         }
         frozenPath = lastPath;

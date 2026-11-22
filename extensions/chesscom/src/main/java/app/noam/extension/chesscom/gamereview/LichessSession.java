@@ -91,7 +91,10 @@ final class LichessSession {
         if (activity == null) return false;
         login = new CountDownLatch(1);
         loggedIn = false;
-        MAIN.post(() -> activity.startActivity(new Intent(activity, LichessLoginActivity.class)));
+        MAIN.post(() -> {
+            // A mounted install can have the login page not in the manifest yet; no point waiting then.
+            if (!Utils.startScreen(activity, new Intent(activity, LichessLoginActivity.class))) login.countDown();
+        });
         try {
             if (!login.await(LOGIN_MS, TimeUnit.MILLISECONDS)) return false;
         } catch (InterruptedException e) {
