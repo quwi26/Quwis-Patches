@@ -1,3 +1,9 @@
+# [1.15.2](https://github.com/quwi26/Quwis-Patches/compare/v1.15.1...v1.15.2) (2026-11-25)
+
+### Performance Improvements
+
+* **Find the computer on the network:** the sweep now opens every address of the network at once instead of 48 at a time, so a /24 is looked at in about a third of a second instead of two, and a phone that also has a VPN interface no longer waits fifteen seconds for the second subnet. Every address is still tried and only a host that greets the way sf-bridge does is offered
+
 # [1.15.1](https://github.com/quwi26/Quwis-Patches/compare/v1.15.0...v1.15.1) (2026-11-25)
 
 ### Bug Fixes

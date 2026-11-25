@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-11-25T21:35:56",
-  "description": "Quwi's Chess Patches 1.15.1: chess.com 4.10.29 is supported as an experimental version, and Hide Premium-only content hides the More screen's Try Premium banner on it again. Turn on Experimental app versions for the source in Morphe to pick 4.10.29; 4.10.28 and 4.10.27 stay supported as before.",
-  "download_url": "https://github.com/quwi26/Quwis-Patches/releases/download/v1.15.1/patches-1.15.1.mpp",
+  "created_at": "2026-11-25T21:57:12",
+  "description": "Quwi's Chess Patches 1.15.2: Find the computer on the network sweeps the whole subnet at once, so the scan takes about a third of a second instead of two, and a phone with a VPN interface no longer waits fifteen. chess.com 4.10.29 stays supported as an experimental version; 4.10.28 and 4.10.27 stay supported as before.",
+  "download_url": "https://github.com/quwi26/Quwis-Patches/releases/download/v1.15.2/patches-1.15.2.mpp",
   "signature_download_url": "",
-  "version": "1.15.1"
+  "version": "1.15.2"
 }
