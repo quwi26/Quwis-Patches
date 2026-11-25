@@ -1,3 +1,13 @@
+# [1.15.0](https://github.com/quwi26/Quwis-Patches/compare/v1.14.2...v1.15.0) (2026-11-25)
+
+### New Features
+
+* **Chess.com:** chess.com 4.10.29 is supported as an experimental version, next to 4.10.28 and 4.10.27. Turn on **Experimental app versions** for the source in Morphe to pick it
+
+### Bug Fixes
+
+* **Chess.com 4.10.29:** Hide Premium-only content, Lichess Puzzles and Time controls under a minute follow the classes 4.10.29 renamed. The Home toolbar state and its paywall icon, the Puzzles hub state and path stats, the puzzle score's path result wrapper and the time selector moved, and the patches still find the older builds' shapes
+
 # [1.14.2](https://github.com/quwi26/Quwis-Patches/compare/v1.14.1...v1.14.2) (2026-11-24)
 
 ### Bug Fixes

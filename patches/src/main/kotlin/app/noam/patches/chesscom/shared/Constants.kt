@@ -13,11 +13,16 @@ internal object Constants {
     // where those moved a class. Checked on a phone like 4.10.27.
     const val CHESSCOM_VERSION_41028 = "4.10.28-googleplay"
 
+    // Experimental: the fingerprints are being ported from 4.10.28. Patches that still match the
+    // 4.10.28 shapes keep working; the rest fail to apply instead of patching the wrong thing.
+    const val CHESSCOM_VERSION_41029 = "4.10.29-googleplay"
+
     val COMPATIBILITY = Compatibility(
         packageName = CHESSCOM_PACKAGE,
         name = "Chess.com",
         appIconColor = 0x69923E,
         targets = listOf(
+            AppTarget(version = CHESSCOM_VERSION_41029, isExperimental = true),
             AppTarget(version = CHESSCOM_VERSION_41028),
             AppTarget(version = CHESSCOM_VERSION_41027),
         ),
