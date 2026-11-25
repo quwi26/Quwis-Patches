@@ -196,11 +196,13 @@ val hidePremiumPatch = bytecodePatch(
 
         // 4.10.28 draws the More screen's Try Premium banner from HomeBannerProvider's
         // getMoreBannerFlow, and the fixed composable above is gone. Emit a single null banner
-        // instead, which is what a Premium member's app shows.
-        mutableClassDefByOrNull("Lcom/chess/gopremium/home/HomeBannerProvider;")?.methods
+        // instead, which is what a Premium member's app shows. 4.10.29 moved the provider to
+        // gopremium/banner and renamed its Flow type again, so the return type stays open.
+        val moreBannerProvider = mutableClassDefByOrNull("Lcom/chess/gopremium/banner/HomeBannerProvider;")
+            ?: mutableClassDefByOrNull("Lcom/chess/gopremium/home/HomeBannerProvider;")
+        moreBannerProvider?.methods
             ?.singleOrNull { method ->
-                method.name == "b" && method.returnType == "Lcom/google/android/rc2;" &&
-                    method.parameterTypes.isEmpty()
+                method.name == "b" && method.returnType.startsWith("L") && method.parameterTypes.isEmpty()
             }
             ?.apply {
                 addInstructionsWithLabels(

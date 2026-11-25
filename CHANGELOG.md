@@ -1,3 +1,9 @@
+# [1.15.1](https://github.com/quwi26/Quwis-Patches/compare/v1.15.0...v1.15.1) (2026-11-25)
+
+### Bug Fixes
+
+* **Chess.com 4.10.29:** Hide Premium-only content hides the More screen's Try Premium banner again. 4.10.29 moved the banner provider to a new package and renamed the Flow it returns, so the banner stayed visible
+
 # [1.15.0](https://github.com/quwi26/Quwis-Patches/compare/v1.14.2...v1.15.0) (2026-11-25)
 
 ### New Features
