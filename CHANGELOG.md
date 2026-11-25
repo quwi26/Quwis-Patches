@@ -1,3 +1,9 @@
+# [1.16.1](https://github.com/quwi26/Quwis-Patches/compare/v1.16.0...v1.16.1) (2026-11-25)
+
+### Performance Improvements
+
+* **Patching:** the patches find the classes they change faster. Several fingerprints now name the class they look for directly, so the patcher no longer scans every class of the app for each of them. The installed app is unchanged, only the patching step is quicker
+
 # [1.16.0](https://github.com/quwi26/Quwis-Patches/compare/v1.15.2...v1.16.0) (2026-11-25)
 
 ### Features
