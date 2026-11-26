@@ -1,3 +1,10 @@
+# [1.17.0](https://github.com/quwi26/Quwis-Patches/compare/v1.16.1...v1.17.0) (2026-11-26)
+
+### Features
+
+* **Patching:** the bundle now runs on Morphe patcher 2.6.0 and needs Morphe Manager 2.8.0. The patcher carries the app's baseline profile over to the patched DEX files. The patches themselves are unchanged. This is an experimental build for the new patcher
+* **Stockfish analysis:** when the phone's DNS can't find github.com, the engine download looks it up over DNS over HTTPS (Cloudflare and Google, reached by IP), so patching works where a browser could reach GitHub but the patcher's runtime couldn't. Mirrors and the "Stockfish 19 archive" option stay
+
 # [1.16.1](https://github.com/quwi26/Quwis-Patches/compare/v1.16.0...v1.16.1) (2026-11-25)
 
 ### Performance Improvements
