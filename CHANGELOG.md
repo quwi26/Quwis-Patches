@@ -1,3 +1,10 @@
+# [1.16.3-dev](https://github.com/quwi26/Quwis-Patches/compare/v1.16.2-dev...v1.16.3-dev) (2026-11-26)
+
+### Features
+
+* **Chess.com:** chess.com 4.10.31 is supported as an experimental version, next to 4.10.29, 4.10.28 and 4.10.27. Turn on **Experimental app versions** for the source in Morphe to pick it
+* **Chess.com 4.10.31:** Unlimited Game Review and its add-ons find the Game Review repository method that gained the report card flag. Lichess Puzzles follows the Rated puzzle screens, the path stats and the settings and stats states 4.10.31 renumbered again
+
 # [1.16.2-dev](https://github.com/quwi26/Quwis-Patches/compare/v1.16.1...v1.16.2-dev) (2026-11-26)
 
 ### Features
