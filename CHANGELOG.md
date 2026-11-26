@@ -1,4 +1,4 @@
-# [1.17.0](https://github.com/quwi26/Quwis-Patches/compare/v1.16.1...v1.17.0) (2026-11-26)
+# [1.16.2-dev](https://github.com/quwi26/Quwis-Patches/compare/v1.16.1...v1.16.2-dev) (2026-11-26)
 
 ### Features
 
