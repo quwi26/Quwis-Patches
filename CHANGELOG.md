@@ -1,3 +1,9 @@
+# [1.16.4-dev](https://github.com/quwi26/Quwis-Patches/compare/v1.16.3-dev...v1.16.4-dev) (2026-11-27)
+
+### Bug Fixes
+
+* **Arrows in reviews:** chess.com 4.10.31 dropped the badge count from the review bar's button composable, so the patch did not find the bar and fell back to the floating chip over the board. Arrows and Clear sit in Game Review's own bottom bar again
+
 # [1.16.3-dev](https://github.com/quwi26/Quwis-Patches/compare/v1.16.2-dev...v1.16.3-dev) (2026-11-26)
 
 ### Features
