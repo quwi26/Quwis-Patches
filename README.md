@@ -28,10 +28,8 @@
    https://raw.githubusercontent.com/quwi26/Quwis-Patches/main/patches-bundle.json
    ```
 
-2. Patch chess.com **4.10.29**, **4.10.28** or **4.10.27**. **4.10.31** is supported as an
-   experimental version: turn on **Experimental app versions** for the source in Morphe to pick
-   it. **Unlimited Game Review** and its two add-ons are selected by default; uncheck the add-ons
-   for a plain Unlimited Game Review.
+2. Patch chess.com **4.10.31**, **4.10.29**, **4.10.28** or **4.10.27**. **Unlimited Game Review** and its
+   two add-ons are selected by default; uncheck the add-ons for a plain Unlimited Game Review.
 
 3. Sign in with an email and a password, not with Google - see
    [Signing in after patching](#signing-in-after-patching).

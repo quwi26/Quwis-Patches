@@ -13,10 +13,10 @@ internal object Constants {
     // where those moved a class.
     const val CHESSCOM_VERSION_41028 = "4.10.28-googleplay"
 
-    // The current build: the 4.10.28 shapes, with the classes 4.10.29 renamed again.
+    // The 4.10.28 shapes, with the classes 4.10.29 renamed again.
     const val CHESSCOM_VERSION_41029 = "4.10.29-googleplay"
 
-    // The newest build: 4.10.29's shapes, with the Game Review repository taking one more flag
+    // The current build: 4.10.29's shapes, with the Game Review repository taking one more flag
     // and the Rated puzzles screens renumbered again.
     const val CHESSCOM_VERSION_41031 = "4.10.31-googleplay"
 
@@ -25,7 +25,7 @@ internal object Constants {
         name = "Chess.com",
         appIconColor = 0x69923E,
         targets = listOf(
-            AppTarget(version = CHESSCOM_VERSION_41031, isExperimental = true),
+            AppTarget(version = CHESSCOM_VERSION_41031),
             AppTarget(version = CHESSCOM_VERSION_41029),
             AppTarget(version = CHESSCOM_VERSION_41028),
             AppTarget(version = CHESSCOM_VERSION_41027),

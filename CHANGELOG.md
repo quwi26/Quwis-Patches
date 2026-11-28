@@ -1,3 +1,9 @@
+# [1.16.8](https://github.com/quwi26/Quwis-Patches/compare/v1.16.7-dev...v1.16.8) (2026-11-28)
+
+### Features
+
+* **Chess.com:** chess.com 4.10.31 is a normal supported version now, next to 4.10.29, 4.10.28 and 4.10.27. The experimental app versions switch is no longer needed for it
+
 # [1.16.7-dev](https://github.com/quwi26/Quwis-Patches/compare/v1.16.6-dev...v1.16.7-dev) (2026-11-28)
 
 ### Bug Fixes
