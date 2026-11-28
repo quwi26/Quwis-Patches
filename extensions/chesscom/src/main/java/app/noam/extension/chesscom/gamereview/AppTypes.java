@@ -159,6 +159,40 @@ final class AppTypes {
         return 0;
     }
 
+    /**
+     * GameAnalysisPermissions with every capability on. Chess.com's builds differ in how many
+     * flags the class carries (4.10.31 added advanced stats and unlimited reviews), so take the
+     * longest public constructor made only of the flags and the quota type, and turn them all on.
+     */
+    static Object fullPermissions() throws Exception {
+        Class<?> permissions = Class.forName("com.chess.entities.GameAnalysisPermissions");
+        Class<?> quota = Class.forName("com.chess.entities.GameAnalysisPermissions$QuotaType");
+        Constructor<?> best = null;
+        for (Constructor<?> candidate : permissions.getConstructors()) {
+            Class<?>[] parameters = candidate.getParameterTypes();
+            if (parameters.length < 5) continue;
+            boolean usable = true;
+            for (Class<?> parameter : parameters) {
+                if (parameter != boolean.class && parameter != quota) {
+                    usable = false;
+                    break;
+                }
+            }
+            if (usable && (best == null || parameters.length > best.getParameterTypes().length)) {
+                best = candidate;
+            }
+        }
+        if (best == null) {
+            throw new NoSuchMethodException("GameAnalysisPermissions has no all-capabilities constructor");
+        }
+        Class<?>[] types = best.getParameterTypes();
+        Object[] arguments = new Object[types.length];
+        for (int i = 0; i < types.length; i++) {
+            arguments[i] = types[i] == boolean.class ? Boolean.TRUE : null;
+        }
+        return best.newInstance(arguments);
+    }
+
     static Class<?> load(String name) {
         try {
             return Class.forName(name);

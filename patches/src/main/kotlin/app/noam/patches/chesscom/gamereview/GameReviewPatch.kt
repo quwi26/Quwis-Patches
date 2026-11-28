@@ -267,6 +267,22 @@ val gameReviewPatch = bytecodePatch(
         }
         }
 
+        // The extension builds the permissions object by reflection (all capabilities on). A build
+        // that changes how many flags the class carries would otherwise fail mid-review with the
+        // app's "couldn't review your game" message; fail here instead, with a clear reason.
+        // 4.10.31 added advanced stats and unlimited reviews, so the shape is not fixed either.
+        val permissionCtors = mutableClassDefBy("Lcom/chess/entities/GameAnalysisPermissions;")
+            .methods.filter { method ->
+                method.name == "<init>" && method.parameterTypes.size >= 5 &&
+                    method.parameterTypes.all { type ->
+                        type.toString() == "Z" ||
+                            type.toString() == "Lcom/chess/entities/GameAnalysisPermissions\$QuotaType;"
+                    }
+            }
+        if (permissionCtors.isEmpty()) {
+            throw PatchException("GameAnalysisPermissions has no all-capabilities constructor")
+        }
+
         // The five quota/permission flags Game Review's UI reads before it will render full
         // content. getCanViewAccuracyAndMoves() genuinely reads the same backing field as
         // getCanCreate() in chess.com's own code (confirmed against this build, not a typo).

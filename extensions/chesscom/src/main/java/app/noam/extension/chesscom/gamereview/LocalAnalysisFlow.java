@@ -674,37 +674,9 @@ final class LocalAnalysisFlow {
             }
             Object gameData = agdConstructor.newInstance(agdArgs);
 
-            // Permissions: construct directly with all-true to avoid obfuscated companion field
-            // names (the permissions object itself still comes from the real class). 4.10.31 added
-            // two flags to the data class (advanced stats, unlimited reviews), so take the longest
-            // constructor that is only booleans and the quota type rather than one fixed shape.
-            Class<?> permissionsClass = Class.forName("com.chess.entities.GameAnalysisPermissions");
-            Class<?> quotaTypeClass = Class.forName("com.chess.entities.GameAnalysisPermissions$QuotaType");
-            Constructor<?> permConstructor = null;
-            for (Constructor<?> candidate : permissionsClass.getConstructors()) {
-                Class<?>[] parameters = candidate.getParameterTypes();
-                if (parameters.length < 5) continue;
-                boolean usable = true;
-                for (Class<?> parameter : parameters) {
-                    if (parameter != boolean.class && parameter != quotaTypeClass) {
-                        usable = false;
-                        break;
-                    }
-                }
-                if (usable && (permConstructor == null ||
-                    parameters.length > permConstructor.getParameterTypes().length)) {
-                    permConstructor = candidate;
-                }
-            }
-            if (permConstructor == null) {
-                throw new NoSuchMethodException("GameAnalysisPermissions has no all-capabilities constructor");
-            }
-            Class<?>[] permTypes = permConstructor.getParameterTypes();
-            Object[] permArgs = new Object[permTypes.length];
-            for (int k = 0; k < permTypes.length; k++) {
-                permArgs[k] = permTypes[k] == boolean.class ? Boolean.TRUE : null;
-            }
-            Object fullPermissions = permConstructor.newInstance(permArgs);
+            // Permissions: all capabilities on, through the build's own constructor shape (4.10.31
+            // added two flags to the class; AppTypes picks the longest flag-only constructor).
+            Object fullPermissions = AppTypes.fullPermissions();
 
             // Emit RemoteAnalysisCompleted to trigger the review UI.
             Constructor<?> compConstructor = types.completedCtor;

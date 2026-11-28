@@ -1,3 +1,10 @@
+# [1.16.7-dev](https://github.com/quwi26/Quwis-Patches/compare/v1.16.6-dev...v1.16.7-dev) (2026-11-28)
+
+### Bug Fixes
+
+* **Game Review on your computer:** the guest-review path built the same permissions object with the old fixed constructor, so it would have failed the same way on chess.com 4.10.31. Both places now share one shape-based constructor
+* **Patching:** the review patch checks the permissions class before it is applied and refuses to run when the build has no all-capabilities constructor, instead of letting the review fail mid-run with the app's error message
+
 # [1.16.6-dev](https://github.com/quwi26/Quwis-Patches/compare/v1.16.5-dev...v1.16.6-dev) (2026-11-28)
 
 ### Bug Fixes

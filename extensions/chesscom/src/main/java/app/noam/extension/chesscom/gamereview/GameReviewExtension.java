@@ -63,12 +63,7 @@ public final class GameReviewExtension {
 
     public static Object getFullGameAnalysisPermissions() {
         try {
-            Class<?> permClass = Class.forName("com.chess.entities.GameAnalysisPermissions");
-            Class<?> quotaTypeClass = Class.forName("com.chess.entities.GameAnalysisPermissions$QuotaType");
-            Constructor<?> ctor = permClass.getConstructor(
-                boolean.class, boolean.class, boolean.class, boolean.class, quotaTypeClass
-            );
-            return ctor.newInstance(true, true, true, true, null);
+            return AppTypes.fullPermissions();
         } catch (Throwable t) {
             Log.e(TAG, "getFullGameAnalysisPermissions failed", t);
             return null;
