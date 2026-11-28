@@ -1,3 +1,9 @@
+# [1.16.6-dev](https://github.com/quwi26/Quwis-Patches/compare/v1.16.5-dev...v1.16.6-dev) (2026-11-28)
+
+### Bug Fixes
+
+* **Game Review on your computer:** the review failed with "couldn't review your game" right after the engine finished on chess.com 4.10.31. That build added two flags (advanced stats, unlimited reviews) to the game analysis permissions, so the local review's fixed five-argument constructor no longer existed. The permissions are now built from whichever all-capabilities constructor the installed build has
+
 # [1.16.5-dev](https://github.com/quwi26/Quwis-Patches/compare/v1.16.4-dev...v1.16.5-dev) (2026-11-28)
 
 ### Bug Fixes
