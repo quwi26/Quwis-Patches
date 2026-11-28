@@ -1,3 +1,9 @@
+# [1.16.5-dev](https://github.com/quwi26/Quwis-Patches/compare/v1.16.4-dev...v1.16.5-dev) (2026-11-28)
+
+### Bug Fixes
+
+* **App logs:** the frame-rate and window chatter (`View`, `setRequestedFrameRate`, the BLAST buffer and insets lines) is no longer written to the log file. On a Compose screen it filled the whole tail in a few seconds and pushed the app's own lines and crash traces out of the Share text
+
 # [1.16.4-dev](https://github.com/quwi26/Quwis-Patches/compare/v1.16.3-dev...v1.16.4-dev) (2026-11-27)
 
 ### Bug Fixes

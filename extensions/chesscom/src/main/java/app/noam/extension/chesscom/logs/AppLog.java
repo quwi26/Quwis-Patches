@@ -11,6 +11,11 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import app.noam.extension.chesscom.Features;
 
@@ -28,6 +33,31 @@ public final class AppLog {
     private static final int SHOW_CHARS = 60_000;
     private static final String EMPTY =
         "Nothing was recorded yet. Play a game or open a review, then come back.";
+
+    /** threadtime: "MM-DD hh:mm:ss.mmm pid tid level tag: message". */
+    private static final Pattern ENTRY =
+        Pattern.compile("^\\S+\\s+\\S+\\s+\\S+\\s+[VDIWEFA]\\s+(.*?)\\s*:\\s?(.*)$");
+    /**
+     * Per-frame and window plumbing: a Compose screen writes these on every frame, and they fill
+     * the tail before anyone can reach the settings screen. The app's own tags, crashes included,
+     * never use these names.
+     */
+    private static final Set<String> NOISY_TAGS = new HashSet<>(Arrays.asList(
+        "View", "BLASTBufferQueue", "BLASTBufferQueue_Java", "BufferQueueConsumer", "HWUI",
+        "InputTransport", "InsetsController", "InsetsSourceConsumer", "ViewRootImpl", "DecorView",
+        "ScrollView", "NativeCustomFrequencyManager", "libMEOW", "WindowOnBackDispatcher",
+        "ActivityThread", "SurfaceTexture"
+    ));
+
+    /** True for the frame-rate and window chatter that buries the useful lines. */
+    private static boolean noisy(String line) {
+        Matcher entry = ENTRY.matcher(line);
+        if (!entry.matches()) return false;
+        String tag = entry.group(1);
+        if (tag.startsWith("VRI[")) return true;
+        if (NOISY_TAGS.contains(tag)) return true;
+        return entry.group(2).contains("setRequestedFrameRate");
+    }
 
     private static Context context;
     private static Thread thread;
@@ -62,6 +92,7 @@ public final class AppLog {
                     try {
                         String line;
                         while ((line = reader.readLine()) != null) {
+                            if (noisy(line)) continue;
                             byte[] bytes = (line + "\n").getBytes(StandardCharsets.UTF_8);
                             out.write(bytes);
                             written += bytes.length;
